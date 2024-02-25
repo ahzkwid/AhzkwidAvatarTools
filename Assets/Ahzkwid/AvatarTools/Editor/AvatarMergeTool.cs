@@ -8,6 +8,8 @@ using System.Data.SqlTypes;
 using System.Collections;
 
 using UnityEditorInternal;
+using static VRC.Dynamics.PhysBoneManager;
+
 
 
 
@@ -68,7 +70,7 @@ class AvatarMergeTool : EditorWindow
     public GameObject character;
     public GameObject cloth;
     public GameObject[] cloths= new GameObject[] {null };
-    public bool createClone=true;
+    public bool createBackup = true;
 
 
     [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
@@ -162,7 +164,7 @@ class AvatarMergeTool : EditorWindow
             DrawArray(nameof(cloths));
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createClone)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createBackup)));
         }
         serializedObject.ApplyModifiedProperties();
         if (character == null)
@@ -181,7 +183,7 @@ class AvatarMergeTool : EditorWindow
         {
             if (GUILayout.Button("Merge"))
             {
-                if (createClone)
+                if (createBackup)
                 {
                     /*
                     var characterCopy = PrefabUtility.InstantiatePrefab(character, character.transform.parent) as GameObject;
@@ -626,7 +628,7 @@ class AvatarMergeTool : EditorWindow
                 //clothRenderer.bones = boneList.ToArray();
                 Debug.Log($"{clothRenderer}.bones.Length (Pre): {clothRenderer.bones.Length}");
                 var equalBones = GetEqualBones(bones, clothRenderer.bones);
-                if (equalBones.Length>0)
+                if (equalBones.Length > 0)
                 {
                     clothRenderer.bones = equalBones;
                 }
@@ -637,23 +639,34 @@ class AvatarMergeTool : EditorWindow
                 //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
             }
 
-            var physBones = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>();
-            var physBoneColliders = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>();
-            foreach (var physBone in physBones)
             {
-                if (physBone.rootTransform == null)
+                //Debug.Log($"physBones convert");
+
+                var physBones = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+                var physBoneColliders = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>(true);
+                foreach (var physBone in physBones)
                 {
-                    continue;
+                    if (physBone.rootTransform == null)
+                    {
+                        continue;
+                    }
+                    physBone.rootTransform = GetEqualBone(bones, physBone.rootTransform);
                 }
-                physBone.rootTransform = GetEqualBone(bones, physBone.rootTransform);
-            }
-            foreach (var physBoneCollider in physBoneColliders)
-            {
-                if (physBoneCollider.rootTransform == null)
+                foreach (var physBoneCollider in physBoneColliders)
                 {
-                    continue ;
+                    if (physBoneCollider.rootTransform == null)
+                    {
+                        continue;
+                    }
+                    physBoneCollider.rootTransform = GetEqualBone(bones, physBoneCollider.rootTransform);
                 }
-                physBoneCollider.rootTransform = GetEqualBone(bones, physBoneCollider.rootTransform);
+                foreach (var physBone in physBones)
+                {
+                    var physBoneTarget = GetEqualBone(bones, physBone.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>();
+                    physBoneTarget.colliders = physBone.colliders.ConvertAll(collider => GetEqualBone(bones, collider.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>() as VRC.Dynamics.VRCPhysBoneColliderBase);
+
+                    //Debug.Log($"{physBoneTarget.name}.colliders: {physBoneTarget.colliders.Count}");
+                }
             }
         }
 
