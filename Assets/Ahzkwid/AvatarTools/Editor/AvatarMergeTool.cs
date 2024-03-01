@@ -1,4 +1,4 @@
-﻿
+
 using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Data.SqlTypes;
 using System.Collections;
 
 using UnityEditorInternal;
-using static VRC.Dynamics.PhysBoneManager;
+
 
 
 
@@ -323,6 +323,8 @@ class AvatarMergeTool : EditorWindow
 
     void CreateChildBones(Transform rootBoneCharacter, Transform rootBoneCloth)
     {
+
+
         var characterChilds = new List<Transform>();
         for (int i = 0; i < rootBoneCharacter.childCount; i++)
         {
@@ -531,7 +533,11 @@ class AvatarMergeTool : EditorWindow
             {
                 foreach (var armatureName in armatureNames)
                 {
-                    return gameObject.transform.Find(armatureName);
+                    var armature = gameObject.transform.Find(armatureName);
+                    if (armature != null)
+                    {
+                        return armature;
+                    }
                 }
             }
             return null;
@@ -584,7 +590,22 @@ class AvatarMergeTool : EditorWindow
             }
             */
 
-            CreateChildBones(GetArmature(character), GetArmature(cloth));
+            {
+                var characterArmature = GetArmature(character);
+                var clothArmature = GetArmature(cloth);
+
+
+                if (characterArmature == null)
+                {
+                    Debug.LogError("characterArmature == null");
+                }
+                if (characterArmature == null)
+                {
+                    Debug.LogError("characterArmature == null");
+                }
+                CreateChildBones(characterArmature, clothArmature);
+            }
+
             //AddChildBones(ref list, GetArmature(character), GetArmature(cloth));
             AddChildBones(ref list, GetArmature(character));
             Debug.Log($"list.Count: {list.Count}");
