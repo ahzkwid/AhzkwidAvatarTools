@@ -76,7 +76,9 @@ class AvatarMergeTool : EditorWindow
     [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
     public static void Init()
     {
-        GetWindow<AvatarMergeTool>(false, nameof(AvatarMergeTool));
+        var window=GetWindow<AvatarMergeTool>(false, nameof(AvatarMergeTool));
+        window.minSize = new Vector2(400, 200);
+        window.Show();
     }
     SerializedObject serializedObject;
 
