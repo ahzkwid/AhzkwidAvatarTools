@@ -629,7 +629,7 @@ class AvatarMergeTool : EditorWindow
             //var bones = characterRenderer.bones;
             var bones = list.ToArray();
             Debug.Log($"bones.Length: {bones.Length}");
-            Debug.Log($"characterRenderer.bones: {string.Join(",", System.Array.ConvertAll(characterRenderer.bones, x => x.name))}");
+            //Debug.Log($"characterRenderer.bones: {string.Join(",", System.Array.ConvertAll(characterRenderer.bones, x => x.name))}"); //BlendshapeAutoSetter와 충돌
             Debug.Log($"bones: {string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
 
             //return;
