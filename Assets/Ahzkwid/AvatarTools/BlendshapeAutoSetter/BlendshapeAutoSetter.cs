@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Ahzkwid
 {
-    using System.Linq;
-    using System;
-
-
 #if UNITY_EDITOR
     using UnityEditor;
     using UnityEditorInternal;
