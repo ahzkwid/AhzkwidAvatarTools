@@ -126,7 +126,8 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                         var path = nameof(BlendshapeAutoSetter.BlendshapeSettingData.key);
                         if (mesh == null)
                         {
-                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                            //EditorGUI.PropertyField(fieldRect, elementProperty.FindPropertyRelative(path), new GUIContent(path), true);
+                            elementProperty.FindPropertyRelative(path).stringValue = EditorGUI.TextField(fieldRect, elementProperty.FindPropertyRelative(path).stringValue);
                         }
                         else
                         {
