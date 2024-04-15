@@ -337,7 +337,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                             var fieldProperty = elementProperty.FindPropertyRelative(field.Name);
                             if (fieldProperty.isArray)
                             {
-                                height += EditorGUIUtility.singleLineHeight*1.11f * fieldProperty.arraySize;
+                                height += EditorGUIUtility.singleLineHeight*1.11f * Mathf.Max(1,fieldProperty.arraySize);
                             }
                             else
                             {
