@@ -1,4 +1,4 @@
-
+﻿
 using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
@@ -69,14 +69,14 @@ class AvatarMergeTool : EditorWindow
 
     public GameObject character;
     public GameObject cloth;
-    public GameObject[] cloths= new GameObject[] {null };
+    public GameObject[] cloths = new GameObject[] { null };
     public bool createBackup = true;
 
 
     [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
     public static void Init()
     {
-        var window=GetWindow<AvatarMergeTool>(false, nameof(AvatarMergeTool));
+        var window = GetWindow<AvatarMergeTool>(false, nameof(AvatarMergeTool));
         window.minSize = new Vector2(400, 200);
         window.Show();
     }
@@ -109,9 +109,9 @@ class AvatarMergeTool : EditorWindow
         return copy;
     }
     */
-    GameObject InstantiatePrefab(GameObject gameObject, Transform parent=null)
+    GameObject InstantiatePrefab(GameObject gameObject, Transform parent = null)
     {
-        if (parent==null)
+        if (parent == null)
         {
             parent = gameObject.transform.parent;
         }
@@ -177,7 +177,7 @@ class AvatarMergeTool : EditorWindow
         {
             allReady = false;
         }
-        else if (System.Array.FindAll(cloths,x=>x != null).Length == 0)
+        else if (System.Array.FindAll(cloths, x => x != null).Length == 0)
         {
             allReady = false;
         }
@@ -244,13 +244,13 @@ class AvatarMergeTool : EditorWindow
         */
     }
 
-    string ArmaturePath(Transform bone, Transform rootBone=null)
+    string ArmaturePath(Transform bone, Transform rootBone = null)
     {
         var rootName = "";
         var hierarchyPath = "";
 
 
-        if (rootBone!=null)
+        if (rootBone != null)
         {
             try
             {
@@ -293,7 +293,7 @@ class AvatarMergeTool : EditorWindow
                 startIndex = hierarchyPath.IndexOf("Armature");
             }
         }
-        if (startIndex>=0)
+        if (startIndex >= 0)
         {
             return hierarchyPath.Substring(startIndex, hierarchyPath.Length - startIndex);
         }
@@ -305,14 +305,14 @@ class AvatarMergeTool : EditorWindow
     }
     void Test()
     {
-        
+
         Debug.Log(cloth.transform.root.name);
-        Debug.Log(SearchUtils.GetHierarchyPath(cloth,false));
+        Debug.Log(SearchUtils.GetHierarchyPath(cloth, false));
         //Debug.Log(cloth.transform.GetHierarchyPath());
         //Debug.Log(cloth.transform.GetShortHierarchyPath());
-        Debug.Log(ArmaturePath(cloth.transform,cloth.transform));
+        Debug.Log(ArmaturePath(cloth.transform, cloth.transform));
     }
-    void AddChildBones(ref List<Transform> list,Transform rootBone)
+    void AddChildBones(ref List<Transform> list, Transform rootBone)
     {
         list.Add(rootBone);
         for (int i = 0; i < rootBone.childCount; i++)
@@ -321,7 +321,7 @@ class AvatarMergeTool : EditorWindow
             AddChildBones(ref list, child);
         }
     }
-    
+
 
     void CreateChildBones(Transform rootBoneCharacter, Transform rootBoneCloth)
     {
@@ -357,7 +357,7 @@ class AvatarMergeTool : EditorWindow
         {
             var childCloth = rootBoneCloth.GetChild(i);
             var childCharacter = characterChilds.Find(x => x.name == childCloth.name);
-            if (childCharacter==null)
+            if (childCharacter == null)
             {
                 Debug.Log($"Create : {childCloth.name}");
 
@@ -674,6 +674,7 @@ class AvatarMergeTool : EditorWindow
                         continue;
                     }
                     physBone.rootTransform = GetEqualBone(bones, physBone.rootTransform);
+                    physBone.ignoreTransforms = physBone.ignoreTransforms.ConvertAll(x=>GetEqualBone(bones, x));
                 }
                 foreach (var physBoneCollider in physBoneColliders)
                 {
@@ -685,7 +686,12 @@ class AvatarMergeTool : EditorWindow
                 }
                 foreach (var physBone in physBones)
                 {
-                    var physBoneTarget = GetEqualBone(bones, physBone.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>();
+                    var bone = GetEqualBone(bones, physBone.transform);
+                    if (bone==null)
+                    {
+                        return;
+                    }
+                    var physBoneTarget = bone.GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>();
                     physBoneTarget.colliders = physBone.colliders.ConvertAll(collider => GetEqualBone(bones, collider.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>() as VRC.Dynamics.VRCPhysBoneColliderBase);
 
                     //Debug.Log($"{physBoneTarget.name}.colliders: {physBoneTarget.colliders.Count}");
@@ -693,20 +699,20 @@ class AvatarMergeTool : EditorWindow
             }
         }
 
-        Transform[] GetEqualBones(Transform[] targetBones,Transform[] sourceBones)
+        Transform[] GetEqualBones(Transform[] targetBones, Transform[] sourceBones)
         {
             var bones = System.Array.ConvertAll(sourceBones, x => GetEqualBone(targetBones, x));
-            return System.Array.FindAll(bones, x=> x != null);
+            return System.Array.FindAll(bones, x => x != null);
         }
         Transform GetEqualBone(Transform[] bones, Transform bone)
         {
-            if (bone==null)
+            if (bone == null)
             {
                 return null;
             }
             //var equalBone = System.Array.Find(bones, x => ArmaturePath(x, character.transform) == ArmaturePath(bone, cloth.transform));
             var equalBone = System.Array.Find(bones, x => ArmaturePath(x) == ArmaturePath(bone));
-            if (equalBone==null)
+            if (equalBone == null)
             {
                 Debug.Log($"{SearchUtils.GetHierarchyPath(bone.gameObject, false)} - {SearchUtils.GetHierarchyPath(cloth.gameObject, false)}");
                 Debug.Log($"{ArmaturePath(bone, cloth.transform)}");
