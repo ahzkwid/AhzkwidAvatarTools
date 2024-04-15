@@ -105,7 +105,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
             }
             var reorderableList = (ReorderableList)reorderableListTable[propertyPath];
 
-                //í—¤ë”ëª…
+                //Çì´õ¸í
                 reorderableList.drawHeaderCallback = (rect) => {
                     EditorGUI.LabelField(rect, $"{property.name} ({reorderableListProperty.arraySize})");
                     };
@@ -153,6 +153,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                                     var blendshapeValue = objs[1] as BlendshapeAutoSetter.BlendshapeSettingData;
                                     propertyRelative.stringValue = key;
                                     blendshapeValue.key = key;
+                                    UnityEditor.EditorUtility.SetDirty(target);
                                     //SerializedProperty
                                 }
                             }
@@ -189,7 +190,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                 reorderableList.DoList(offset);
 
 
-                //ìš”ì†Œë³„í¬ê¸°
+                //¿ä¼Òº°Å©±â
                 reorderableList.elementHeightCallback = (index) => {
 
                     var height = EditorGUIUtility.singleLineHeight;
@@ -217,9 +218,9 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
         {
             /*
 {
-    //ë©”ì‰¬ê°’ê³¼ ì¸ë±ìŠ¤ë“¤ì„ í•­ìƒ í†µì¼
+    //¸Ş½¬°ª°ú ÀÎµ¦½ºµéÀ» Ç×»ó ÅëÀÏ
     var blendshapeAutoSetter = target as BlendshapeAutoSetter;
-    //var flag = false; //ì„ì‹œê°’ë“¤ì´ë¼ ë”í‹°í”Œë˜ê·¸ í•„ìš” ì—†ìŒ
+    //var flag = false; //ÀÓ½Ã°ªµéÀÌ¶ó ´õÆ¼ÇÃ·¡±× ÇÊ¿ä ¾øÀ½
 
     for (int i = 0; i < blendshapeAutoSetter.blendshapeTargets.Count; i++)
     {
@@ -265,10 +266,10 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
             {
 
-                //í—¤ë”ëª…
+                //Çì´õ¸í
                 reorderableList.drawHeaderCallback = (rect) => EditorGUI.LabelField(rect, $"{propertyPath} ({reorderableListProperty.arraySize})");
 
-                //ìš”ì†Œí¬ê¸°
+                //¿ä¼ÒÅ©±â
                 //reorderableList.elementHeight = EditorGUIUtility.singleLineHeight * 5;
 
                 reorderableList.drawElementCallback =
@@ -315,7 +316,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                 reorderableList.DoLayoutList();
 
 
-                //ìš”ì†Œë³„í¬ê¸°
+                //¿ä¼Òº°Å©±â
                 reorderableList.elementHeightCallback = (index) => {
 
                     var elementProperty = reorderableListProperty.GetArrayElementAtIndex(index);
@@ -350,7 +351,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
 
                 /*
-                //ì„ íƒëœ í•„ë“œ
+                //¼±ÅÃµÈ ÇÊµå
                 if (reorderableList.index >= 0)
                 {
                     var index = reorderableList.index;
@@ -360,7 +361,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
                         var mesh = elementAtIndex.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)).objectReferenceValue;
 
-                        //ê¸°ë³¸í‘œì‹œ
+                        //±âº»Ç¥½Ã
                         foreach (var field in typeof(BlendshapeAutoSetter.BlendshapeTarget).GetFields())
                         {
                             if ((field.IsStatic) || (field.IsNotSerialized))
@@ -379,13 +380,13 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                 */
 
                 /*
-                //ìš”ì†Œ
+                //¿ä¼Ò
                 var elementName = nameof(AutoBlendshapeSetter.BlendshapeTarget.mesh);
                 reorderableList.drawElementCallback =
                 (Rect rect, int index, bool isActive, bool isFocused) =>
                 {
                     EditorGUI.PropertyField(rect, reorderableListProperty.GetArrayElementAtIndex(index).FindPropertyRelative(elementName));
-                    //ê¸°ë³¸í‘œì‹œ
+                    //±âº»Ç¥½Ã
                     foreach (var field in typeof(AutoBlendshapeSetter.BlendshapeTarget).GetFields())
                     {
                         if (field.Name != elementName)
@@ -398,7 +399,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                 */
 
                 /*
-                //ì„ íƒëœ í•„ë“œ
+                //¼±ÅÃµÈ ÇÊµå
                 if (reorderableList.index >= 0)
                 {
                     var index = reorderableList.index;
@@ -406,7 +407,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                     {
                         var elementAtIndex = reorderableListProperty.GetArrayElementAtIndex(index);
 
-                        //ê¸°ë³¸í‘œì‹œ
+                        //±âº»Ç¥½Ã
                         foreach (var field in typeof(AutoBlendshapeSetter.BlendshapeTarget).GetFields())
                         {
                             if ((field.IsStatic) || (field.IsNotSerialized))
@@ -555,7 +556,6 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
             else
             {
                 UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
-                UnityEditor.Handles.Button(transform.position, Quaternion.identity, 2f, 4f, Handles.RectangleHandleCap);
             }
         }
 #endif
