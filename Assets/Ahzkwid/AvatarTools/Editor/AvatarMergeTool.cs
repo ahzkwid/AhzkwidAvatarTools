@@ -1,13 +1,8 @@
 ﻿
 using UnityEngine;
-using System.Linq;
 using System.Collections.Generic;
-using System.IO;
-using UnityEditor.Search;
-using System.Data.SqlTypes;
 using System.Collections;
 
-using UnityEditorInternal;
 
 
 
@@ -16,6 +11,8 @@ using UnityEditorInternal;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.Search;
+using UnityEditorInternal;
 
 [InitializeOnLoad]
 class AvatarMergeTool : EditorWindow
@@ -68,7 +65,7 @@ class AvatarMergeTool : EditorWindow
 
 
     public GameObject character;
-    public GameObject cloth;
+    //public GameObject cloth;
     public GameObject[] cloths = new GameObject[] { null };
     public bool createBackup = true;
 
@@ -109,6 +106,26 @@ class AvatarMergeTool : EditorWindow
         return copy;
     }
     */
+    static GameObject InstantiatePrefabTemporary(GameObject gameObject, Transform parent = null)
+    {
+        //임시
+        if (parent == null)
+        {
+            parent = gameObject.transform.parent;
+        }
+        GameObject copy = null;
+
+        if (PrefabUtility.IsAnyPrefabInstanceRoot(gameObject))
+        {
+            copy = Instantiate(gameObject, parent);
+            CreateChildBones(copy.transform, gameObject.transform);
+        }
+        if (copy == null)
+        {
+            copy = Instantiate(gameObject, parent);
+        }
+        return copy;
+    }
     GameObject InstantiatePrefab(GameObject gameObject, Transform parent = null)
     {
         if (parent == null)
@@ -124,16 +141,17 @@ class AvatarMergeTool : EditorWindow
             //if (PrefabUtility.GetPrefabAssetType(gameObject) != PrefabAssetType.Variant)
             {
 
-                copy = PrefabUtility.InstantiatePrefab(gameObject, parent) as GameObject;
+                //copy = PrefabUtility.InstantiatePrefab(gameObject, parent) as GameObject;
                 if (copy == null)
                 {
-
                     var target = gameObject;
-                    //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target);
-                    var source = PrefabUtility.GetCorrespondingObjectFromSource(target);
+                    //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target); //하위값을 복사 안 해버림
+                    var source = PrefabUtility.GetCorrespondingObjectFromSource(target); //부모를 복사해버림
+                    //copy = GameObjectUtility.DuplicateGameObject(gameObject); //2023.1.0부터
                     copy = PrefabUtility.InstantiatePrefab(source, parent) as GameObject;
                     var modifications = PrefabUtility.GetPropertyModifications(target);
                     PrefabUtility.SetPropertyModifications(copy, modifications);
+
                     CreateChildBones(copy.transform, gameObject.transform);
 
 
@@ -227,7 +245,7 @@ class AvatarMergeTool : EditorWindow
                 }
                 else
                 {
-                    Merge(character, cloth);
+                    //Merge(character, cloth);
                     foreach (var cloth in cloths)
                     {
                         Merge(character, cloth);
@@ -244,7 +262,7 @@ class AvatarMergeTool : EditorWindow
         */
     }
 
-    string ArmaturePath(Transform bone, Transform rootBone = null)
+    static string ArmaturePath(Transform bone, Transform rootBone = null)
     {
         var rootName = "";
         var hierarchyPath = "";
@@ -306,13 +324,13 @@ class AvatarMergeTool : EditorWindow
     void Test()
     {
 
-        Debug.Log(cloth.transform.root.name);
-        Debug.Log(SearchUtils.GetHierarchyPath(cloth, false));
-        //Debug.Log(cloth.transform.GetHierarchyPath());
-        //Debug.Log(cloth.transform.GetShortHierarchyPath());
-        Debug.Log(ArmaturePath(cloth.transform, cloth.transform));
+        //Debug.Log(cloth.transform.root.name);
+        //Debug.Log(SearchUtils.GetHierarchyPath(cloth, false));
+        ////Debug.Log(cloth.transform.GetHierarchyPath());
+        ////Debug.Log(cloth.transform.GetShortHierarchyPath());
+        //Debug.Log(ArmaturePath(cloth.transform, cloth.transform));
     }
-    void AddChildBones(ref List<Transform> list, Transform rootBone)
+    static void AddChildBones(ref List<Transform> list, Transform rootBone)
     {
         list.Add(rootBone);
         for (int i = 0; i < rootBone.childCount; i++)
@@ -323,7 +341,7 @@ class AvatarMergeTool : EditorWindow
     }
 
 
-    void CreateChildBones(Transform rootBoneCharacter, Transform rootBoneCloth)
+    static void CreateChildBones(Transform rootBoneCharacter, Transform rootBoneCloth)
     {
 
 
@@ -373,7 +391,10 @@ class AvatarMergeTool : EditorWindow
                 //gameObject = InstantiatePrefab(childCloth.gameObject, rootBoneCharacter);
                 GameObject gameObject = null;
                 //if (EditorUtility.IsPersistent(childCloth))
-                gameObject = InstantiatePrefab(childCloth.gameObject, rootBoneCharacter);
+                //gameObject = InstantiatePrefab(childCloth.gameObject, rootBoneCharacter);
+                gameObject = InstantiatePrefabTemporary(childCloth.gameObject, rootBoneCharacter);
+                
+                //gameObject = Instantiate(childCloth.gameObject, rootBoneCharacter);
                 //var gameObject=Instantiate(childCloth, rootBoneCharacter);
                 //gameObject.transform.parent = rootBoneCharacter;
                 gameObject.name = childCloth.name;
@@ -488,7 +509,7 @@ class AvatarMergeTool : EditorWindow
 
     }
     */
-    public void Merge(GameObject character, GameObject cloth)
+    public static void Merge(GameObject character, GameObject cloth)
     {
 
         Transform GetRootBone(GameObject gameObject)
@@ -545,6 +566,10 @@ class AvatarMergeTool : EditorWindow
             return null;
         }
 
+        if (cloth == null)
+        {
+            Debug.LogError("cloth==null");
+        }
         {
             //var armatureNames = new string[] { "Armature", "armature" };
             //{

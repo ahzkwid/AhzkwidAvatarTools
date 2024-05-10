@@ -177,7 +177,7 @@ namespace Ahzkwid
         {
             if (success == false)
             {
-                UnityEditor.Handles.Label(transform.position, "ObjectAutoSetter");
+                UnityEditor.Handles.Label(transform.position, "Finding Character");
                 {
                     var root = GetRoot(transform);
                     if (root == null)
