@@ -8,7 +8,7 @@ using UnityEditor;
 [InitializeOnLoad]
 class AvatarPoseCopyTool : EditorWindow
 {
-    public GameObject character;
+    public GameObject[] characters;
     public GameObject pose;
     public bool backupPose = true;
 
@@ -38,17 +38,17 @@ class AvatarPoseCopyTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(character)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(pose)));
             EditorGUILayout.Space();
-            if (character == null)
+            if (characters == null || characters.Length == 0)
             {
                 allReady = false;
             }
             else
             {
-                var animator = character.GetComponent<Animator>();
+                var animator = characters[0].GetComponent<Animator>();
                 if (animator == null)
                 {
                     EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Error);
@@ -89,13 +89,16 @@ class AvatarPoseCopyTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("PoseCopy"))
         {
-            if (backupPose)
+            foreach (var character in characters)
             {
-                var characterCopy = Instantiate(character);
-                characterCopy.name = character.name+" (BackupPose)";
-                characterCopy.SetActive(false);
+                if (backupPose)
+                {
+                    var characterCopy = Instantiate(character);
+                    characterCopy.name = character.name + " (BackupPose)";
+                    characterCopy.SetActive(false);
+                }
+                PoseCopy(character, pose);
             }
-            PoseCopy(character, pose);
         }
         GUI.enabled = true;
     }
