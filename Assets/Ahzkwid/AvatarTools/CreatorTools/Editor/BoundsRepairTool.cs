@@ -12,7 +12,7 @@ using UnityEditor;
 [InitializeOnLoad]
 class BoundsRepairTool : EditorWindow
 {
-    public GameObject root;
+    public GameObject[] roots;
     public Bounds bounds = new Bounds(Vector3.zero, Vector3.one*2);
     //public Object textureFolder;
     //public bool createBackup = true;
@@ -53,11 +53,11 @@ class BoundsRepairTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(bounds)));
             EditorGUILayout.Space();
-            if (root == null)
+            if (roots == null || roots.Length == 0) 
             {
                 allReady = false;
             }
@@ -76,7 +76,10 @@ class BoundsRepairTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("설정"))
         {
-            BoundsRepair(root, bounds);
+            foreach (var root in roots)
+            {
+                BoundsRepair(root, bounds);
+            }
             /*
             if (createBackup)
             {

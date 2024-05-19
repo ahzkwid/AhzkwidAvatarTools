@@ -525,7 +525,7 @@ class AvatarMergeTool : EditorWindow
             */
 
 
-            var characterRenderers = character.GetComponentsInChildren<SkinnedMeshRenderer>();
+            var characterRenderers = character.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             var rootBones = System.Array.ConvertAll(characterRenderers, x => x.rootBone);
             var shortPathIndex = -1;
             var shortPathMin = int.MaxValue;
@@ -592,8 +592,8 @@ class AvatarMergeTool : EditorWindow
 
         cloth.transform.parent = character.transform;
 
-        var characterRenderer = character.GetComponentInChildren<SkinnedMeshRenderer>();
-        var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>();
+        var characterRenderer = character.GetComponentInChildren<SkinnedMeshRenderer>(true);
+        var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 
 
         //var bones = (Transform[])characterRenderer.bones.Clone();
