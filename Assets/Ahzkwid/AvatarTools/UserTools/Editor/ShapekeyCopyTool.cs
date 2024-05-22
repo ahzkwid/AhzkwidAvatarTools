@@ -13,7 +13,7 @@ class ShapekeyCopyTool : EditorWindow
     public bool createBackup = true;
 
 
-    [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(ShapekeyCopyTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(ShapekeyCopyTool))]
     public static void Init()
     {
         var window = GetWindow<ShapekeyCopyTool>(utility: false, title: nameof(ShapekeyCopyTool));

@@ -18,7 +18,7 @@ class MaterialPathRepairTool : EditorWindow
     //public bool createBackup = true;
 
 
-    [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(MaterialPathRepairTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(MaterialPathRepairTool))]
     public static void Init()
     {
         var window = GetWindow<MaterialPathRepairTool>(utility: false, title: nameof(MaterialPathRepairTool));

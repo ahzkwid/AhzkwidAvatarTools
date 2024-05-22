@@ -13,7 +13,7 @@ class AvatarPoseCopyTool : EditorWindow
     public bool backupPose = true;
 
 
-    [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarPoseCopyTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarPoseCopyTool))]
     public static void Init()
     {
         var window = GetWindow<AvatarPoseCopyTool>(utility: false, title: nameof(AvatarPoseCopyTool));

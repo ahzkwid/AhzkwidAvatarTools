@@ -13,7 +13,7 @@ class PrefabPropertyCopyTool : EditorWindow
     public bool createBackup = true;
 
 
-    [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(PrefabPropertyCopyTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(PrefabPropertyCopyTool))]
     public static void Init()
     {
         var window = GetWindow<PrefabPropertyCopyTool>(utility: false, title: nameof(PrefabPropertyCopyTool));

@@ -70,7 +70,7 @@ class AvatarMergeTool : EditorWindow
     public bool createBackup = true;
 
 
-    [UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
     public static void Init()
     {
         var window = GetWindow<AvatarMergeTool>(false, nameof(AvatarMergeTool));
