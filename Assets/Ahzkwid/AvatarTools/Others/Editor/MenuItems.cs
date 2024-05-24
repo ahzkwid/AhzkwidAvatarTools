@@ -29,6 +29,18 @@ namespace Ahzkwid
             BoundsRepairTool.Init();
         }
 
+
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnchorOverrideTool))]
+        public static void AnchorOverrideToolInit()
+        {
+            AnchorOverrideTool.Init();
+        }
+
+
+        
+
+
+
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarMergeTool))]
         public static void AvatarMergeToolInit()
         {

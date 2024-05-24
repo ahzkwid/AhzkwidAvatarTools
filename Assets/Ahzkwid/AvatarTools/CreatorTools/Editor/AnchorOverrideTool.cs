@@ -10,29 +10,30 @@ using UnityEngine;
 using UnityEditor;
 
 [InitializeOnLoad]
-class BoundsRepairTool : EditorWindow
+class AnchorOverrideTool : EditorWindow
 {
     public GameObject[] roots;
-    public Bounds bounds = new Bounds(Vector3.zero, Vector3.one*2);
+    public Transform anchor = null;
     //public Object textureFolder;
     //public bool createBackup = true;
 
 
-    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(BoundsRepairTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnchorOverrideTool))]
     public static void Init()
     {
-        var window = GetWindow<BoundsRepairTool>(utility: false, title: nameof(BoundsRepairTool));
+        var window = GetWindow<AnchorOverrideTool>(utility: false, title: nameof(AnchorOverrideTool));
         window.minSize = new Vector2(300, 200);
         window.maxSize = window.minSize;
         window.Show();
     }
-    public void BoundsRepair(GameObject root, Bounds bounds)
+    public void SetAnchor(GameObject root, Transform anchor)
     {
         var renders=root.GetComponentsInChildren<SkinnedMeshRenderer>();
         foreach (var render in renders)
         {
-            render.localBounds = bounds;
+            render.probeAnchor = anchor;
             UnityEditor.EditorUtility.SetDirty(render);
+            Debug.Log($"{render.name}.probeAnchor={anchor.name}");
         }
     }
     SerializedObject serializedObject;
@@ -55,7 +56,7 @@ class BoundsRepairTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(bounds)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(anchor)));
             EditorGUILayout.Space();
             if (roots == null || roots.Length == 0) 
             {
@@ -78,17 +79,8 @@ class BoundsRepairTool : EditorWindow
         {
             foreach (var root in roots)
             {
-                BoundsRepair(root, bounds);
+                SetAnchor(root, anchor);
             }
-            /*
-            if (createBackup)
-            {
-                var characterCopy = Instantiate(character);
-                characterCopy.name = character.name+" (Backup)";
-                characterCopy.SetActive(false);
-            }
-            ShapekeyCopy(character, shapekey);
-            */
         }
         GUI.enabled = true;
     }

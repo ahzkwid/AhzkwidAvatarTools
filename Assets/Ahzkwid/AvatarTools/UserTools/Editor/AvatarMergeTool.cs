@@ -684,6 +684,9 @@ class AvatarMergeTool : EditorWindow
                 Debug.Log($"{clothRenderer}.bones.Length (After): {clothRenderer.bones.Length}");
                 clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone);
                 clothRenderer.probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
+
+
+                UnityEditor.EditorUtility.SetDirty(clothRenderer);
                 //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
             }
 
@@ -723,6 +726,8 @@ class AvatarMergeTool : EditorWindow
                 }
             }
         }
+
+
 
         Transform[] GetEqualBones(Transform[] targetBones, Transform[] sourceBones)
         {
