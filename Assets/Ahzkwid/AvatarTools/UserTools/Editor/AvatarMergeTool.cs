@@ -2,6 +2,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using static VRC.Dynamics.PhysBoneManager;
+
 
 
 
@@ -262,6 +264,44 @@ class AvatarMergeTool : EditorWindow
         */
     }
 
+
+    static string RelativePath(Transform target, Transform root = null)
+    {
+        var rootName = "";
+        var hierarchyPath = "";
+
+
+        if (root != null)
+        {
+            try
+            {
+                rootName = SearchUtils.GetHierarchyPath(root.gameObject, false);
+
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError(ex);
+                Debug.LogError(root.ToString() + "nothing root");
+                //Debug.LogError(bone.name + "는 root가 없음");
+                throw;
+            }
+        }
+        try
+        {
+            //hierarchyPath = bone.GetHierarchyPath();
+            hierarchyPath = SearchUtils.GetHierarchyPath(target.gameObject, false);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError(ex);
+            Debug.LogError(target.ToString() + "nothing GetHierarchyPath");
+            throw;
+        }
+
+        var startIndex = rootName.Length;
+
+        return hierarchyPath.Substring(startIndex, hierarchyPath.Length - startIndex);
+    }
     static string ArmaturePath(Transform bone, Transform rootBone = null)
     {
         var rootName = "";
@@ -683,7 +723,21 @@ class AvatarMergeTool : EditorWindow
                 //clothRenderer.bones = System.Array.FindAll(characterRenderer.bones,x=> System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
                 Debug.Log($"{clothRenderer}.bones.Length (After): {clothRenderer.bones.Length}");
                 clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone);
-                clothRenderer.probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
+                {
+                    Transform probeAnchor=null;
+                    //probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
+                    if (clothRenderer.probeAnchor != null)
+                    {
+                        //본이 아니면 일반 오브젝트경로
+                        if (probeAnchor == null)
+                        {
+                            var transforms = character.GetComponentsInChildren<Transform>();
+                            var equalBone = System.Array.Find(transforms, x => RelativePath(x, character.transform) == RelativePath(clothRenderer.probeAnchor,cloth.transform));
+                            probeAnchor = equalBone;
+                        }
+                    }
+                    clothRenderer.probeAnchor = probeAnchor;
+                }
 
 
                 UnityEditor.EditorUtility.SetDirty(clothRenderer);
@@ -717,15 +771,23 @@ class AvatarMergeTool : EditorWindow
                     var bone = GetEqualBone(bones, physBone.transform);
                     if (bone==null)
                     {
-                        return;
+                        continue;
                     }
                     var physBoneTarget = bone.GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>();
-                    physBoneTarget.colliders = physBone.colliders.ConvertAll(collider => GetEqualBone(bones, collider.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>() as VRC.Dynamics.VRCPhysBoneColliderBase);
 
+                    if (physBoneTarget==null)
+                    {
+                        continue;
+                    }
+                    {
+                        physBoneTarget.colliders = physBone.colliders.ConvertAll(collider => GetEqualBone(bones, collider.transform).GetComponent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBoneCollider>() as VRC.Dynamics.VRCPhysBoneColliderBase);
+
+                    }
                     //Debug.Log($"{physBoneTarget.name}.colliders: {physBoneTarget.colliders.Count}");
                 }
             }
         }
+
 
 
 
