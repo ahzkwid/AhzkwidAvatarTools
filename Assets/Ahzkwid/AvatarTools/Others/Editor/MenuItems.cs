@@ -35,9 +35,14 @@ namespace Ahzkwid
         {
             AnchorOverrideTool.Init();
         }
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(TexturesCompressionTool))]
+        public static void TexturesCompressionToolInit()
+        {
+            TexturesCompressionTool.Init();
+        }
 
 
-        
+
 
 
 
@@ -71,6 +76,8 @@ namespace Ahzkwid
         {
             PrefabPropertyCopyTool.Init();
         }
+
+        
     }
 #endif
 }
