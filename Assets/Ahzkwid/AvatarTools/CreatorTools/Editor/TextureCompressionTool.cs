@@ -52,6 +52,7 @@ class TexturesCompressionTool : EditorWindow
         var filePathTextures = AssetDatabase.FindAssets($"t:{typeof(Texture2D).Name}", new string[] { folderPath });
         filePathTextures = System.Array.ConvertAll(filePathTextures, x => AssetDatabase.GUIDToAssetPath(x));
         var textureImporters = System.Array.ConvertAll(filePathTextures, x => AssetImporter.GetAtPath(x) as TextureImporter);
+        var textureTypes = System.Array.ConvertAll(textureImporters, x => x.textureType);
         var isReadables = System.Array.ConvertAll(textureImporters, x => x.isReadable);
         var textureSettings = System.Array.ConvertAll(textureImporters, x => {
 
@@ -72,7 +73,8 @@ class TexturesCompressionTool : EditorWindow
                 compressionQuality = from.compressionQuality,
                 allowsAlphaSplitting = from.allowsAlphaSplitting,
                 overridden = from.overridden,
-                textureCompression = from.textureCompression
+                textureCompression = from.textureCompression,
+                crunchedCompression = from.crunchedCompression
             };
 
 
@@ -82,6 +84,7 @@ class TexturesCompressionTool : EditorWindow
         for (int i = 0; i < filePathTextures.Length; i++)
         {
             var textureImporter = textureImporters[i];
+            textureImporter.textureType = TextureImporterType.Default;
             textureImporter.isReadable = true;
             textureImporter.SetPlatformTextureSettings(new TextureImporterPlatformSettings
             {
@@ -118,6 +121,8 @@ class TexturesCompressionTool : EditorWindow
 
                 var isReadable = isReadables[i];
                 var textureSetting = textureSettings[i];
+                var textureType = textureTypes[i];
+                textureImporter.textureType = textureType;
                 textureImporter.isReadable = isReadable;
                 textureImporter.SetPlatformTextureSettings(textureSetting);
 

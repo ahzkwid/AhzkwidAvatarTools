@@ -105,6 +105,9 @@ class MaterialPathRepairTool : EditorWindow
                 }
 
 
+
+
+                path = AssetDatabase.GetAssetPath(property.textureValue);
                 foreach (var removefolderPath in removefolderPaths)
                 {
                     if (path.Length >= removefolderPath.Length)
@@ -117,7 +120,10 @@ class MaterialPathRepairTool : EditorWindow
                         }
                     }
                 }
-
+                if (property.textureValue==null)
+                {
+                    continue;
+                }
 
                 if (textureIndex < 0)
                 {
@@ -139,8 +145,6 @@ class MaterialPathRepairTool : EditorWindow
 
 
         var allReady = true;
-
-
 
 
         serializedObject.Update();

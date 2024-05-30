@@ -35,6 +35,8 @@ namespace Ahzkwid
         {
             AnchorOverrideTool.Init();
         }
+
+
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(TexturesCompressionTool))]
         public static void TexturesCompressionToolInit()
         {
@@ -42,8 +44,25 @@ namespace Ahzkwid
         }
 
 
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AssetsReplaceTool))]
+        public static void AssetsReplaceToolInit()
+        {
+            AssetsReplaceTool.Init();
+        }
 
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialsTool))]
+        public static void InsertMaterialsToolInit()
+        {
+            InsertMaterialsTool.Init();
+        }
 
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(NamesReplaceTool))]
+        public static void NamesReplaceToolInit()
+        {
+            NamesReplaceTool.Init();
+        }
+
+        
 
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarMergeTool))]
