@@ -12,10 +12,17 @@ using UnityEditor;
 [InitializeOnLoad]
 class InsertMaterialsTool : EditorWindow
 {
+    public enum MaterialSelectMode
+    {
+        Materials, MaterialFolder
+    }
+    public MaterialSelectMode materialSelectMode;
+    public Object materialFolder;
     public Material[] materials;
     public GameObject root;
 
 
+    public bool repairMode=false;
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialTool))]
     public static void Init()
     {
@@ -24,11 +31,30 @@ class InsertMaterialsTool : EditorWindow
         //window.maxSize = window.minSize;
         window.Show();
     }
+    static Material[] GetFolderToMaterials(Object folder)
+    {
+        var folderPath = AssetDatabase.GetAssetPath(folder);
+        var filePaths = AssetDatabase.FindAssets($"t:{typeof(Material).Name}", new string[] { folderPath });
+        var assets = new Material[filePaths.Length];
+        for (int i = 0; i < assets.Length; i++)
+        {
+            assets[i] = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(filePaths[i]));
+        }
+        return assets;
+    }
     public void InsertMaterials(GameObject root, Material[] materials)
     {
         var renders=root.GetComponentsInChildren<Renderer>();
         foreach (var render in renders)
         {
+            if (repairMode)
+            {
+                if (PrefabUtility.IsPartOfPrefabInstance(render))
+                {
+                    var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(render);
+                    render.sharedMaterials = originalPrefab.sharedMaterials;
+                }
+            }
             var sharedMaterials = render.sharedMaterials;
             for (int i = 0; i < sharedMaterials.Length; i++)
             {
@@ -39,6 +65,8 @@ class InsertMaterialsTool : EditorWindow
                 }
             }
             render.sharedMaterials = sharedMaterials;
+
+            UnityEditor.EditorUtility.SetDirty(render);
         }
     }
     SerializedObject serializedObject;
@@ -59,15 +87,29 @@ class InsertMaterialsTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materials)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialSelectMode)));
             EditorGUILayout.Space();
-            if (materials == null)
+            if (materialSelectMode == MaterialSelectMode.Materials)
             {
-                allReady = false;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materials)));
+                if (materials == null)
+                {
+                    allReady = false;
+                }
             }
+            else
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolder)));
+                if (materialFolder == null)
+                {
+                    allReady = false;
+                }
+            }
+            EditorGUILayout.Space();
             GUI.enabled = allReady;
             if (GUILayout.Button("ResetMaterials"))
             {
+                materialFolder = null;
                 materials = null;
             }
             GUI.enabled = true;
@@ -75,6 +117,10 @@ class InsertMaterialsTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
             EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(repairMode)));
+            EditorGUILayout.Space();
+            
             if (root == null)
             {
                 allReady = false;
@@ -94,7 +140,14 @@ class InsertMaterialsTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Insert"))
         {
-            InsertMaterials(root, materials);
+            if (materialSelectMode==MaterialSelectMode.MaterialFolder)
+            {
+                materials = GetFolderToMaterials(materialFolder);
+            }
+            if ((materials != null)&& (materials.Length > 0))
+            {
+                InsertMaterials(root, materials);
+            }
         }
         GUI.enabled = true;
     }
