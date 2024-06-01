@@ -63,13 +63,18 @@ class AvatarMergeTool : EditorWindow
 
 
 
-
+    public enum MergeType
+    {
+        Default
+        , ForceMerge
+    }
 
 
     public GameObject character;
     //public GameObject cloth;
     public GameObject[] cloths = new GameObject[] { null };
     public bool createBackup = true;
+    public MergeType mergeType = MergeType.Default;
 
 
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
@@ -186,6 +191,8 @@ class AvatarMergeTool : EditorWindow
             DrawArray(nameof(cloths));
             EditorGUILayout.Space();
             EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeType)));
+            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createBackup)));
         }
         serializedObject.ApplyModifiedProperties();
@@ -235,14 +242,15 @@ class AvatarMergeTool : EditorWindow
                     */
                     var characterCopy = InstantiatePrefab(character);
                     characterCopy.transform.name += " (Clone)";
-                    character.SetActive(false);
+                    //character.SetActive(false);
                     characterCopy.SetActive(true);
                     foreach (var cloth in cloths)
                     {
                         var clothCopy = InstantiatePrefab(cloth);
                         cloth.SetActive(false);
                         clothCopy.SetActive(true);
-                        Merge(characterCopy, clothCopy);
+                        //Merge(characterCopy, clothCopy, mergeType);
+                        Merge(character, cloth, mergeType);
                     }
                 }
                 else
@@ -250,7 +258,7 @@ class AvatarMergeTool : EditorWindow
                     //Merge(character, cloth);
                     foreach (var cloth in cloths)
                     {
-                        Merge(character, cloth);
+                        Merge(character, cloth, mergeType);
                     }
                 }
             }
@@ -549,7 +557,129 @@ class AvatarMergeTool : EditorWindow
 
     }
     */
-    public static void Merge(GameObject character, GameObject cloth)
+    public static void Merge(GameObject character, GameObject cloth, MergeType mergeType=MergeType.Default)
+    {
+
+        switch (mergeType)
+        {
+            case MergeType.ForceMerge:
+                var characterCopy = Instantiate(character);
+                characterCopy.SetActive(true);
+                character.SetActive(false);
+                //cloth.SetActive(true);
+                var clothCopy = Instantiate(cloth);
+                clothCopy.SetActive(true);
+                cloth.SetActive(false);
+                ForceMerge(characterCopy, clothCopy);
+                break;
+            case MergeType.Default:
+            default:
+                MergeDefault(character, cloth);
+                break;
+        }
+    }
+    public static void ForceMerge(GameObject character, GameObject cloth)
+    {
+        //var characterAnimator = character.GetComponentInChildren<Animator>(true);
+        //var clothAnimator = character.GetComponentInChildren<Animator>(true);
+        var characterAnimator = character.GetComponent<Animator>();
+        var clothAnimator = cloth.GetComponent<Animator>();
+
+
+        {
+            var characterHeghit = 1f;
+            var clothHeghit = 1f;
+            var characterPos = Vector3.zero;
+            var clothPos = Vector3.zero;
+            {
+                var animator = characterAnimator;
+                var leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                var rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                var leftUpperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                var rightUpperArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+
+                var upper = (leftUpperArm.transform.position + rightUpperArm.transform.position) / 2;
+                var lower = (leftFoot.transform.position + rightFoot.transform.position) / 2;
+
+                characterPos = lower;
+                characterHeghit = upper.y - lower.y;
+            }
+
+            {
+                var animator = clothAnimator;
+                var leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                var rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot);
+                var leftUpperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                var rightUpperArm = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+
+
+                var upper = (leftUpperArm.transform.position + rightUpperArm.transform.position) / 2;
+                var lower = (leftFoot.transform.position + rightFoot.transform.position) / 2;
+
+                clothPos = lower;
+                clothHeghit = upper.y - lower.y;
+            }
+
+            if (clothHeghit<=0)
+            {
+                return;
+            }
+
+
+            var ratio = characterHeghit / clothHeghit;
+            Debug.Log($"characterHeghit: {characterHeghit}, clothHeghit: {clothHeghit}, ratio: {ratio}");
+            cloth.transform.localScale *= ratio;
+            cloth.transform.position += characterPos - clothPos;
+            {
+                var leftFootCloth = clothAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                var rightFootCloth = clothAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
+                var leftFootCharacter = characterAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
+                var rightFootCharacter = characterAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
+                leftFootCloth.position = leftFootCharacter.position;
+                rightFootCloth.position = rightFootCharacter.position;
+
+            }
+        }
+        foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+        {
+
+            if (humanBodyBone < 0)
+            {
+                continue;
+            }
+            if (humanBodyBone >= HumanBodyBones.LastBone)
+            {
+                continue;
+            }
+            Transform characterTransform;
+            try
+            {
+                characterTransform = characterAnimator.GetBoneTransform(humanBodyBone);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError(ex);
+                Debug.LogError(humanBodyBone);
+                throw;
+            }
+            var clothTransform = clothAnimator.GetBoneTransform(humanBodyBone);
+            //characterTransform.localPosition = poseTransform.localPosition;
+            if (characterTransform == null)
+            {
+                continue;
+            }
+            if (clothTransform == null)
+            {
+                continue;
+            }
+            //characterTransform.localRotation = clothTransform.localRotation;
+            clothTransform.parent= characterTransform;
+        }
+
+
+        cloth.transform.parent = character.transform;
+    }
+    public static void MergeDefault(GameObject character, GameObject cloth)
     {
 
         Transform GetRootBone(GameObject gameObject)
@@ -606,10 +736,34 @@ class AvatarMergeTool : EditorWindow
             return null;
         }
 
+
+
+
+
+
+
+
+
+
+
         if (cloth == null)
         {
             Debug.LogError("cloth==null");
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         {
             //var armatureNames = new string[] { "Armature", "armature" };
             //{
@@ -699,9 +853,37 @@ class AvatarMergeTool : EditorWindow
 
             //return;
             //targetRenderer.sharedMesh = originalRenderer.sharedMesh;
+
+
+
+
+
+            /*
+            var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(cloth);
+            var originalPrefabRenderers = originalPrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
+
             foreach (var clothRenderer in clothRenderers)
             {
+                var originalPrefabRender = System.Array.Find(originalPrefabRenderers, x => x.sharedMesh == clothRenderer.sharedMesh);
+                clothRenderer.bones = originalPrefabRender.bones;
+            }
+            Debug.LogWarning("Repair");
+            */
+
+
+            foreach (var clothRenderer in clothRenderers)
+            {
+                if (PrefabUtility.IsPartOfPrefabInstance(clothRenderer))
+                {
+                    //PrefabUtility.RevertObjectOverride(clothRenderer, InteractionMode.UserAction);
+                    var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
+                    clothRenderer.bones = originalPrefab.bones;
+                }
+
+
                 Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}");
+
+
                 /*
                 //var bonesFilters= System.Array.FindAll(bones, x => System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
                 var boneList = new List<Transform>();
