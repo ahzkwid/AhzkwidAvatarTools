@@ -62,7 +62,12 @@ namespace Ahzkwid
             NamesReplaceTool.Init();
         }
 
-        
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationRepairTool))]
+        public static void AnimationRepairToolInit()
+        {
+            AnimationRepairTool.Init();
+        }
+
 
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarMergeTool))]
