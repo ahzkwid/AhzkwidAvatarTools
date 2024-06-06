@@ -1,10 +1,4 @@
 ﻿
-using UnityEngine;
-using System.Collections.Generic;
-using System.Collections;
-using UnityEngine.TextCore.Text;
-
-
 
 
 
@@ -13,6 +7,14 @@ using UnityEngine.TextCore.Text;
 
 
 #if UNITY_EDITOR
+
+
+using UnityEngine;
+using System.Collections.Generic;
+using System.Collections;
+
+
+
 using UnityEditor;
 using UnityEditor.Search;
 using UnityEditorInternal;
