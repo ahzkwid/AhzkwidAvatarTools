@@ -112,6 +112,7 @@ namespace Ahzkwid
                             if (baseAnimationLayer.type == animLayerType)
                             {
                                 avatarDescriptor.customizeAnimationLayers = true;
+                                avatarDescriptor.baseAnimationLayers[i].isDefault = false;
                                 avatarDescriptor.baseAnimationLayers[i].animatorController = (RuntimeAnimatorController)value;
                             }
                         }

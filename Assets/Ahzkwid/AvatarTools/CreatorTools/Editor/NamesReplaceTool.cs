@@ -41,11 +41,17 @@ class NamesReplaceTool : EditorWindow
             {
                 name=name.Replace(keyValuePair.key, keyValuePair.value);
             }
-            //gameObject.name= name;
-
+            //
 
             var assetPath = AssetDatabase.GetAssetPath(gameObject);
-            AssetDatabase.RenameAsset(assetPath, name);
+            if (string.IsNullOrWhiteSpace(assetPath))
+            {
+                gameObject.name = name;
+            }
+            else
+            {
+                AssetDatabase.RenameAsset(assetPath, name);
+            }
 
 
         }
@@ -70,13 +76,20 @@ class NamesReplaceTool : EditorWindow
 
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(gameObjects)));
-            EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(keyValuePairs)));
-            EditorGUILayout.Space();
-            if (keyValuePairs == null || keyValuePairs.Length == 0) 
+            if (keyValuePairs == null || keyValuePairs.Length == 0)
             {
                 allReady = false;
             }
+            GUI.enabled = allReady;
+            if (GUILayout.Button("Reset GameObjects"))
+            {
+                gameObjects = null;
+            }
+            GUI.enabled = true;
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(keyValuePairs)));
+            EditorGUILayout.Space();
             //if (textureFolder == null)
             {
                 //allReady = false;

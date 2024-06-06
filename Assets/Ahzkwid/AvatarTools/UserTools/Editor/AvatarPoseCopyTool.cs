@@ -48,16 +48,19 @@ class AvatarPoseCopyTool : EditorWindow
             }
             else
             {
-                var animator = characters[0].GetComponent<Animator>();
-                if (animator == null)
+                if (characters[0]!=null)
                 {
-                    EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Error);
-                    allReady = false;
-                }
-                else if (animator.isHuman == false)
-                {
-                    EditorGUILayout.HelpBox("This character is not a humanoid", MessageType.Error);
-                    allReady = false;
+                    var animator = characters[0].GetComponent<Animator>();
+                    if (animator == null)
+                    {
+                        EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Error);
+                        allReady = false;
+                    }
+                    else if (animator.isHuman == false)
+                    {
+                        EditorGUILayout.HelpBox("This character is not a humanoid", MessageType.Error);
+                        allReady = false;
+                    }
                 }
             }
             if (pose == null)

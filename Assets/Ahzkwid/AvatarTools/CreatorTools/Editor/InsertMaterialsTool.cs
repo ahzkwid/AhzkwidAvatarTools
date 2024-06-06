@@ -23,6 +23,7 @@ class InsertMaterialsTool : EditorWindow
 
 
     public bool repairMode=false;
+    public bool nameMerge = false;
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialTool))]
     public static void Init()
     {
@@ -96,6 +97,15 @@ class InsertMaterialsTool : EditorWindow
                 {
                     allReady = false;
                 }
+
+                EditorGUILayout.Space();
+                GUI.enabled = allReady;
+                if (GUILayout.Button("ResetMaterials"))
+                {
+                    materialFolder = null;
+                    materials = null;
+                }
+                GUI.enabled = true;
             }
             else
             {
@@ -106,21 +116,17 @@ class InsertMaterialsTool : EditorWindow
                 }
             }
             EditorGUILayout.Space();
-            GUI.enabled = allReady;
-            if (GUILayout.Button("ResetMaterials"))
-            {
-                materialFolder = null;
-                materials = null;
-            }
-            GUI.enabled = true;
-            EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(repairMode)));
+            if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(nameMerge)));
+            }
             EditorGUILayout.Space();
-            
+
             if (root == null)
             {
                 allReady = false;
@@ -143,6 +149,10 @@ class InsertMaterialsTool : EditorWindow
             if (materialSelectMode==MaterialSelectMode.MaterialFolder)
             {
                 materials = GetFolderToMaterials(materialFolder);
+                if (nameMerge)
+                {
+                    root.name += $" {materialFolder.name}";
+                }
             }
             if ((materials != null)&& (materials.Length > 0))
             {

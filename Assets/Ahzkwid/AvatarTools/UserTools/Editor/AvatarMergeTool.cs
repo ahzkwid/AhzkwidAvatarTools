@@ -2,6 +2,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using UnityEngine.TextCore.Text;
+
 
 
 
@@ -69,10 +71,11 @@ class AvatarMergeTool : EditorWindow
     }
 
 
-    public GameObject character;
+    public GameObject[] characters;
     //public GameObject cloth;
     public GameObject[] cloths = new GameObject[] { null };
     public bool createBackup = true;
+    public bool nameMerge = false;
     public MergeType mergeType = MergeType.Default;
 
 
@@ -183,7 +186,7 @@ class AvatarMergeTool : EditorWindow
         {
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(character)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
             EditorGUILayout.Space();
             //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(cloth)));
             //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(cloths)));
@@ -193,9 +196,14 @@ class AvatarMergeTool : EditorWindow
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeType)));
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createBackup)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(nameMerge)));
         }
         serializedObject.ApplyModifiedProperties();
-        if (character == null)
+        if (characters==null)
+        {
+            allReady = false;
+        }
+        else if (System.Array.FindAll(characters, x => x != null).Length == 0)
         {
             allReady = false;
         }
@@ -211,53 +219,67 @@ class AvatarMergeTool : EditorWindow
         {
             if (GUILayout.Button("Merge"))
             {
-                if (createBackup)
+                for (int i = 0; i < cloths.Length; i++)
                 {
-                    /*
-                    var characterCopy = PrefabUtility.InstantiatePrefab(character, character.transform.parent) as GameObject;
-                    if (characterCopy == null)
+                    var cloth = cloths[i];
+                    var character = characters[i % characters.Length];
+                    if (nameMerge)
                     {
-                        var target = character;
-                        //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target);
-                        var source = PrefabUtility.GetCorrespondingObjectFromSource(target);
-                        characterCopy = PrefabUtility.InstantiatePrefab(source, target.transform.parent) as GameObject;
-                    }
-                    if (characterCopy == null)
-                    {
-                        characterCopy = Instantiate(character);
-                    }
-                    var clothCopy = PrefabUtility.InstantiatePrefab(cloth, cloth.transform.parent) as GameObject;
-                    if (clothCopy == null)
-                    {
-                        var target = cloth;
-                        //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target);
-                        var source = PrefabUtility.GetCorrespondingObjectFromSource(target);
-                        characterCopy = PrefabUtility.InstantiatePrefab(source, target.transform.parent) as GameObject;
-                    }
-                    if (clothCopy == null)
-                    {
-                        clothCopy = Instantiate(cloth);
-                    }
-                    */
-                    var characterCopy = InstantiatePrefab(character);
-                    characterCopy.transform.name += " (Clone)";
-                    //character.SetActive(false);
-                    characterCopy.SetActive(true);
-                    foreach (var cloth in cloths)
-                    {
-                        var clothCopy = InstantiatePrefab(cloth);
-                        cloth.SetActive(false);
-                        clothCopy.SetActive(true);
-                        //Merge(characterCopy, clothCopy, mergeType);
-                        Merge(character, cloth, mergeType);
+                        character.transform.name += $" {cloth.transform.name}";
                     }
                 }
-                else
+                for (int i = 0; i < cloths.Length; i++)
                 {
-                    //Merge(character, cloth);
-                    foreach (var cloth in cloths)
+                    var cloth = cloths[i];
+                    var character = characters[i% characters.Length];
+                    if (createBackup)
                     {
-                        Merge(character, cloth, mergeType);
+                        /*
+                        var characterCopy = PrefabUtility.InstantiatePrefab(character, character.transform.parent) as GameObject;
+                        if (characterCopy == null)
+                        {
+                            var target = character;
+                            //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target);
+                            var source = PrefabUtility.GetCorrespondingObjectFromSource(target);
+                            characterCopy = PrefabUtility.InstantiatePrefab(source, target.transform.parent) as GameObject;
+                        }
+                        if (characterCopy == null)
+                        {
+                            characterCopy = Instantiate(character);
+                        }
+                        var clothCopy = PrefabUtility.InstantiatePrefab(cloth, cloth.transform.parent) as GameObject;
+                        if (clothCopy == null)
+                        {
+                            var target = cloth;
+                            //var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(target);
+                            var source = PrefabUtility.GetCorrespondingObjectFromSource(target);
+                            characterCopy = PrefabUtility.InstantiatePrefab(source, target.transform.parent) as GameObject;
+                        }
+                        if (clothCopy == null)
+                        {
+                            clothCopy = Instantiate(cloth);
+                        }
+                        */
+                        var characterCopy = InstantiatePrefab(character);
+                        characterCopy.transform.name += " (Clone)";
+                        //character.SetActive(false);
+                        characterCopy.SetActive(true);
+                        //foreach (var cloth in cloths)
+                        {
+                            var clothCopy = InstantiatePrefab(cloth);
+                            cloth.SetActive(false);
+                            clothCopy.SetActive(true);
+                            //Merge(characterCopy, clothCopy, mergeType);
+                            Merge(character, cloth, mergeType);
+                        }
+                    }
+                    else
+                    {
+                        //Merge(character, cloth);
+                        //foreach (var cloth in cloths)
+                        {
+                            Merge(character, cloth, mergeType);
+                        }
                     }
                 }
             }
@@ -307,7 +329,16 @@ class AvatarMergeTool : EditorWindow
 
         var startIndex = rootName.Length;
 
-        return hierarchyPath.Substring(startIndex, hierarchyPath.Length - startIndex);
+        try
+        {
+            return hierarchyPath.Substring(startIndex, hierarchyPath.Length - startIndex);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError(ex);
+            Debug.LogError($"{hierarchyPath} - {rootName}");
+            throw;
+        }
     }
     static string ArmaturePath(Transform bone, Transform rootBone = null)
     {
