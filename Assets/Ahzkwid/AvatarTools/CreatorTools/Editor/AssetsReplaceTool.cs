@@ -15,7 +15,7 @@ class AssetsReplaceTool : EditorWindow
 {
     public Object fromFolder;
     public Object toFolder;
-    public string[] excludeExtensions=new string[] { ".meta", ".asmdef" };
+    public string[] ignores= new string[] { ".meta", ".asmdef" };
 
     public enum Option
     {
@@ -129,7 +129,7 @@ class AssetsReplaceTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toFolder)));
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(excludeExtensions)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(ignores)));
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(option)));
             EditorGUILayout.Space();
@@ -151,7 +151,7 @@ class AssetsReplaceTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Run"))
         {
-            ReplaceFiles(fromFolder, toFolder, excludeExtensions, option);
+            ReplaceFiles(fromFolder, toFolder, ignores, option);
         }
         GUI.enabled = true;
     }

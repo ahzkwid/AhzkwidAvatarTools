@@ -11,7 +11,6 @@
 
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
 
 
 
@@ -19,6 +18,7 @@ using UnityEditor;
 using UnityEditor.Search;
 using UnityEditorInternal;
 using System.Linq;
+using System.Collections;
 
 [InitializeOnLoad]
 class AvatarMergeTool : EditorWindow
@@ -291,7 +291,8 @@ class AvatarMergeTool : EditorWindow
 
             if (mergeType != MergeType.ForceMerge)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createBackup)));
+                createBackup = false;
+                //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createBackup)));
             }
             else
             {
@@ -322,13 +323,99 @@ class AvatarMergeTool : EditorWindow
         {
             allReady = false;
         }
+
+        /*
+        if (GUILayout.Button("Test"))
+        {
+            var cloth = cloths.FirstOrDefault();
+
+            bool IsArrayCustom(System.Type type)
+            {
+                return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
+            }
+            var components = cloth.GetComponentsInChildren<Component>(true);
+            foreach (var component in components)
+            {
+                if (component == null)
+                {
+                    continue;
+                }
+                if (component is Transform)
+                {
+                    continue;
+                }
+                //Debug.Log($"{component.GetType()} {component.name}");
+                foreach (var field in component.GetType().GetFields())
+                {
+
+                    var value = field.GetValue(component);
+                    if (value == null)
+                    {
+                        continue;
+                    }
+                    if (value.Equals(null))
+                    {
+                        continue;
+                    }
+                    if (IsArrayCustom(field.FieldType))
+                    {
+                        var ilist = (System.Collections.IList)value;
+                        for (int i = 0; i < ilist.Count; i++)
+                        {
+                            var item = ilist[i];
+                            var transform = item as Transform;
+                            if (transform == null)
+                            {
+                                var property = item.GetType().GetProperty("transform");
+                                if (property == null)
+                                {
+                                    continue;
+                                }
+                                transform = property.GetValue(item) as Transform;
+                            }
+                            if (transform == null)
+                            {
+                                continue;
+                            }
+                            Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{transform}");
+                            Debug.Log($"GetComponent:{transform.GetComponent(item.GetType())}");
+                            var equalTransform = EqualTransform(transform, transform, transform);
+                            Debug.Log($"{ilist[i]}:{transform.GetComponent(item.GetType())}");
+                            ilist[i] = equalTransform.GetComponent(item.GetType());
+                        }
+                        field.SetValue(component, ilist);
+
+                    }
+                    else
+                    {
+                        if (field.FieldType == typeof(Transform))
+                        {
+                            var transform = value as Transform;
+                            var equalTransform = EqualTransform(transform, transform, transform);
+                            field.SetValue(component, equalTransform);
+                            Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
+                            continue;
+                        }
+                    }
+                    //Debug.Log($"{component.name}.{field.Name}");
+                }
+            }
+            
+        }
+    
+        */
+
+
         GUI.enabled = allReady;
         {
-            if (GUILayout.Button("Fit"))
+            if (mergeType == MergeType.ForceMerge)
             {
-                for (int i = 0; i < 4; i++)
+                if (GUILayout.Button("Fit"))
                 {
-                    Fit(characters.FirstOrDefault(), cloths.FirstOrDefault());
+                    for (int i = 0; i < 4; i++)
+                    {
+                        Fit(characters.FirstOrDefault(), cloths.FirstOrDefault());
+                    }
                 }
             }
             EditorGUILayout.Space();
@@ -426,6 +513,12 @@ class AvatarMergeTool : EditorWindow
         */
     }
 
+    static Transform EqualTransform(Transform target, Transform from, Transform to)
+    {
+        var fromPath = RelativePath(target, from);
+        var transforms = to.GetComponentsInChildren<Transform>(true);
+        return System.Array.Find(transforms, x => RelativePath(x, to) == fromPath);
+    }
     static string RelativePath(Transform target, Transform root = null)
     {
         var rootName = "";
@@ -460,6 +553,20 @@ class AvatarMergeTool : EditorWindow
         }
 
         var startIndex = rootName.Length;
+
+        if (rootName.Length > hierarchyPath.Length)
+        {
+            Debug.LogWarning("rootName.Length > hierarchyPath.Length");
+            Debug.LogWarning($"{rootName} > {hierarchyPath}");
+            return null;
+        }
+
+        if (hierarchyPath.Substring(0, rootName.Length) != rootName)
+        {
+            Debug.LogWarning("hierarchyPath.Substring(0, rootName.Length) != rootName");
+            Debug.LogWarning($"{rootName} != {hierarchyPath}.Substring(0, rootName.Length)");
+            return null;
+        }
 
         try
         {
@@ -1650,7 +1757,7 @@ class AvatarMergeTool : EditorWindow
             }
             else
             {
-                NameSearch(root.GetComponentsInChildren<Transform>());
+                NameSearch(root.GetComponentsInChildren<Transform>(true));
             }
 
             /*
@@ -1937,7 +2044,19 @@ class AvatarMergeTool : EditorWindow
                         if (probeAnchor == null)
                         {
                             var transforms = character.GetComponentsInChildren<Transform>();
-                            var equalBone = System.Array.Find(transforms, x => RelativePath(x, character.transform) == RelativePath(clothRenderer.probeAnchor,cloth.transform));
+                            var relativePath=RelativePath(clothRenderer.probeAnchor, cloth.transform);
+                            if (relativePath == null)
+                            {
+                                continue;
+                            }
+                            var equalBone = System.Array.Find(transforms, x => {
+                                var characterRelativePath = RelativePath(x, character.transform);
+                                if (characterRelativePath==null)
+                                {
+                                    return false;
+                                }
+                                return characterRelativePath == relativePath;
+                                });
                             probeAnchor = equalBone;
                         }
                     }
@@ -1949,6 +2068,161 @@ class AvatarMergeTool : EditorWindow
                 //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
             }
 
+
+            {
+                var characterComponents = character.GetComponentsInChildren<Component>(true);
+                var clothComponents = cloth.GetComponentsInChildren<Component>(true);
+                //var clothRelativePaths = System.Array.ConvertAll(clothComponents, component => RelativePath(component.transform,cloth.transform));
+                //var characterRelativePaths = System.Array.ConvertAll(characterComponents, component => RelativePath(component.transform, character.transform));
+                //characterComponents = System.Array.FindAll(characterComponents, x => System.Array.FindIndex(clothRelativePaths, relativePath => RelativePath(x.transform, character.transform) == relativePath) >= 0);
+                //clothComponents = System.Array.FindAll(clothComponents, x => System.Array.FindIndex(clothRelativePaths, relativePath => RelativePath(x.transform, cloth.transform) == relativePath) >= 0);
+
+                foreach (var component in clothComponents)
+                {
+                    if (component == null)
+                    {
+                        continue;
+                    }
+                    if (component is Transform)
+                    {
+                        continue;
+                    }
+                    var relativePath = RelativePath(component.transform, cloth.transform);
+
+                    if (relativePath==null)
+                    {
+                        continue;
+                    }
+
+
+                    var equalTypeComponents = System.Array.FindAll(characterComponents, x => x.GetType() == component.GetType());
+                    if (System.Array.FindIndex(equalTypeComponents, x => {
+                        var characterRelativePath = RelativePath(x.transform, character.transform);
+                        if (characterRelativePath==null)
+                        {
+                            return false;
+                        }
+                        return relativePath == characterRelativePath;
+                        }) >= 0)
+                    {
+                        continue;
+                    }
+
+                    var equalTransform = EqualTransform(component.transform, cloth.transform, character.transform);
+
+                    if (equalTransform == null)
+                    {
+                        continue;
+                    }
+                    var newComponent=equalTransform.gameObject.AddComponent(component.GetType());
+
+
+                    foreach (var field in component.GetType().GetFields())
+                    {
+                        var value = field.GetValue(component);
+                        field.SetValue(newComponent, value);
+                    }
+
+                }
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {
+                bool IsArrayCustom(System.Type type)
+                {
+                    return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
+                }
+                var components = cloth.GetComponentsInChildren<Component>(true);
+                foreach (var component in components)
+                {
+                    if (component == null)
+                    {
+                        continue;
+                    }
+                    if (component is Transform)
+                    {
+                        continue;
+                    }
+                    //Debug.Log($"{component.GetType()} {component.name}");
+                    foreach (var field in component.GetType().GetFields())
+                    {
+
+                        var value = field.GetValue(component);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+                        if (value.Equals(null))
+                        {
+                            continue;
+                        }
+                        if (IsArrayCustom(field.FieldType))
+                        {
+                            var ilist = (System.Collections.IList)value;
+                            for (int i = 0; i < ilist.Count; i++)
+                            {
+                                var item = ilist[i];
+                                var transform = item as Transform;
+                                if (transform == null)
+                                {
+                                    var property = item.GetType().GetProperty("transform");
+                                    if (property == null)
+                                    {
+                                        continue;
+                                    }
+                                    transform = property.GetValue(item) as Transform;
+                                }
+                                if (transform == null)
+                                {
+                                    continue;
+                                }
+                                Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{transform}");
+                                Debug.Log($"GetComponent:{transform.GetComponent(item.GetType())}");
+                                var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                                Debug.Log($"{ilist[i]}:{transform.GetComponent(item.GetType())}");
+                                ilist[i] = equalTransform.GetComponent(item.GetType());
+                            }
+                            field.SetValue(component, ilist);
+
+                        }
+                        else
+                        {
+                            if (field.FieldType == typeof(Transform))
+                            {
+                                var transform = value as Transform;
+                                var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                                field.SetValue(component, equalTransform);
+                                Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
+                                continue;
+                            }
+                        }
+                        //Debug.Log($"{component.name}.{field.Name}");
+                    }
+                }
+
+
+
+
+            }
+            /*
             {
                 //Debug.Log($"physBones convert");
 
@@ -1991,6 +2265,7 @@ class AvatarMergeTool : EditorWindow
                     //Debug.Log($"{physBoneTarget.name}.colliders: {physBoneTarget.colliders.Count}");
                 }
             }
+            */
         }
 
 
