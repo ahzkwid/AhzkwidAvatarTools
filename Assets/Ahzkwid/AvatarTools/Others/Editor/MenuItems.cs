@@ -44,10 +44,10 @@ namespace Ahzkwid
         }
 
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AssetsReplaceTool))]
-        public static void AssetsReplaceToolInit()
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AssetsCloningTool))]
+        public static void AssetsCloningToolInit()
         {
-            AssetsReplaceTool.Init();
+            AssetsCloningTool.Init();
         }
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialsTool))]

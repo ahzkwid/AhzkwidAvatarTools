@@ -279,8 +279,32 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
                         var fieldRect = rect;
                         fieldRect.height = EditorGUIUtility.singleLineHeight;
-                        EditorGUI.PropertyField(fieldRect, elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)));
-
+                    //EditorGUI.PropertyField(fieldRect, elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)));
+                    {
+                        var property = elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh));
+                        Object fieldReturn = null;
+                        EditorGUI.BeginChangeCheck();
+                        {
+                            fieldReturn = EditorGUI.ObjectField(fieldRect,"Mesh",property.objectReferenceValue, typeof(Object), true);
+                        }
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            if (fieldReturn is GameObject)
+                            {
+                                var gameObject = fieldReturn as GameObject;
+                                var renderer = gameObject.GetComponent<SkinnedMeshRenderer>();
+                                if (renderer != null)
+                                {
+                                    fieldReturn = renderer.sharedMesh;
+                                }
+                            }
+                            if ((fieldReturn is Mesh) == false)
+                            {
+                                fieldReturn = null;
+                            }
+                            property.objectReferenceValue = fieldReturn;
+                        }
+                    }
                     var mesh = elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)).objectReferenceValue as Mesh;
                     var blendshapeValues = blendshapeAutoSetter.blendshapeTargets[index].blendshapeValues;
                     /*

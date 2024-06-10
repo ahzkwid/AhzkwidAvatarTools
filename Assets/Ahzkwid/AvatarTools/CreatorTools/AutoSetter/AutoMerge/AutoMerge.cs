@@ -1,21 +1,16 @@
 
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Ahzkwid
 {
-    using System;
-    using System.Linq;
 
 
 #if UNITY_EDITOR
     using UnityEditor;
-    using UnityEditor.TerrainTools;
-    using UnityEngine.EventSystems;
-    using UnityEngine.UIElements;
-    using VRC.SDK3.Avatars.Components;
+    using System.Linq;
+    using static AnimationRepairTool;
 
     [CustomEditor(typeof(AutoMerge))]
     public class AutoMergeEditor : Editor
@@ -25,7 +20,37 @@ namespace Ahzkwid
             base.OnInspectorGUI();
 
 
+            {
+                var autoMerge = target as AutoMerge;
+                var targetMeshs = autoMerge.targetMeshs;
+                var valueChanged = false;
 
+
+                targetMeshs = System.Array.ConvertAll(targetMeshs, value =>
+                {
+                    if (value is GameObject)
+                    {
+                        var gameObject = value as GameObject;
+                        var renderer = gameObject.GetComponent<SkinnedMeshRenderer>();
+                        if (renderer != null)
+                        {
+                            value = renderer.sharedMesh;
+                            valueChanged = true;
+                        }
+                    }
+                    if ((value is Mesh) == false)
+                    {
+                        value = null;
+                        valueChanged = true;
+                    }
+                    return value;
+                });
+                if (valueChanged)
+                {
+                    autoMerge.targetMeshs= targetMeshs;
+                    UnityEditor.EditorUtility.SetDirty(target);
+                }
+            }
 
             serializedObject.Update();
             {
@@ -136,7 +161,7 @@ namespace Ahzkwid
         }
 
 
-        public Mesh targetMesh;
+        public Object[] targetMeshs;
 
 
         [ClothRootAttribute]
@@ -207,32 +232,43 @@ namespace Ahzkwid
         }
         public Transform GetTargetTransform()
         {
-            if (targetMesh == null)
+            if ((targetMeshs == null)|| (targetMeshs.Length==0))
             {
                 return null;
             }
-            var targets = FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
-            targets = System.Array.FindAll(targets, target => target.sharedMesh == targetMesh);
 
-
-            //화면상거리
-            var screenPoint = HandleUtility.WorldToGUIPoint( transform.position);
-            targets = targets.OrderBy(target => Vector2.Distance(HandleUtility.WorldToGUIPoint(target.transform.position), screenPoint)).ToArray();
-
-            //절대거리
-            //targets = targets.OrderBy(target => Vector3.Distance(target.transform.position, transform.position)).ToArray();
-
-
-            if (targets.Length <= 0)
+            foreach (var targetMesh in targetMeshs)
             {
-                return null;
+                if (targetMesh == null)
+                {
+                    continue;
+                }
+                var targets = FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
+                targets = System.Array.FindAll(targets, target => target.sharedMesh == targetMesh);
+
+
+                //화면상거리
+                var screenPoint = HandleUtility.WorldToGUIPoint(transform.position);
+                targets = targets.OrderBy(target => Vector2.Distance(HandleUtility.WorldToGUIPoint(target.transform.position), screenPoint)).ToArray();
+
+                //절대거리
+                //targets = targets.OrderBy(target => Vector3.Distance(target.transform.position, transform.position)).ToArray();
+
+
+                if (targets.Length <= 0)
+                {
+                    continue;
+                }
+                var targetTransform = targets.First().transform;
+                if (targetTransform.parent != null)
+                {
+                    targetTransform = targetTransform.parent;
+                }
+                return targetTransform;
             }
-            var targetTransform = targets.First().transform;
-            if (targetTransform.parent != null)
-            {
-                targetTransform = targetTransform.parent;
-            }
-            return targetTransform;
+
+
+            return null;
         }
 
 

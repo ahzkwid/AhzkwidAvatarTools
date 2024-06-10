@@ -6,8 +6,6 @@ namespace Ahzkwid
 {
 #if UNITY_EDITOR
     using UnityEditor;
-    using UnityEditorInternal;
-
 
 
 
@@ -17,7 +15,7 @@ namespace Ahzkwid
     [CustomEditor(typeof(MaterialAutoSetter))]
     public class MaterialAutoSetterEditor : Editor
     {
-        Hashtable reorderableListTable = new Hashtable();
+        //Hashtable reorderableListTable = new Hashtable();
 
 
 
@@ -40,6 +38,50 @@ namespace Ahzkwid
             serializedObject.Update();
             {
                 DrawPropertiesExcluding(serializedObject, "m_Script");
+
+
+
+
+                {
+
+                    var materialAutoSetter = target as MaterialAutoSetter;
+                    var materialTargets = materialAutoSetter.materialTargets;
+                    var valueChanged = false;
+
+
+                    materialTargets = materialTargets.ConvertAll(materialTarget =>
+                    {
+                        var value = materialTarget.mesh;
+                        if (value is GameObject)
+                        {
+                            var gameObject = value as GameObject;
+                            var renderer = gameObject.GetComponent<SkinnedMeshRenderer>();
+                            if (renderer != null)
+                            {
+                                value = renderer.sharedMesh;
+                                valueChanged = true;
+                            }
+                        }
+                        if ((value is Mesh) == false)
+                        {
+                            value = null;
+                            valueChanged = true;
+                        }
+                        materialTarget.mesh = value;
+                        return materialTarget;
+                    });
+                    if (valueChanged)
+                    {
+                        materialAutoSetter.materialTargets = materialTargets;
+                        UnityEditor.EditorUtility.SetDirty(target);
+                    }
+                }
+
+
+
+
+
+
 
                 GUI.enabled = false;
                 {
@@ -66,7 +108,7 @@ namespace Ahzkwid
     [System.Serializable]
     public class MaterialTarget
     {
-        public Mesh mesh;
+        public Object mesh;
         //[BlendshapeSettingData]
         public Material[] materials;
         //public Dictionary<string,float> keyValuePairs = new Dictionary<string,float>();
