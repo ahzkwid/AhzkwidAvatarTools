@@ -1,12 +1,11 @@
 
-- Package Download
-https://ahzkwid.booth.pm/items/5463945
+- Package Download : https://ahzkwid.booth.pm/items/5463945
+
+- 対応衣装 : https://booth.pm/ja/items?tags%5B%5D=EasyWear
 
 
-- 対応衣装
-https://booth.pm/ja/items?tags%5B%5D=EasyWear
 
-- Wiki
+Wiki
 
 Home: https://github.com/ahzkwid/AhzkwidAvatarTools/wiki
 
