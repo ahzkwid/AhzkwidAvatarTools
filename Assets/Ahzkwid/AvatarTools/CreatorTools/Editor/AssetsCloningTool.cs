@@ -82,17 +82,19 @@ class AssetsCloningTool : EditorWindow
             Debug.LogError($"folderBPath: {folderBPath}");
             return;
         }
-        if (option==Option.Default)
+        if (option == Option.Default)
         {
             ignores = new string[] { ".meta", "MenuItems.cs" };
         }
 
         var filesA = Directory.GetFiles(folderAPath, "*", SearchOption.AllDirectories)
-            .Where(file => !ignores.Contains(Path.GetFileNameWithoutExtension(file).ToLower()))
+            .Where(file => System.Array.Find(ignores, ignore => Path.GetFileName(file).Contains(ignore)) == null)
+            .Where(file => !ignores.Contains(Path.GetExtension(file)))
             .ToList();
 
         var filesB = Directory.GetFiles(folderBPath, "*", SearchOption.AllDirectories)
-            .Where(file => !ignores.Contains(Path.GetFileNameWithoutExtension(file).ToLower()))
+            .Where(file => System.Array.Find(ignores, ignore => Path.GetFileName(file).Contains(ignore)) == null)
+            .Where(file => !ignores.Contains(Path.GetExtension(file)))
             .ToList();
         Debug.Log($"Directory.GetFiles(folderAPath).Length:{Directory.GetFiles(folderAPath).Length}");
         Debug.Log($"filesA.Count:{filesA.Count}");
@@ -116,11 +118,11 @@ class AssetsCloningTool : EditorWindow
         // A 폴더의 파일들을 B 폴더에 복사
         foreach (var filepathA in filesA)
         {
-            var relativePath = "/"+Path.GetRelativePath(folderAPath, filepathA);
+            var relativePath = "/" + Path.GetRelativePath(folderAPath, filepathA);
             //string fileName = Path.GetFileName(fileA);
             //string filePath = Path.GetDirectoryName(fileA);
             //Debug.Log(fileName);
-            var newFilePath = folderBPath+ relativePath;
+            var newFilePath = folderBPath + relativePath;
             Debug.Log(newFilePath);
 
 
@@ -143,18 +145,18 @@ class AssetsCloningTool : EditorWindow
                 System.IO.Directory.CreateDirectory(folderPath);
             }
 
-            if (System.IO.Path.GetExtension(filepathA) ==".asmdef")
+            if (System.IO.Path.GetExtension(filepathA) == ".asmdef")
             {
                 var text = System.IO.File.ReadAllText(filepathA);
                 //var json = JsonUtility.FromJson<AssemblyDefinitionAsset>(text);
-                var jsonObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(text); 
+                var jsonObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(text);
                 var newNamespace = System.IO.Path.GetDirectoryName(newFilePath); // 파일명제거
                 newNamespace = newNamespace.Replace("Assets\\", ""); // Assets\ 제거
                 newNamespace = ReplaceWhiteList(newNamespace, @"^[a-zA-Z]+$"); //알파벳만
                 jsonObject["rootNamespace"] = newNamespace;
                 jsonObject["name"] = newNamespace;
                 var newJson = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
-                    
+
                 File.WriteAllText(newFilePath, newJson);
             }
             else
@@ -181,7 +183,7 @@ class AssetsCloningTool : EditorWindow
             {
                 var script = MonoScript.FromMonoBehaviour(component);
                 var scriptPath = AssetDatabase.GetAssetPath(script);
-                if (scriptPath.StartsWith(folderAPath)==false)
+                if (scriptPath.StartsWith(folderAPath) == false)
                 {
                     continue;
                 }
@@ -201,14 +203,14 @@ class AssetsCloningTool : EditorWindow
             }
 
 
-            var text=System.IO.File.ReadAllText(prefabPath);
+            var text = System.IO.File.ReadAllText(prefabPath);
             foreach (var key in dictionary.Keys)
             {
-                text= text.Replace(key, dictionary[key]);
+                text = text.Replace(key, dictionary[key]);
                 Debug.Log($"{prefabPath}.{key} -> {dictionary[key]}");
             }
 
-            System.IO.File.WriteAllText(prefabPath,text);
+            System.IO.File.WriteAllText(prefabPath, text);
 
         }
         foreach (var path in prefabPaths)
@@ -222,7 +224,7 @@ class AssetsCloningTool : EditorWindow
 
 
 
-            Debug.Log("Complete");
+        Debug.Log("Complete");
     }
 
     SerializedObject serializedObject;
@@ -243,7 +245,7 @@ class AssetsCloningTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toFolder)));
             EditorGUILayout.Space();
-            if (option!=Option.Default)
+            if (option != Option.Default)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(ignores)));
                 EditorGUILayout.Space();
