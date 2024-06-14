@@ -45,30 +45,62 @@ class InsertMaterialsTool : EditorWindow
     }
     public void InsertMaterials(GameObject root, Material[] materials)
     {
-        var renders=root.GetComponentsInChildren<Renderer>();
-        foreach (var render in renders)
+        string path = AssetDatabase.GetAssetPath(root);
+        if (string.IsNullOrEmpty(path))
         {
-            if (repairMode)
+            var renders = root.GetComponentsInChildren<Renderer>();
+            foreach (var render in renders)
             {
-                if (PrefabUtility.IsPartOfPrefabInstance(render))
+                if (repairMode)
                 {
-                    var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(render);
-                    render.sharedMaterials = originalPrefab.sharedMaterials;
+                    if (PrefabUtility.IsPartOfPrefabInstance(render))
+                    {
+                        var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(render);
+                        render.sharedMaterials = originalPrefab.sharedMaterials;
+                    }
                 }
-            }
-            var sharedMaterials = render.sharedMaterials;
-            for (int i = 0; i < sharedMaterials.Length; i++)
-            {
-                var material = System.Array.FindLast(materials, x => x.name == sharedMaterials[i].name);
-                if (material != null)
+                var sharedMaterials = render.sharedMaterials;
+                for (int i = 0; i < sharedMaterials.Length; i++)
                 {
-                    sharedMaterials[i] = material;
+                    var material = System.Array.FindLast(materials, x => x.name == sharedMaterials[i].name);
+                    if (material != null)
+                    {
+                        sharedMaterials[i] = material;
+                    }
                 }
-            }
-            render.sharedMaterials = sharedMaterials;
+                render.sharedMaterials = sharedMaterials;
 
-            UnityEditor.EditorUtility.SetDirty(render);
+                UnityEditor.EditorUtility.SetDirty(render);
+            }
         }
+        else
+        {
+            var importer = AssetImporter.GetAtPath(path) as ModelImporter;
+            if (importer == null)
+            {
+                Debug.LogWarning("importer == null");
+                return;
+            }
+            foreach (var importerMaterial in importer.GetExternalObjectMap())
+            {
+                var material = System.Array.FindLast(materials, x => x.name == importerMaterial.Value.name);
+                if (material == null)
+                {
+                    material = System.Array.FindLast(materials, x => x.name == importerMaterial.Key.name);
+                }
+                if (material == null)
+                {
+                    Debug.LogWarning($"material == null");
+                    continue;
+                }
+                Debug.Log($"{importerMaterial.Value.name}->{material.name}");
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), importerMaterial.Key.name), material);
+            }
+            AssetDatabase.WriteImportSettingsIfDirty(path);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            Debug.Log("Materials updated for model: " + path);
+        }
+
     }
     SerializedObject serializedObject;
     void OnGUI()

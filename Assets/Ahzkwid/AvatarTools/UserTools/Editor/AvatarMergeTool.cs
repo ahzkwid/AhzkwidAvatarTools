@@ -77,7 +77,7 @@ class AvatarMergeTool : EditorWindow
     public GameObject[] characters;
     //public GameObject cloth;
     public GameObject[] cloths = new GameObject[] { null };
-    public List<Transform> boneTransforms = new List<Transform>();
+    //public List<Transform> boneTransforms = new List<Transform>();
     public bool createBackup = true;
     public bool nameMerge = false;
     public bool editMode = false;
@@ -422,7 +422,7 @@ class AvatarMergeTool : EditorWindow
             EditorGUILayout.Space();
             if (GUILayout.Button("Merge"))
             {
-                boneTransforms.Clear();
+                //boneTransforms.Clear();
                 for (int i = 0; i < cloths.Length; i++)
                 {
                     var cloth = cloths[i];
@@ -479,7 +479,7 @@ class AvatarMergeTool : EditorWindow
 
                             if (mergeType == MergeType.ForceMerge)
                             {
-                                if (boneTransforms.Count <= 0)
+                                //if (boneTransforms.Count <= 0)
                                 {
                                     //GetBoneTransforms(clothCopy);
                                 }
@@ -495,7 +495,7 @@ class AvatarMergeTool : EditorWindow
                         }
                         if (mergeType == MergeType.ForceMerge)
                         {
-                            if (boneTransforms.Count <= 0)
+                            //if (boneTransforms.Count <= 0)
                             {
                                 //GetBoneTransforms(cloth);
                             }
@@ -505,12 +505,14 @@ class AvatarMergeTool : EditorWindow
             }
         }
         GUI.enabled = true;
+
         /*
         if (GUILayout.Button("Test()"))
         {
             Test();
         }
         */
+
     }
 
     static Transform EqualTransform(Transform target, Transform from, Transform to)
@@ -826,6 +828,7 @@ class AvatarMergeTool : EditorWindow
 
     }
     */
+    /*
     public void GetBoneTransforms(GameObject character)
     {
         //foreach (var cloth in cloths)
@@ -868,6 +871,7 @@ class AvatarMergeTool : EditorWindow
         }
 
     }
+    */
     public static void Merge(GameObject character, GameObject cloth, MergeType mergeType=MergeType.Default)
     {
 
@@ -2007,6 +2011,8 @@ class AvatarMergeTool : EditorWindow
                 {
                     //PrefabUtility.RevertObjectOverride(clothRenderer, InteractionMode.UserAction);
                     var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
+                    Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}" +
+                        $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}");
                     clothRenderer.bones = originalPrefab.bones;
                 }
 

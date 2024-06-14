@@ -1,8 +1,10 @@
 ﻿
-using UnityEngine;
-using System.Linq;
-using System.Collections.Generic;
+
+
 #if UNITY_EDITOR
+using UnityEngine;
+using System.IO;
+using UnityEditor.Search;
 using UnityEditor;
 
 [InitializeOnLoad]
@@ -53,12 +55,12 @@ class AvatarPoseCopyTool : EditorWindow
                     var animator = characters[0].GetComponent<Animator>();
                     if (animator == null)
                     {
-                        EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Error);
+                        EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Info);
                         allReady = false;
                     }
                     else if (animator.isHuman == false)
                     {
-                        EditorGUILayout.HelpBox("This character is not a humanoid", MessageType.Error);
+                        EditorGUILayout.HelpBox("This character is not a humanoid", MessageType.Info);
                         allReady = false;
                     }
                 }
@@ -72,12 +74,12 @@ class AvatarPoseCopyTool : EditorWindow
                 var animator = pose.GetComponent<Animator>();
                 if (animator == null)
                 {
-                    EditorGUILayout.HelpBox("This pose character does not include an animator", MessageType.Error);
+                    EditorGUILayout.HelpBox("This pose character does not include an animator", MessageType.Info);
                     allReady = false;
                 }
                 else if (animator.isHuman == false)
                 {
-                    EditorGUILayout.HelpBox("This pose character is not a humanoid", MessageType.Error);
+                    EditorGUILayout.HelpBox("This pose character is not a humanoid", MessageType.Info);
                     allReady = false;
                 }
             }
@@ -89,7 +91,7 @@ class AvatarPoseCopyTool : EditorWindow
         serializedObject.ApplyModifiedProperties();
 
 
-        GUI.enabled = allReady;
+        //GUI.enabled = allReady;
         if (GUILayout.Button("PoseCopy"))
         {
             foreach (var character in characters)
@@ -100,12 +102,48 @@ class AvatarPoseCopyTool : EditorWindow
                     characterCopy.name = character.name + " (BackupPose)";
                     characterCopy.SetActive(false);
                 }
-                PoseCopy(character, pose);
+                if (allReady)
+                {
+                    PoseCopy(character, pose);
+                }
+                else
+                {
+                    PoseCopyPath(character, pose);
+                }
             }
         }
         GUI.enabled = true;
     }
 
+    public void PoseCopyPath(GameObject character, GameObject pose)
+    {
+
+        var pathCharacter = SearchUtils.GetHierarchyPath(character.gameObject, false);
+        var pathPose = SearchUtils.GetHierarchyPath(pose.gameObject, false);
+
+        var characterChilds = character.GetComponentsInChildren<Transform>(true);
+        var poseChilds = pose.GetComponentsInChildren<Transform>(true);
+
+        var pathPoseChilds = System.Array.ConvertAll(poseChilds, x => SearchUtils.GetHierarchyPath(x.gameObject, false));
+        var relativePathPose = System.Array.ConvertAll(pathPoseChilds, x => Path.GetRelativePath(pathCharacter, x));
+
+        foreach (var characterChild in characterChilds)
+        {
+            var pathCharacterChild = SearchUtils.GetHierarchyPath(characterChild.gameObject, false);
+            var relativePathCharacter = Path.GetRelativePath(pathCharacter, pathCharacterChild);
+
+
+            var index = System.Array.FindIndex(relativePathPose, path => path == pathCharacterChild);
+            if (index < 0)
+            {
+                return;
+            }
+
+            var poseChild = poseChilds[index];
+
+            characterChild.localRotation = poseChild.localRotation;
+        }
+    }
     public void PoseCopy(GameObject character, GameObject pose)
     {
         var characterAnimator = character.GetComponent<Animator>();

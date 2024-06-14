@@ -88,11 +88,11 @@ class AssetsCloningTool : EditorWindow
         }
 
         var filesA = Directory.GetFiles(folderAPath, "*", SearchOption.AllDirectories)
-            .Where(file => !ignores.Contains(Path.GetExtension(file).ToLower()))
+            .Where(file => !ignores.Contains(Path.GetFileNameWithoutExtension(file).ToLower()))
             .ToList();
 
         var filesB = Directory.GetFiles(folderBPath, "*", SearchOption.AllDirectories)
-            .Where(file => !ignores.Contains(Path.GetExtension(file).ToLower()))
+            .Where(file => !ignores.Contains(Path.GetFileNameWithoutExtension(file).ToLower()))
             .ToList();
         Debug.Log($"Directory.GetFiles(folderAPath).Length:{Directory.GetFiles(folderAPath).Length}");
         Debug.Log($"filesA.Count:{filesA.Count}");
