@@ -76,6 +76,13 @@ namespace Ahzkwid
         }
 #endif
 
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(IntervalTool))]
+        public static void IntervalToolInit()
+        {
+            IntervalTool.Init();
+        }
+        
+
 
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarMergeTool))]

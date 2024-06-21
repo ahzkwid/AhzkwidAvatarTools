@@ -1,6 +1,5 @@
 
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -49,6 +48,7 @@ namespace Ahzkwid
             public GameObject gameObject;
             public Enabled objEnabled;
             public Enabled rendererEnabled;
+            public Tag tag;
         }
 
         public enum Enabled
@@ -56,6 +56,17 @@ namespace Ahzkwid
             None,
             Enable,
             Disable
+        }
+        public enum Tag
+        {
+            None,
+            Untagged,
+            Respawn,
+            Finish,
+            EditorOnly,
+            MainCamera,
+            Player,
+            GameController
         }
         Transform GetRoot(Transform transform)
         {
@@ -181,6 +192,19 @@ namespace Ahzkwid
                                     case Enabled.Disable:
                                         renderer.enabled = false;
                                         break;
+                                }
+                                break;
+                        }
+                        switch (objectActiveData.tag)
+                        {
+                            case Tag.None:
+                                break;
+                            default:
+                                var tagString = objectActiveData.tag.ToString();
+                                if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags,x=> x == tagString) != null)
+                                {
+
+                                    target.tag = tagString;
                                 }
                                 break;
                         }

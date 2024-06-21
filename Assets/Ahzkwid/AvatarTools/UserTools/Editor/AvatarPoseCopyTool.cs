@@ -142,6 +142,7 @@ class AvatarPoseCopyTool : EditorWindow
             var poseChild = poseChilds[index];
 
             characterChild.localRotation = poseChild.localRotation;
+            UnityEditor.EditorUtility.SetDirty(characterChild);
         }
     }
     public void PoseCopy(GameObject character, GameObject pose)
