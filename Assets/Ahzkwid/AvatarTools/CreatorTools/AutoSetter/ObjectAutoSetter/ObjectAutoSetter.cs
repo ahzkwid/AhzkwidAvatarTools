@@ -7,9 +7,6 @@ namespace Ahzkwid
 {
 
 
-
-
-
 #if UNITY_EDITOR
     using UnityEditor;
     using UnityEditor.Search;
@@ -48,6 +45,7 @@ namespace Ahzkwid
             public GameObject gameObject;
             public Enabled objEnabled;
             public Enabled rendererEnabled;
+            public Enabled physboneEnabled;
             public Tag tag;
         }
 
@@ -192,6 +190,33 @@ namespace Ahzkwid
                                     case Enabled.Disable:
                                         renderer.enabled = false;
                                         break;
+                                }
+                                break;
+                        }
+                        switch (objectActiveData.physboneEnabled)
+                        {
+                            case Enabled.Enable:
+                            case Enabled.Disable:
+                                var components = target.GetComponents<Component>();
+                                foreach (var component in components)
+                                {
+                                    if (component == null)
+                                    {
+                                        continue;
+                                    }
+                                    if (component.GetType().Name.ToLower().Contains("physbone") == false)
+                                    {
+                                        continue;
+                                    }
+                                    switch (objectActiveData.physboneEnabled)
+                                    {
+                                        case Enabled.Enable:
+                                            ((Behaviour)component).enabled = true;
+                                            break;
+                                        case Enabled.Disable:
+                                            ((Behaviour)component).enabled = false;
+                                            break;
+                                    }
                                 }
                                 break;
                         }
