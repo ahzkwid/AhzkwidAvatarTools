@@ -684,7 +684,7 @@ class AvatarMergeTool : EditorWindow
 
 
 
-        var addedGameObjects = PrefabUtility.GetAddedGameObjects(rootBoneCloth.gameObject);
+        //var addedGameObjects = PrefabUtility.GetAddedGameObjects(rootBoneCloth.gameObject);
 
 
 

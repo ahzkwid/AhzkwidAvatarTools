@@ -58,7 +58,7 @@ class GetBoneNamesTool : EditorWindow
                 var boneTransform = animator.GetBoneTransform(humanBodyBone);
                 if (boneTransform == null)
                 {
-                    //continue;
+                    continue;
                 }
                 if (!string.IsNullOrWhiteSpace(boneTransformNames))
                 {

@@ -8,10 +8,10 @@ namespace Ahzkwid
     [InitializeOnLoad]
     class MenuItems
     {
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(OutlineRepairTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(MaterialPropertyTool))]
         public static void OutlineRepairToolInit()
         {
-            OutlineRepairTool.Init();
+            MaterialPropertyTool.Init();
         }
 
 
@@ -69,7 +69,7 @@ namespace Ahzkwid
         }
 
 #if DEBUG
-        //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(GetBoneNamesTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(GetBoneNamesTool))]
         public static void GetBoneNamesToolInit()
         {
             GetBoneNamesTool.Init();
