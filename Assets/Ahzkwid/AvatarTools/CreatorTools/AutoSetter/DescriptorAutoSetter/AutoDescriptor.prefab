@@ -45,4 +45,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoDestroy: 1
-  actionTriggers: []
+  actionTriggers:
+  - triggersOperator: 0
+    triggers: []
+    actions:
+    - target: 0
+      option: 0
+      value: {fileID: 0}

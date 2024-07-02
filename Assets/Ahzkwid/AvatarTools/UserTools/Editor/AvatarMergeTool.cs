@@ -2011,8 +2011,11 @@ class AvatarMergeTool : EditorWindow
                 {
                     //PrefabUtility.RevertObjectOverride(clothRenderer, InteractionMode.UserAction);
                     var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
-                    Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}" +
-                        $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}");
+                    if ((clothRenderer.bones != null)&& (originalPrefab.bones != null))
+                    {
+                        Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}" +
+                            $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(originalPrefab.bones, x => x.name))}");
+                    }
                     clothRenderer.bones = originalPrefab.bones;
                 }
 
