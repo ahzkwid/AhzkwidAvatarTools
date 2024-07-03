@@ -16,9 +16,10 @@ using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEditor.Search;
-using UnityEditorInternal;
 using System.Linq;
 using System.Collections;
+using UnityEditor.Animations;
+
 
 [InitializeOnLoad]
 class AvatarMergeTool : EditorWindow
@@ -27,14 +28,13 @@ class AvatarMergeTool : EditorWindow
     Hashtable reorderableListTable = new Hashtable();
     public void DrawArray(string propertyPath)
     {
-
         var reorderableListProperty = serializedObject.FindProperty(propertyPath);
 
         if (reorderableListTable[propertyPath] == null)
         {
-            reorderableListTable[propertyPath] = new ReorderableList(serializedObject, reorderableListProperty);
+            reorderableListTable[propertyPath] = new UnityEditorInternal.ReorderableList(serializedObject, reorderableListProperty);
         }
-        var reorderableList = (ReorderableList)reorderableListTable[propertyPath];
+        var reorderableList = (UnityEditorInternal.ReorderableList)reorderableListTable[propertyPath];
 
         //serializedObject.Update();
         {
@@ -569,7 +569,8 @@ class AvatarMergeTool : EditorWindow
             Debug.LogWarning($"{rootName} != {hierarchyPath}.Substring(0, rootName.Length)");
             return null;
         }
-
+        //return System.IO.Path.GetRelativePath(hierarchyPath, rootName);
+        
         try
         {
             return hierarchyPath.Substring(startIndex, hierarchyPath.Length - startIndex);
@@ -580,6 +581,7 @@ class AvatarMergeTool : EditorWindow
             Debug.LogError($"{hierarchyPath} - {rootName}");
             throw;
         }
+        
     }
     static string ArmaturePath(Transform bone, Transform rootBone = null)
     {
@@ -594,7 +596,6 @@ class AvatarMergeTool : EditorWindow
                 //rootName = bone.root.name;
                 //rootName = rootBone.GetHierarchyPath();
                 rootName = SearchUtils.GetHierarchyPath(rootBone.gameObject, false);
-
             }
             catch (System.Exception ex)
             {
@@ -2013,14 +2014,14 @@ class AvatarMergeTool : EditorWindow
                     var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
                     if ((clothRenderer.bones != null)&& (originalPrefab.bones != null))
                     {
-                        Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}" +
-                            $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(originalPrefab.bones, x => x.name))}");
+                        Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}" +
+                            $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(originalPrefab.bones, x => x?.name))}");
                     }
                     clothRenderer.bones = originalPrefab.bones;
                 }
 
 
-                Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x.name))}");
+                Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}");
 
 
                 /*
@@ -2036,14 +2037,14 @@ class AvatarMergeTool : EditorWindow
                 */
                 //clothRenderer.bones = boneList.ToArray();
                 Debug.Log($"{clothRenderer}.bones.Length (Pre): {clothRenderer.bones.Length}");
-                var equalBones = GetEqualBones(bones, clothRenderer.bones);
+                var equalBones = GetEqualBones(bones, clothRenderer.bones, character.transform, cloth.transform);
                 if (equalBones.Length > 0)
                 {
                     clothRenderer.bones = equalBones;
                 }
                 //clothRenderer.bones = System.Array.FindAll(characterRenderer.bones,x=> System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
                 Debug.Log($"{clothRenderer}.bones.Length (After): {clothRenderer.bones.Length}");
-                clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone);
+                clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone, character.transform, cloth.transform);
                 {
                     Transform probeAnchor=null;
                     //probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
@@ -2233,6 +2234,51 @@ class AvatarMergeTool : EditorWindow
             }
             /*
             {
+                var components = character.GetComponentsInChildren<Component>(true);
+                foreach (var component in components)
+                {
+                    if (component == null)
+                    {
+                        continue;
+                    }
+                    if (component is Transform)
+                    {
+                        continue;
+                    }
+                    //Debug.Log($"{component.GetType()} {component.name}");
+                    foreach (var field in component.GetType().GetFields())
+                    {
+
+                        var value = field.GetValue(component);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+                        if (value.Equals(null))
+                        {
+                            continue;
+                        }
+                        if (field.FieldType == typeof(RuntimeAnimatorController))
+                        {
+                            var runtimeAnimator = value as RuntimeAnimatorController;
+                            var animator = runtimeAnimator as AnimatorController;
+                            var layers = animator.layers;
+                            foreach (var item in animator.layers)
+                            {
+
+                            }
+                            var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                            field.SetValue(component, equalTransform);
+                            Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
+                            continue;
+                        }
+                        //Debug.Log($"{component.name}.{field.Name}");
+                    }
+                }
+            }
+            */
+            /*
+            {
                 //Debug.Log($"physBones convert");
 
                 var physBones = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
@@ -2280,23 +2326,28 @@ class AvatarMergeTool : EditorWindow
 
 
 
-        Transform[] GetEqualBones(Transform[] targetBones, Transform[] sourceBones)
+        Transform[] GetEqualBones(Transform[] targetBones, Transform[] sourceBones, Transform targetBonesRoot = null, Transform sourceBonesRoot = null)
         {
-            var bones = System.Array.ConvertAll(sourceBones, x => GetEqualBone(targetBones, x));
+            var bones = System.Array.ConvertAll(sourceBones, x => GetEqualBone(targetBones, x, targetBonesRoot, sourceBonesRoot));
             return System.Array.FindAll(bones, x => x != null);
         }
-        Transform GetEqualBone(Transform[] bones, Transform bone)
+        Transform GetEqualBone(Transform[] bones, Transform bone, Transform bonesRoot=null, Transform boneRoot = null)
         {
             if (bone == null)
             {
                 return null;
             }
             //var equalBone = System.Array.Find(bones, x => ArmaturePath(x, character.transform) == ArmaturePath(bone, cloth.transform));
-            var equalBone = System.Array.Find(bones, x => ArmaturePath(x) == ArmaturePath(bone));
+            var bonePath = ArmaturePath(bone);
+            var equalBone = System.Array.Find(bones, x => ArmaturePath(x) == bonePath);
+            //var bonePath = RelativePath(bone, boneRoot);
+            //var equalBone = System.Array.Find(bones, x => RelativePath(x, bonesRoot) == bonePath);
             if (equalBone == null)
             {
                 Debug.Log($"{SearchUtils.GetHierarchyPath(bone.gameObject, false)} - {SearchUtils.GetHierarchyPath(cloth.gameObject, false)}");
-                Debug.Log($"{ArmaturePath(bone, cloth.transform)}");
+                //Debug.Log($"{ArmaturePath(bone, cloth.transform)}");
+                //Debug.Log($"{RelativePath(bone, boneRoot)}");
+                Debug.Log($"{bonePath}");
             }
             return equalBone;
             var boneName = bone.name;

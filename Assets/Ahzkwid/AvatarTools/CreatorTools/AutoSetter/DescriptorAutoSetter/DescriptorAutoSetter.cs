@@ -6,10 +6,8 @@ using VRC.SDK3.Avatars.Components;
 
 namespace Ahzkwid
 {
-    using System.IO;
 #if UNITY_EDITOR
     using UnityEditor;
-    using UnityEditor.VersionControl;
 
     [CustomEditor(typeof(DescriptorAutoSetter))]
     public class DescriptorAutoSetterEditor : Editor
@@ -86,7 +84,7 @@ namespace Ahzkwid
 
 
 
-[System.Serializable]
+        [System.Serializable]
         public class Action
         {
             public enum Option
@@ -112,7 +110,9 @@ namespace Ahzkwid
                     {
                         ext = ".controller";
                     }
-                    var path = $"{folderPath}/{asset.name}{(System.DateTime.Now.Ticks-new System.DateTime(2024,1,1).Ticks)/1000}{ext}";
+                    var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
+                    var path = $"{folderPath}/{fileName}{ext}";
+                    asset.name = fileName;
                     AssetDatabase.CreateAsset(asset, path);
                     //AssetDatabase.SaveAssets();
                     AssetDatabase.Refresh();
@@ -136,7 +136,7 @@ namespace Ahzkwid
                                 avatarDescriptor.baseAnimationLayers[i].isDefault = false;
                                 {
 
-                                    var animatorController= (RuntimeAnimatorController)value;
+                                    var animatorController = (RuntimeAnimatorController)value;
                                     if (option == Option.Merge)
                                     {
                                         animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController);
@@ -158,48 +158,51 @@ namespace Ahzkwid
                             if (option == Option.Merge)
                             {
                                 //expressionsMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
-                                expressionsMenu = Instantiate(avatarDescriptor.expressionsMenu);
-                                expressionsMenu.name = $"{avatarDescriptor.expressionsMenu?.name}+{expressionsMenuValue?.name}";
-
-                                //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
-                                /*
                                 if (avatarDescriptor.expressionsMenu != null)
                                 {
-                                    //expressionsMenu.controls.AddRange(avatarDescriptor.expressionsMenu.controls);
-                                    foreach (var item in avatarDescriptor.expressionsMenu.controls)
+                                    expressionsMenu = Instantiate(avatarDescriptor.expressionsMenu);
+                                    expressionsMenu.name = $"{avatarDescriptor.expressionsMenu?.name}+{expressionsMenuValue?.name}";
+
+                                    //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
+                                    /*
+                                    if (avatarDescriptor.expressionsMenu != null)
                                     {
-                                        var targetClass = item;
-                                        var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
-                                        var fields = targetClass.GetType().GetFields();
-                                        foreach (var field in fields)
+                                        //expressionsMenu.controls.AddRange(avatarDescriptor.expressionsMenu.controls);
+                                        foreach (var item in avatarDescriptor.expressionsMenu.controls)
                                         {
-                                            field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            var targetClass = item;
+                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+                                            var fields = targetClass.GetType().GetFields();
+                                            foreach (var field in fields)
+                                            {
+                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            }
+                                            expressionsMenu.controls.Add(itemCopy);
                                         }
-                                        expressionsMenu.controls.Add(itemCopy);
                                     }
-                                }
-                                */
-                                if (expressionsMenuValue != null)
-                                {
-                                    foreach (var item in expressionsMenuValue.controls)
+                                    */
+                                    if (expressionsMenuValue != null)
                                     {
-                                        var targetClass = item;
-                                        var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
-                                        var fields = targetClass.GetType().GetFields();
-                                        foreach (var field in fields)
+                                        foreach (var item in expressionsMenuValue.controls)
                                         {
-                                            field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            var targetClass = item;
+                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+                                            var fields = targetClass.GetType().GetFields();
+                                            foreach (var field in fields)
+                                            {
+                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            }
+                                            expressionsMenu.controls.Add(itemCopy);
                                         }
-                                        expressionsMenu.controls.Add(itemCopy);
+                                        //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
                                     }
-                                    //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
-                                }
-                                if (expressionsMenu.controls != null)
-                                {
-                                    //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
+                                    if (expressionsMenu.controls != null)
+                                    {
+                                        //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
+                                    }
+                                    SaveAsset(expressionsMenu);
                                 }
                             }
-                            SaveAsset(expressionsMenu);
                             avatarDescriptor.expressionsMenu = expressionsMenu;
                         }
                         break;
@@ -211,52 +214,55 @@ namespace Ahzkwid
                             if (option == Option.Merge)
                             {
                                 //expressionParameters = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters();
-                                expressionParameters = Instantiate(avatarDescriptor.expressionParameters);
-                                expressionParameters.name = $"{avatarDescriptor.expressionParameters?.name}+{expressionParametersValue?.name}";
-                                /*
-                                if (avatarDescriptor.expressionParameters?.parameters != null)
+                                if (avatarDescriptor.expressionParameters != null)
                                 {
-                                    foreach (var item in avatarDescriptor.expressionParameters.parameters)
+                                    expressionParameters = Instantiate(avatarDescriptor.expressionParameters);
+                                    expressionParameters.name = $"{avatarDescriptor.expressionParameters?.name}+{expressionParametersValue?.name}";
+                                    /*
+                                    if (avatarDescriptor.expressionParameters?.parameters != null)
                                     {
-                                        var targetClass = item;
-                                        var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Parameter();
-                                        var fields = targetClass.GetType().GetFields();
-                                        foreach (var field in fields)
+                                        foreach (var item in avatarDescriptor.expressionParameters.parameters)
                                         {
-                                            field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            var targetClass = item;
+                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Parameter();
+                                            var fields = targetClass.GetType().GetFields();
+                                            foreach (var field in fields)
+                                            {
+                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            }
+                                            expressionParameters.parameters.AddItem(itemCopy);
                                         }
-                                        expressionParameters.parameters.AddItem(itemCopy);
                                     }
-                                }
-                                */
-                                if (expressionParametersValue?.parameters != null)
-                                {
-                                    //foreach (var item in expressionParametersValue.parameters)
+                                    */
+                                    if (expressionParametersValue?.parameters != null)
                                     {
-                                        /*
-                                        var targetClass = item;
-                                        var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Parameter();
-                                        var fields = targetClass.GetType().GetFields();
-                                        foreach (var field in fields)
+                                        //foreach (var item in expressionParametersValue.parameters)
                                         {
-                                            field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            /*
+                                            var targetClass = item;
+                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters.Parameter();
+                                            var fields = targetClass.GetType().GetFields();
+                                            foreach (var field in fields)
+                                            {
+                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                            }
+                                            */
+                                            //expressionParameters.parameters= expressionParametersValue.parameters.Append(item).ToArray();
+                                            //expressionParameters.parameters.AddItem(item);
                                         }
-                                        */
-                                        //expressionParameters.parameters= expressionParametersValue.parameters.Append(item).ToArray();
-                                        //expressionParameters.parameters.AddItem(item);
+                                        expressionParameters.parameters = expressionParameters.parameters.Concat(expressionParametersValue.parameters).ToArray();
                                     }
-                                    expressionParameters.parameters = expressionParameters.parameters.Concat(expressionParametersValue.parameters).ToArray();
-                                }
-                                if (expressionParameters.parameters != null)
-                                {
-                                    expressionParameters.parameters = expressionParameters.parameters.GroupBy(x => x.name).Select(x => x.Last()).ToArray();
+                                    if (expressionParameters.parameters != null)
+                                    {
+                                        expressionParameters.parameters = expressionParameters.parameters.GroupBy(x => x.name).Select(x => x.Last()).ToArray();
+                                    }
+                                    SaveAsset(expressionParameters);
                                 }
                             }
                             if (avatarDescriptor.expressionParameters?.parameters != null)
                             {
                                 Debug.Log($"parameters.Length: {avatarDescriptor.expressionParameters.parameters.Length}->{expressionParameters.parameters.Length}");
                             }
-                            SaveAsset(expressionParameters);
                             avatarDescriptor.expressionParameters = expressionParameters;
                         }
                         break;

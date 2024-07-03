@@ -11,8 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using System.ComponentModel;
-
 
 
 [InitializeOnLoad]
@@ -173,6 +171,10 @@ class AssetsCloningTool : EditorWindow
 
         foreach (var prefabPath in prefabPaths)
         {
+            if (System.IO.File.Exists(prefabPath)==false)
+            {
+                continue;
+            }
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
             components = System.Array.FindAll(components, x => x != null);
