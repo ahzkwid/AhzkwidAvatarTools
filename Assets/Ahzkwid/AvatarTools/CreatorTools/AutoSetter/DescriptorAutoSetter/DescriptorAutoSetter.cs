@@ -139,7 +139,7 @@ namespace Ahzkwid
                                     var animatorController = (RuntimeAnimatorController)value;
                                     if (option == Option.Merge)
                                     {
-                                        animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController);
+                                        animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController, avatarDescriptor.transform);
                                         //AnimatorCombiner.ExportAnimatorController(animatorController, "Assets/Temp/TempAnimator.controller");
                                         SaveAsset(animatorController);
                                     }
@@ -161,7 +161,12 @@ namespace Ahzkwid
                                 if (avatarDescriptor.expressionsMenu != null)
                                 {
                                     expressionsMenu = Instantiate(avatarDescriptor.expressionsMenu);
-                                    expressionsMenu.name = $"{avatarDescriptor.expressionsMenu?.name}+{expressionsMenuValue?.name}";
+                                    var name = $"{avatarDescriptor.expressionsMenu?.name}+{expressionsMenuValue?.name}";
+                                    if (name.Length > 40)
+                                    {
+                                        name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                                    }
+                                    expressionsMenu.name = name;
 
                                     //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
                                     /*
@@ -217,7 +222,12 @@ namespace Ahzkwid
                                 if (avatarDescriptor.expressionParameters != null)
                                 {
                                     expressionParameters = Instantiate(avatarDescriptor.expressionParameters);
-                                    expressionParameters.name = $"{avatarDescriptor.expressionParameters?.name}+{expressionParametersValue?.name}";
+                                    var name = $"{avatarDescriptor.expressionParameters?.name}+{expressionParametersValue?.name}";
+                                    if (name.Length > 40)
+                                    {
+                                        name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                                    }
+                                    expressionParameters.name = name;
                                     /*
                                     if (avatarDescriptor.expressionParameters?.parameters != null)
                                     {
