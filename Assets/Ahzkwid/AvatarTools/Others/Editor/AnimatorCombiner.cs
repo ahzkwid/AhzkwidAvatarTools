@@ -179,7 +179,7 @@ public class AnimatorCombiner : MonoBehaviour
             }
         }
         newBlendTree.children = childrens;
-
+        SaveAsset(newBlendTree);
         return newBlendTree;
     }
 
@@ -265,36 +265,36 @@ public class AnimatorCombiner : MonoBehaviour
 
         SaveAsset(newClip);
 
-        void SaveAsset(Object asset)
-        {
-#if UNITY_EDITOR
-            var folderPath = $"Assets/EasyWearDatas/";
-            if (System.IO.Directory.Exists(folderPath) == false)
-            {
-                System.IO.Directory.CreateDirectory(folderPath);
-            }
-            var ext = ".asset";
-            if (asset is RuntimeAnimatorController)
-            {
-                ext = ".controller";
-            }
-            if (asset is AnimationClip)
-            {
-                ext = ".anim";
-            }
-            var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
-            var path = $"{folderPath}/{fileName}{ext}";
-            asset.name = fileName;
-            AssetDatabase.CreateAsset(asset, path);
-            AssetDatabase.Refresh();
-#endif
-        }
-
-
 
 
         return newClip;
     }
+    static void SaveAsset(Object asset)
+    {
+#if UNITY_EDITOR
+        var folderPath = $"Assets/EasyWearDatas/";
+        if (System.IO.Directory.Exists(folderPath) == false)
+        {
+            System.IO.Directory.CreateDirectory(folderPath);
+        }
+        var ext = ".asset";
+        if (asset is RuntimeAnimatorController)
+        {
+            ext = ".controller";
+        }
+        if ((asset is AnimationClip)|| (asset is BlendTree))
+        {
+            ext = ".anim";
+        }
+        var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
+        var path = $"{folderPath}/{fileName}{ext}";
+        asset.name = fileName;
+        AssetDatabase.CreateAsset(asset, path);
+        AssetDatabase.Refresh();
+#endif
+    }
+
+
 
     static void CopyClass<T>(T source, T target)
     {
