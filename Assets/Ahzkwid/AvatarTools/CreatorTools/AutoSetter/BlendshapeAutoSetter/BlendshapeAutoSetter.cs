@@ -505,9 +505,10 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 #endif
 
 
-    
 
 
+
+    [ExecuteInEditMode]
     public class BlendshapeAutoSetter : MonoBehaviour
 {
     [System.Serializable]
@@ -538,6 +539,26 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
             if (success == false)
             {
                 UnityEditor.Handles.Label(transform.position, "Finding Character");
+            }
+            else
+            {
+                UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
+            }
+        }
+#endif
+        // Start is called before the first frame update
+
+        // Update is called once per frame
+        void Update()
+        {
+            //foreach (var blendshapeAutoSetter in FindObjectsOfType<BlendshapeAutoSetter>())
+            {
+                var blendshapeAutoSetter = this;
+                var transform = blendshapeAutoSetter.transform;
+                if (blendshapeAutoSetter.success)
+                {
+                    return;
+                }
                 {
 
                     var parents = transform.GetComponentsInParent<Transform>();
@@ -564,31 +585,19 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                             {
                                 var index = blendshapeTarget.mesh.GetBlendShapeIndex(blendshapeValue.key);
                                 renderer.SetBlendShapeWeight(index, blendshapeValue.value);
-                                success = true;
+                                blendshapeAutoSetter.success = true;
                             }
                         }
                     }
                 }
-                if (success)
+                if (blendshapeAutoSetter.success)
                 {
-                    if (autoDestroy)
+                    if (blendshapeAutoSetter.autoDestroy)
                     {
-                        DestroyImmediate(this);
+                        DestroyImmediate(blendshapeAutoSetter);
                     }
                 }
             }
-            else
-            {
-                UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
-            }
         }
-#endif
-    // Start is called before the first frame update
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
 }

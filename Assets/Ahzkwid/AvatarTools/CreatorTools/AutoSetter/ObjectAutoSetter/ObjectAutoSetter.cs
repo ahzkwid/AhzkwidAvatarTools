@@ -31,11 +31,29 @@ namespace Ahzkwid
                 }
                 GUI.enabled = true;
             }
+            {
+                var objectAutoSetter = target as ObjectAutoSetter;
+                for (int i = 0; i < objectAutoSetter.objectActiveDatas.Count; i++)
+                {
+                    var objectActiveData = objectAutoSetter.objectActiveDatas[i];
+                    if (objectActiveData.gameObject != null)
+                    {
+                        var objectActiveDataRoot = ObjectAutoSetter.GetRoot(objectActiveData.gameObject.transform);
+                        if (objectActiveDataRoot != null)
+                        {
+                            objectAutoSetter.objectActiveDatas[i].path = ObjectAutoSetter.GetPath(objectActiveData.gameObject, objectActiveDataRoot.gameObject);
+                            objectAutoSetter.objectActiveDatas[i].gameObject = null;
+                        }
+                    }
+                }
+
+            }
             serializedObject.ApplyModifiedProperties();
         }
     }
 
 
+    [ExecuteInEditMode]
     public class ObjectAutoSetter : MonoBehaviour
     {
         [System.Serializable]
@@ -66,7 +84,7 @@ namespace Ahzkwid
             Player,
             GameController
         }
-        Transform GetRoot(Transform transform)
+        public static Transform GetRoot(Transform transform)
         {
 
             var parents = transform.GetComponentsInParent<Transform>(true);
@@ -82,7 +100,7 @@ namespace Ahzkwid
             return root;
         }
 
-        string GetPath(GameObject target, GameObject root = null)
+        public static string GetPath(GameObject target, GameObject root = null)
         {
             var rootPath = "";
 
@@ -118,27 +136,31 @@ namespace Ahzkwid
         public List<ObjectActiveData> objectActiveDatas = new List<ObjectActiveData>();
         void OnDrawGizmos()
         {
-            {
-                for (int i = 0; i < objectActiveDatas.Count; i++)
-                {
-                    var objectActiveData = objectActiveDatas[i];
-                    if (objectActiveData.gameObject != null)
-                    {
-                        var objectActiveDataRoot = GetRoot(objectActiveData.gameObject.transform);
-                        if (objectActiveDataRoot != null)
-                        {
-                            objectActiveDatas[i].path = GetPath(objectActiveData.gameObject, objectActiveDataRoot.gameObject);
-                            objectActiveDatas[i].gameObject = null;
-                        }
-                    }
-                }
-
-            }
             if (success == false)
             {
                 UnityEditor.Handles.Label(transform.position, "Finding Character");
+            }
+            else
+            {
+                UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
+            }
+        }
+
+        // Start is called before the first frame update
+
+        // Update is called once per frame
+        void Update()
+        {
+            //foreach (var objectAutoSetter in FindObjectsOfType<ObjectAutoSetter>())
+            {
+                var objectAutoSetter = this;
+                if (objectAutoSetter.success)
                 {
-                    var root = GetRoot(transform);
+                    return;
+                }
+
+                {
+                    var root = GetRoot(objectAutoSetter.transform);
                     if (root == null)
                     {
                         return;
@@ -153,7 +175,7 @@ namespace Ahzkwid
 
 
                     var childrens = root.GetComponentsInChildren<Transform>(true);
-                    foreach (var objectActiveData in objectActiveDatas)
+                    foreach (var objectActiveData in objectAutoSetter.objectActiveDatas)
                     {
                         if (string.IsNullOrEmpty(objectActiveData.path))
                         {
@@ -226,7 +248,7 @@ namespace Ahzkwid
                                 break;
                             default:
                                 var tagString = objectActiveData.tag.ToString();
-                                if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags,x=> x == tagString) != null)
+                                if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags, x => x == tagString) != null)
                                 {
 
                                     target.tag = tagString;
@@ -234,27 +256,16 @@ namespace Ahzkwid
                                 break;
                         }
                     }
-                    success = true;
+                    objectAutoSetter.success = true;
                     //if (success)
                     {
-                        if (autoDestroy)
+                        if (objectAutoSetter.autoDestroy)
                         {
-                            DestroyImmediate(this);
+                            DestroyImmediate(objectAutoSetter);
                         }
                     }
                 }
             }
-            else
-            {
-                UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
-            }
-        }
-        // Start is called before the first frame update
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
     }
 #endif

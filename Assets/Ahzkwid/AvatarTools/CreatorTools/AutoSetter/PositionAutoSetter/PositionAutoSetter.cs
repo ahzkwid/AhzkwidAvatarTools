@@ -126,6 +126,10 @@ namespace Ahzkwid
 
 
 
+
+
+
+    [ExecuteInEditMode]
     public class PositionAutoSetter : MonoBehaviour
     {
         public enum Option
@@ -155,7 +159,7 @@ namespace Ahzkwid
             }
             return parent;
         }
-        Transform GetRoot(Transform transform)
+        public static Transform GetRoot(Transform transform)
         {
 
             var parents = transform.GetComponentsInParent<Transform>(true);
@@ -178,54 +182,6 @@ namespace Ahzkwid
             if (success == false)
             {
                 UnityEditor.Handles.Label(transform.position, "Finding Character");
-                {
-                    var root = GetRoot(transform);
-                    if (root == null)
-                    {
-                        return;
-                    }
-                    var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
-                    if (avatarDescriptor == null)
-                    {
-                        return;
-                    }
-                    root = avatarDescriptor.transform;
-
-                    foreach (var positionData in PositionDatas)
-                    {
-                        Transform target = null;
-                        switch (positionData.option)
-                        {
-                            case Option.GameObject:
-                                if (positionData.gameObject == null)
-                                {
-                                    target = transform;
-                                }
-                                else
-                                {
-                                    target = positionData.gameObject.transform;
-                                }
-                                break;
-                            case Option.Parent:
-                                target = GetParent(positionData.parentIndex);
-                                break;
-                            default:
-                                break;
-                        }
-                        target.localPosition = positionData.position;
-                        target.localRotation = Quaternion.Euler(positionData.rotation);
-                        target.localScale = positionData.scale;
-                    }
-
-                    success = true;
-                    //if (success)
-                    {
-                        if (autoDestroy)
-                        {
-                            DestroyImmediate(this);
-                        }
-                    }
-                }
             }
             else
             {
@@ -237,7 +193,60 @@ namespace Ahzkwid
         // Update is called once per frame
         void Update()
         {
+            //foreach (var positionAutoSetter in FindObjectsOfType<PositionAutoSetter>())
+            {
+                var positionAutoSetter = this;
+                if (positionAutoSetter.success)
+                {
+                    return;
+                }
+                var root = GetRoot(positionAutoSetter.transform);
+                if (root == null)
+                {
+                    return;
+                }
+                var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
+                if (avatarDescriptor == null)
+                {
+                    return;
+                }
+                root = avatarDescriptor.transform;
 
+                foreach (var positionData in positionAutoSetter.PositionDatas)
+                {
+                    Transform target = null;
+                    switch (positionData.option)
+                    {
+                        case Option.GameObject:
+                            if (positionData.gameObject == null)
+                            {
+                                target = positionAutoSetter.transform;
+                            }
+                            else
+                            {
+                                target = positionData.gameObject.transform;
+                            }
+                            break;
+                        case Option.Parent:
+                            target = positionAutoSetter.GetParent(positionData.parentIndex);
+                            break;
+                        default:
+                            break;
+                    }
+                    target.localPosition = positionData.position;
+                    target.localRotation = Quaternion.Euler(positionData.rotation);
+                    target.localScale = positionData.scale;
+                }
+
+                positionAutoSetter.success = true;
+                //if (success)
+                {
+                    if (positionAutoSetter.autoDestroy)
+                    {
+                        DestroyImmediate(positionAutoSetter);
+                    }
+                }
+            }
         }
     }
 #endif

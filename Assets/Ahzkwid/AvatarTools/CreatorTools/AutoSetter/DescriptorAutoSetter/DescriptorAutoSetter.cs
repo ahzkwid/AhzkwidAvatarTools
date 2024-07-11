@@ -34,6 +34,7 @@ namespace Ahzkwid
 #endif
 
 
+    [ExecuteInEditMode]
     public class DescriptorAutoSetter : MonoBehaviour
     {
         public enum Target
@@ -97,27 +98,11 @@ namespace Ahzkwid
             public Object value;
             public void Run(VRCAvatarDescriptor avatarDescriptor)
             {
-                void SaveAsset(Object asset)
-                {
-#if UNITY_EDITOR
-                    var folderPath = $"Assets/EasyWearDatas/";
-                    if (System.IO.Directory.Exists(folderPath) == false)
-                    {
-                        System.IO.Directory.CreateDirectory(folderPath);
-                    }
-                    var ext = ".asset";
-                    if (asset is RuntimeAnimatorController)
-                    {
-                        ext = ".controller";
-                    }
-                    var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
-                    var path = $"{folderPath}/{fileName}{ext}";
-                    asset.name = fileName;
-                    AssetDatabase.CreateAsset(asset, path);
-                    //AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-#endif
-                }
+
+
+
+
+
                 switch (target)
                 {
                     case Target.PlayableLayersBase:
@@ -141,7 +126,8 @@ namespace Ahzkwid
                                     {
                                         animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController, avatarDescriptor.transform);
                                         //AnimatorCombiner.ExportAnimatorController(animatorController, "Assets/Temp/TempAnimator.controller");
-                                        SaveAsset(animatorController);
+                                        //animatorController=AnimatorCombiner.SaveAsset(animatorController) as RuntimeAnimatorController;
+                                        AnimatorCombiner.SaveAsset(animatorController);
                                     }
                                     avatarDescriptor.baseAnimationLayers[i].animatorController = animatorController;
                                 }
@@ -205,7 +191,8 @@ namespace Ahzkwid
                                     {
                                         //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
                                     }
-                                    SaveAsset(expressionsMenu);
+                                    //expressionsMenu = AnimatorCombiner.SaveAsset(expressionsMenu) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu;
+                                    AnimatorCombiner.SaveAsset(expressionsMenu);
                                 }
                             }
                             avatarDescriptor.expressionsMenu = expressionsMenu;
@@ -266,7 +253,8 @@ namespace Ahzkwid
                                     {
                                         expressionParameters.parameters = expressionParameters.parameters.GroupBy(x => x.name).Select(x => x.Last()).ToArray();
                                     }
-                                    SaveAsset(expressionParameters);
+                                    //expressionParameters=AnimatorCombiner.SaveAsset(expressionParameters) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters;
+                                    AnimatorCombiner.SaveAsset(expressionParameters);
                                 }
                             }
                             if (avatarDescriptor.expressionParameters?.parameters != null)
@@ -386,13 +374,32 @@ namespace Ahzkwid
             if (success == false)
             {
                 UnityEditor.Handles.Label(transform.position, "Finding Character");
+            }
+            else
+            {
+                UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
+            }
+        }
+#endif
+
+
+        // Update is called once per frame
+        void Update()
+        {
+            //foreach (var descriptorAutoSetter in FindObjectsOfType<DescriptorAutoSetter>())
+            {
+                var descriptorAutoSetter = this;
+                if (descriptorAutoSetter.success)
+                {
+                    return ;
+                }
                 {
 
-                    var parents = transform.GetComponentsInParent<Transform>();
+                    var parents = descriptorAutoSetter.transform.GetComponentsInParent<Transform>();
                     Transform root = null;
                     if (parents.Length == 1)
                     {
-                        root = transform;
+                        root = descriptorAutoSetter.transform;
                     }
                     else
                     {
@@ -406,7 +413,7 @@ namespace Ahzkwid
                     }
 
 
-                    foreach (var actionTrigger in actionTriggers)
+                    foreach (var actionTrigger in descriptorAutoSetter.actionTriggers)
                     {
                         actionTrigger.CheckNActionStart(avatarDescriptor);
                     }
@@ -414,25 +421,13 @@ namespace Ahzkwid
 
 
 
-                    if (autoDestroy)
+                    if (descriptorAutoSetter.autoDestroy)
                     {
-                        DestroyImmediate(this);
+                        DestroyImmediate(descriptorAutoSetter);
                     }
-                    success = true;
+                    descriptorAutoSetter.success = true;
                 }
             }
-            else
-            {
-                UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
-            }
-        }
-#endif
-
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
     }
 

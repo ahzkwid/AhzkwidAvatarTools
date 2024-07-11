@@ -10,7 +10,6 @@ namespace Ahzkwid
 #if UNITY_EDITOR
     using UnityEditor;
     using System.Linq;
-    using static AnimationRepairTool;
 
     [CustomEditor(typeof(AutoMerge))]
     public class AutoMergeEditor : Editor
@@ -374,16 +373,21 @@ namespace Ahzkwid
             SceneView.duringSceneGui -= OnSceneGUI;
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
         }
-         void OnSceneGUI(SceneView obj)
-        {
-            HandleDragAndDropEvents();
-        }
 
-         void OnHierarchyGUI(int instanceID, Rect selectionRect)
+        void OnSceneGUI(SceneView obj)
         {
+            var autoMerge = this;
+            autoMerge.HandleDragAndDropEvents();
             HandleDragAndDropEvents();
         }
-         void HandleDragAndDropEvents()
+        static void OnHierarchyGUI(int instanceID, Rect selectionRect)
+        {
+            foreach (var autoMerge in FindObjectsOfType<AutoMerge>())
+            {
+                autoMerge.HandleDragAndDropEvents();
+            }
+        }
+        public void HandleDragAndDropEvents()
         {
             if (Event.current.type == EventType.DragUpdated)
             {
@@ -404,8 +408,6 @@ namespace Ahzkwid
             //Debug.Log("OnDragPerform()");
             endDrag = true;
         }
-
-
         bool drag = false;
         bool endDrag = false;
 
@@ -415,6 +417,9 @@ namespace Ahzkwid
             DrawSnap();
 
         }
+
+
+
         // Start is called before the first frame update
 
         // Update is called once per frame

@@ -273,6 +273,7 @@ class AssetsCloningTool : EditorWindow
         if (GUILayout.Button("Run"))
         {
             ReplaceFiles(fromFolder, toFolder, ignores, option);
+            AssetDatabase.Refresh();
         }
         GUI.enabled = true;
     }

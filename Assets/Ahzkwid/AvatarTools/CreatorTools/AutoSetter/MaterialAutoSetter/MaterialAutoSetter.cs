@@ -100,9 +100,10 @@ namespace Ahzkwid
 #endif
 
 
-    
 
 
+
+    [ExecuteInEditMode]
     public class MaterialAutoSetter : MonoBehaviour
 {
     [System.Serializable]
@@ -122,13 +123,32 @@ namespace Ahzkwid
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {
-            var blendshapeAutoSetter = this;
-            var transform = blendshapeAutoSetter.transform;
+            var materialAutoSetter = this;
+            var transform = materialAutoSetter.transform;
             if (success == false)
             {
                 UnityEditor.Handles.Label(transform.position, "Finding Character");
-                {
+            }
+            else
+            {
+                UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
+            }
+        }
+#endif
+        // Start is called before the first frame update
 
+        // Update is called once per frame
+        void Update()
+        {
+            //foreach (var materialAutoSetter in FindObjectsOfType<MaterialAutoSetter>())
+            {
+                var materialAutoSetter = this;
+                var transform = materialAutoSetter.transform;
+                if (materialAutoSetter.success)
+                {
+                    return;
+                }
+                {
                     var parents = transform.GetComponentsInParent<Transform>();
                     Transform root = null;
                     if (parents.Length == 1)
@@ -144,36 +164,24 @@ namespace Ahzkwid
                     meshs = System.Array.FindAll(meshs, x => x != null);
 
 
-                    foreach (var blendshapeTarget in blendshapeAutoSetter.materialTargets)
+                    foreach (var materialTarget in materialAutoSetter.materialTargets)
                     {
-                        var renderers = System.Array.FindAll(skinnedMeshRenderers, renderer => renderer.sharedMesh == blendshapeTarget.mesh);
+                        var renderers = System.Array.FindAll(skinnedMeshRenderers, renderer => renderer.sharedMesh == materialTarget.mesh);
                         foreach (var renderer in renderers)
                         {
-                            renderer.materials = blendshapeTarget.materials;
-                            success = true;
+                            renderer.materials = materialTarget.materials;
+                            materialAutoSetter.success = true;
                         }
                     }
                 }
-                if (success)
+                if (materialAutoSetter.success)
                 {
-                    if (autoDestroy)
+                    if (materialAutoSetter.autoDestroy)
                     {
-                        DestroyImmediate(this);
+                        DestroyImmediate(materialAutoSetter);
                     }
                 }
             }
-            else
-            {
-                UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
-            }
         }
-#endif
-    // Start is called before the first frame update
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
 }

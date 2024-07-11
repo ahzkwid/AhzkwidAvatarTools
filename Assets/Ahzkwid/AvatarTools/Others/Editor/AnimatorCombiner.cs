@@ -5,7 +5,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Search;
-using System.IO;
 
 public class AnimatorCombiner : MonoBehaviour
 {
@@ -179,6 +178,7 @@ public class AnimatorCombiner : MonoBehaviour
             }
         }
         newBlendTree.children = childrens;
+        //newBlendTree= SaveAsset(newBlendTree) as BlendTree;
         SaveAsset(newBlendTree);
         return newBlendTree;
     }
@@ -263,13 +263,14 @@ public class AnimatorCombiner : MonoBehaviour
             }
         }
 
+        //newClip = SaveAsset(newClip) as AnimationClip;
         SaveAsset(newClip);
 
 
 
         return newClip;
     }
-    static void SaveAsset(Object asset)
+    public static void SaveAsset(Object asset)
     {
 #if UNITY_EDITOR
         var folderPath = $"Assets/EasyWearDatas/";
@@ -286,11 +287,40 @@ public class AnimatorCombiner : MonoBehaviour
         {
             ext = ".anim";
         }
-        var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
+        //var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
+        var fileName = asset.name;
+
+
+        {
+            var plusIndices = new List<int>();
+            for (int i = 0; i < fileName.Length; i++)
+            {
+                if (fileName[i] == '+')
+                {
+                    plusIndices.Add(i);
+                }
+            }
+
+            if (plusIndices.Count >= 2)
+            {
+                int secondLastPlusIndex = plusIndices[plusIndices.Count - 2];
+                fileName = fileName.Substring(secondLastPlusIndex + 1);
+            }
+        }
+
+
+
+
+        if (fileName.Length > 40)
+        {
+            fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+        }
         var path = $"{folderPath}/{fileName}{ext}";
-        asset.name = fileName;
+        path = AssetDatabase.GenerateUniqueAssetPath(path);
+        asset.name = System.IO.Path.GetFileNameWithoutExtension(path);
         AssetDatabase.CreateAsset(asset, path);
         AssetDatabase.Refresh();
+
 #endif
     }
 
