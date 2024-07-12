@@ -11,7 +11,7 @@ using UnityEditor;
 [InitializeOnLoad]
 class NamesReplaceTool : EditorWindow
 {
-    public GameObject[] gameObjects;
+    public Object[] objects;
     [SerializeField]
     //public Dictionary<string, string> keyValuePairs = new Dictionary<string, string>() { { " Variant", "" } };]
 
@@ -32,21 +32,21 @@ class NamesReplaceTool : EditorWindow
         //window.maxSize = window.minSize;
         window.Show();
     }
-    public void NamesReplace(GameObject[] gameObjects, NamesReplaceData[] keyValuePairs)
+    public void NamesReplace(Object[] objects, NamesReplaceData[] keyValuePairs)
     {
-        foreach (var gameObject in gameObjects)
+        foreach (var _object in objects)
         {
-            var name = gameObject.name;
+            var name = _object.name;
             foreach (var keyValuePair in keyValuePairs)
             {
                 name=name.Replace(keyValuePair.key, keyValuePair.value);
             }
             //
 
-            var assetPath = AssetDatabase.GetAssetPath(gameObject);
+            var assetPath = AssetDatabase.GetAssetPath(_object);
             if (string.IsNullOrWhiteSpace(assetPath))
             {
-                gameObject.name = name;
+                _object.name = name;
             }
             else
             {
@@ -75,15 +75,15 @@ class NamesReplaceTool : EditorWindow
         {
 
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(gameObjects)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(objects)));
             if (keyValuePairs == null || keyValuePairs.Length == 0)
             {
                 allReady = false;
             }
             GUI.enabled = allReady;
-            if (GUILayout.Button("Reset GameObjects"))
+            if (GUILayout.Button("Reset Objects"))
             {
-                gameObjects = null;
+                objects = null;
             }
             GUI.enabled = true;
             EditorGUILayout.Space();
@@ -105,7 +105,7 @@ class NamesReplaceTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Run"))
         {
-            NamesReplace(gameObjects, keyValuePairs);
+            NamesReplace(objects, keyValuePairs);
         }
         GUI.enabled = true;
     }

@@ -236,15 +236,19 @@ namespace Ahzkwid
                 return null;
             }
 
+            var renderers = FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
             foreach (var targetMesh in targetMeshs)
             {
                 if (targetMesh == null)
                 {
                     continue;
                 }
-                var targets = FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
-                targets = System.Array.FindAll(targets, target => target.sharedMesh == targetMesh);
+                var targets = System.Array.FindAll(renderers, target => target.sharedMesh == targetMesh);
 
+                if (targets.Length <= 0)
+                {
+                    continue;
+                }
 
                 //화면상거리
                 var screenPoint = HandleUtility.WorldToGUIPoint(transform.position);

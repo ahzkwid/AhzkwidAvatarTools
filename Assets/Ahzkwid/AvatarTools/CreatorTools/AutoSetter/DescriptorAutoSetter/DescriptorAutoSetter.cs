@@ -1,4 +1,5 @@
 
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,7 +7,6 @@ using VRC.SDK3.Avatars.Components;
 
 namespace Ahzkwid
 {
-#if UNITY_EDITOR
     using UnityEditor;
 
     [CustomEditor(typeof(DescriptorAutoSetter))]
@@ -31,7 +31,6 @@ namespace Ahzkwid
             serializedObject.ApplyModifiedProperties();
         }
     }
-#endif
 
 
     [ExecuteInEditMode]
@@ -110,7 +109,6 @@ namespace Ahzkwid
                     case Target.PlayableLayersGesture:
                     case Target.PlayableLayersAction:
                     case Target.PlayableLayersFX:
-#if UNITY_EDITOR
                         for (int i = 0; i < avatarDescriptor.baseAnimationLayers.Length; i++)
                         {
                             var animLayerType = TargetToAnimLayerType(target);
@@ -133,7 +131,6 @@ namespace Ahzkwid
                                 }
                             }
                         }
-#endif
 
                         break;
                     case Target.ExpressionsMenu:
@@ -368,7 +365,6 @@ namespace Ahzkwid
         public bool autoDestroy = true;
         // List<BlendshapeTarget> blendshapeTargets = new List<BlendshapeTarget>();
         public List<ActionTrigger> actionTriggers = new List<ActionTrigger>();
-#if UNITY_EDITOR
         void OnDrawGizmos()
         {
             if (success == false)
@@ -380,8 +376,6 @@ namespace Ahzkwid
                 UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
             }
         }
-#endif
-
 
         // Update is called once per frame
         void Update()
@@ -433,3 +427,4 @@ namespace Ahzkwid
 
 
 }
+#endif
