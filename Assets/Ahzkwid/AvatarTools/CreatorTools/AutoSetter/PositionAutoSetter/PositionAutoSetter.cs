@@ -187,6 +187,7 @@ namespace Ahzkwid
             {
                 UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
             }
+            Update();
         }
         // Start is called before the first frame update
 

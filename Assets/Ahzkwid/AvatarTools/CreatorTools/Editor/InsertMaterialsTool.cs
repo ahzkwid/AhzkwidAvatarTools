@@ -8,6 +8,7 @@ using UnityEngine;
 
 //텍스처 폴더 경로를 지정한 폴더 하위경로로 수정함
 using UnityEditor;
+using System.Collections.Generic;
 
 [InitializeOnLoad]
 class InsertMaterialsTool : EditorWindow
@@ -45,9 +46,15 @@ class InsertMaterialsTool : EditorWindow
     }
     public void InsertMaterials(GameObject root, Material[] materials)
     {
+        if (materials.Length == 0)
+        {
+            Debug.LogWarning("materials.Length == 0");
+            return;
+        }
         string path = AssetDatabase.GetAssetPath(root);
         if (string.IsNullOrEmpty(path))
         {
+            Debug.Log($"NotAsset");
             var renders = root.GetComponentsInChildren<Renderer>();
             foreach (var render in renders)
             {
@@ -75,14 +82,30 @@ class InsertMaterialsTool : EditorWindow
         }
         else
         {
+            Debug.Log($"IsAsset");
             var importer = AssetImporter.GetAtPath(path) as ModelImporter;
             if (importer == null)
             {
                 Debug.LogWarning("importer == null");
                 return;
             }
+            var serializedObject = new SerializedObject(importer);
+            var materialProperty = serializedObject.FindProperty("m_Materials");
+            var materialNames = new List<string>();
+
+            for (int i = 0; i < materialProperty.arraySize; i++)
+            {
+                var element = materialProperty.GetArrayElementAtIndex(i);
+                var materialName = element.FindPropertyRelative("name").stringValue;
+                materialNames.Add(materialName);
+            }
+
             foreach (var importerMaterial in importer.GetExternalObjectMap())
             {
+                Debug.Log($"{importerMaterial.Value.name}");
+
+                materialNames.Remove(importerMaterial.Value.name);
+
                 var material = System.Array.FindLast(materials, x => x.name == importerMaterial.Value.name);
                 if (material == null)
                 {
@@ -96,6 +119,21 @@ class InsertMaterialsTool : EditorWindow
                 Debug.Log($"{importerMaterial.Value.name}->{material.name}");
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), importerMaterial.Key.name), material);
             }
+
+            foreach (var materialName in materialNames)
+            {
+                Debug.Log($"Material name in model: {materialName}");
+                var material = System.Array.FindLast(materials, x => x.name == materialName);
+                if (material == null)
+                {
+                    Debug.LogWarning($"material == null for {materialName}");
+                    continue;
+                }
+                Debug.Log($"{materialName} -> {material.name}");
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), materialName), material);
+            }
+
+
             AssetDatabase.WriteImportSettingsIfDirty(path);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             Debug.Log("Materials updated for model: " + path);

@@ -125,7 +125,7 @@ class AvatarPoseCopyTool : EditorWindow
         var poseChilds = pose.GetComponentsInChildren<Transform>(true);
 
         var pathPoseChilds = System.Array.ConvertAll(poseChilds, x => SearchUtils.GetHierarchyPath(x.gameObject, false));
-        var relativePathPose = System.Array.ConvertAll(pathPoseChilds, x => Path.GetRelativePath(pathCharacter, x));
+        var relativePathPose = System.Array.ConvertAll(pathPoseChilds, x => Path.GetRelativePath(pathPose, x));
 
         foreach (var characterChild in characterChilds)
         {
@@ -133,7 +133,7 @@ class AvatarPoseCopyTool : EditorWindow
             var relativePathCharacter = Path.GetRelativePath(pathCharacter, pathCharacterChild);
 
 
-            var index = System.Array.FindIndex(relativePathPose, path => path == pathCharacterChild);
+            var index = System.Array.FindIndex(relativePathPose, path => path == relativePathCharacter);
             if (index < 0)
             {
                 return;

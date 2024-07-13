@@ -544,6 +544,7 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
             {
                 UnityEditor.Handles.Label(transform.position, "Success Blendshape AutoSetting");
             }
+            Update();
         }
 #endif
         // Start is called before the first frame update

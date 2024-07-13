@@ -419,6 +419,7 @@ namespace Ahzkwid
         void OnDrawGizmos()
         {
             DrawSnap();
+            Update();
 
         }
 

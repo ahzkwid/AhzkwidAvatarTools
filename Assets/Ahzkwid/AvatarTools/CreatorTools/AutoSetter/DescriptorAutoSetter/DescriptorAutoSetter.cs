@@ -375,6 +375,7 @@ namespace Ahzkwid
             {
                 UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
             }
+            Update();
         }
 
         // Update is called once per frame

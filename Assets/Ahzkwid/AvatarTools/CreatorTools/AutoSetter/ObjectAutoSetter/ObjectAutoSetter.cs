@@ -65,6 +65,8 @@ namespace Ahzkwid
             public Enabled rendererEnabled;
             public Enabled physboneEnabled;
             public Tag tag;
+            public bool changeScale=false;
+            public Vector3 localScale;
         }
 
         public enum Enabled
@@ -144,6 +146,7 @@ namespace Ahzkwid
             {
                 UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
             }
+            Update();
         }
 
         // Start is called before the first frame update
@@ -254,6 +257,10 @@ namespace Ahzkwid
                                     target.tag = tagString;
                                 }
                                 break;
+                        }
+                        if (objectActiveData.changeScale)
+                        {
+                            target.transform.localScale = objectActiveData.localScale;
                         }
                     }
                     objectAutoSetter.success = true;
