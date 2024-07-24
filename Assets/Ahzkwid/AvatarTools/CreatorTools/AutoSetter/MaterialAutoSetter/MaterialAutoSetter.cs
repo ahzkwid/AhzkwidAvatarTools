@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Ahzkwid
 {
+    using System.Linq;
 #if UNITY_EDITOR
     using UnityEditor;
 
@@ -20,7 +21,7 @@ namespace Ahzkwid
 
 
         public override void OnInspectorGUI()
-    {
+        {
             //base.OnInspectorGUI();
 
             GUI.enabled = false;
@@ -105,15 +106,21 @@ namespace Ahzkwid
 
     [ExecuteInEditMode]
     public class MaterialAutoSetter : MonoBehaviour
-{
-    [System.Serializable]
-    public class MaterialTarget
     {
-        public Object mesh;
-        //[BlendshapeSettingData]
-        public Material[] materials;
-        //public Dictionary<string,float> keyValuePairs = new Dictionary<string,float>();
-    }
+        [System.Serializable]
+        public class MaterialData
+        {
+            public Material material;
+            public int index;
+        }
+        [System.Serializable]
+        public class MaterialTarget
+        {
+            public Object mesh;
+            //[BlendshapeSettingData]
+            public MaterialData[] materialDatas;
+            //public Dictionary<string,float> keyValuePairs = new Dictionary<string,float>();
+        }
 
         bool success = false;
 
@@ -170,7 +177,25 @@ namespace Ahzkwid
                         var renderers = System.Array.FindAll(skinnedMeshRenderers, renderer => renderer.sharedMesh == materialTarget.mesh);
                         foreach (var renderer in renderers)
                         {
-                            renderer.materials = materialTarget.materials;
+                            var materialDatas = materialTarget.materialDatas;
+                            var materialsLength = materialDatas.Length;
+                            materialsLength = Mathf.Max(materialsLength, materialDatas.Max(x => x.index) + 1);
+                            materialsLength = Mathf.Max(materialsLength, renderer.sharedMaterials.Length);
+                            var materials = new Material[materialsLength];
+                            for (int i = 0; i < materials.Length; i++)
+                            {
+                                var materialData = System.Array.Find(materialDatas, x => x.index == i);
+                                if (materialData != null)
+                                {
+                                    materials[i] = materialData.material;
+                                    continue;
+                                }
+                                if (i < renderer.sharedMaterials.Length)
+                                {
+                                    materials[i] = renderer.sharedMaterials[i];
+                                }
+                            }
+                            renderer.materials = materials;
                             materialAutoSetter.success = true;
                         }
                     }
@@ -184,5 +209,5 @@ namespace Ahzkwid
                 }
             }
         }
-}
+    }
 }

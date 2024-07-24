@@ -665,6 +665,14 @@ class AvatarMergeTool : EditorWindow
     {
 
 
+        if (rootBoneCloth == null)
+        {
+            Debug.LogWarning("rootBoneCloth==null");
+            return;
+        }
+
+
+
         var characterChilds = new List<Transform>();
         for (int i = 0; i < rootBoneCharacter.childCount; i++)
         {

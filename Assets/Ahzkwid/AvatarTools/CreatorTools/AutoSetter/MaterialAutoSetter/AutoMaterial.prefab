@@ -45,4 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoDestroy: 1
-  materialTargets: []
+  materialTargets:
+  - mesh: {fileID: 0}
+    materials:
+    - {fileID: 0}
