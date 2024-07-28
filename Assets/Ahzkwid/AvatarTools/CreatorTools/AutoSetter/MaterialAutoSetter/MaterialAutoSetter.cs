@@ -175,6 +175,8 @@ namespace Ahzkwid
                     foreach (var materialTarget in materialAutoSetter.materialTargets)
                     {
                         var renderers = System.Array.FindAll(skinnedMeshRenderers, renderer => renderer.sharedMesh == materialTarget.mesh);
+
+
                         foreach (var renderer in renderers)
                         {
                             var materialDatas = materialTarget.materialDatas;
@@ -195,6 +197,9 @@ namespace Ahzkwid
                                     materials[i] = renderer.sharedMaterials[i];
                                 }
                             }
+#if UNITY_EDITOR
+                            UnityEditor.Undo.RecordObject(renderer, "ChangeMaterial");
+#endif
                             renderer.materials = materials;
                             materialAutoSetter.success = true;
                         }

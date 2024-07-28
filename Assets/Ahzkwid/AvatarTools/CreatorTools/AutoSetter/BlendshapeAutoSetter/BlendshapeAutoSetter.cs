@@ -279,6 +279,10 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
                         var fieldRect = rect;
                         fieldRect.height = EditorGUIUtility.singleLineHeight;
+
+
+
+                    var blendshapeValues = blendshapeAutoSetter.blendshapeTargets[index].blendshapeValues;
                     //EditorGUI.PropertyField(fieldRect, elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)));
                     {
                         var property = elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh));
@@ -296,6 +300,44 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                                 if (renderer != null)
                                 {
                                     fieldReturn = renderer.sharedMesh;
+
+
+                                    if (blendshapeValues.Count==0)
+                                    {
+                                        var sharedMesh = renderer.sharedMesh;
+                                        for (int i = 0; i < sharedMesh.blendShapeCount; i++)
+                                        {
+
+                                            var blendshapeSettingData = new BlendshapeAutoSetter.BlendshapeSettingData();
+                                            blendshapeSettingData.key = sharedMesh.GetBlendShapeName(i);
+                                            blendshapeSettingData.value = renderer.GetBlendShapeWeight(i);
+                                            if (blendshapeSettingData.value>0)
+                                            {
+                                                blendshapeValues.Add(blendshapeSettingData);
+                                            }
+                                        }
+                                        if (blendshapeValues.Count>0)
+                                        {
+
+                                            serializedObject.ApplyModifiedProperties();
+                                            {
+                                                blendshapeAutoSetter.blendshapeTargets[index].blendshapeValues = blendshapeValues;
+                                            }
+                                            serializedObject.Update();
+
+                                            //elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.blendshapeValues)).objectReferenceValue = blendshapeValues;
+                                            /*
+                                            var blendshapeValuesProperty = elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.blendshapeValues));
+                                            blendshapeValuesProperty.arraySize = blendshapeValues.Count;
+                                            for (int i = 0; i < blendshapeValuesProperty.arraySize; i++)
+                                            {
+                                                blendshapeValuesProperty.GetArrayElementAtIndex(i).GetArrayElementAtIndex(0).stringValue = blendshapeValues[i].key;
+                                                blendshapeValuesProperty.GetArrayElementAtIndex(i).GetArrayElementAtIndex(1).floatValue = blendshapeValues[i].value;
+                                            }
+                                            */
+                                            //UnityEditor.EditorUtility.SetDirty(target);
+                                        }
+                                    }
                                 }
                             }
                             if ((fieldReturn is Mesh) == false)
@@ -306,7 +348,6 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                         }
                     }
                     var mesh = elementProperty.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeTarget.mesh)).objectReferenceValue as Mesh;
-                    var blendshapeValues = blendshapeAutoSetter.blendshapeTargets[index].blendshapeValues;
                     /*
                         fieldRect.y += EditorGUIUtility.singleLineHeight;
                         //if (EditorGUILayout.DropdownButton(new GUIContent($"{mesh.name}.blendshapeNames"), FocusType.Passive))
@@ -474,7 +515,12 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
 
 
                 DrawBlendshapeTargets(nameof(BlendshapeAutoSetter.blendshapeTargets));
+            }
+            serializedObject.ApplyModifiedProperties();
 
+
+            serializedObject.Update();
+            {
                 var blendshapeAutoSetter = target as BlendshapeAutoSetter;
                 foreach (var blendshapeTarget in blendshapeAutoSetter.blendshapeTargets)
                 {
@@ -588,6 +634,9 @@ public class BlendshapeSettingDataAttribute : PropertyAttribute
                                 renderer.SetBlendShapeWeight(index, blendshapeValue.value);
                                 blendshapeAutoSetter.success = true;
                             }
+#if UNITY_EDITOR
+                            UnityEditor.Undo.RecordObject(renderer, "Change BlendShape");
+#endif
                         }
                     }
                 }
