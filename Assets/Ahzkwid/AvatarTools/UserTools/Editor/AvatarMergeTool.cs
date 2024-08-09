@@ -18,8 +18,6 @@ using UnityEditor;
 using UnityEditor.Search;
 using System.Linq;
 using System.Collections;
-using UnityEditor.Animations;
-
 
 [InitializeOnLoad]
 class AvatarMergeTool : EditorWindow
@@ -678,13 +676,14 @@ class AvatarMergeTool : EditorWindow
         {
             characterChilds.Add(rootBoneCharacter.GetChild(i));
         }
-
+        /*
 
         var clothChilds = new List<Transform>();
         for (int i = 0; i < rootBoneCharacter.childCount; i++)
         {
-            characterChilds.Add(rootBoneCharacter.GetChild(i));
+            clothChilds.Add(rootBoneCloth.GetChild(i));
         }
+        */
 
 
 
@@ -750,6 +749,17 @@ class AvatarMergeTool : EditorWindow
             }
             else
             {
+                if (childCharacter.transform.localPosition.x!=0)
+                {
+                    if (childCharacter.transform.localPosition.x > childCloth.transform.localPosition.x * 99f)
+                    {
+                        childCharacter.transform.localPosition = childCloth.transform.localPosition;
+                    }
+                    if (childCharacter.transform.localPosition.x * 99f < childCloth.transform.localPosition.x)
+                    {
+                        childCharacter.transform.localPosition = childCloth.transform.localPosition;
+                    }
+                }
                 CreateChildBones(childCharacter, childCloth);
             }
         }
@@ -2013,7 +2023,6 @@ class AvatarMergeTool : EditorWindow
             Debug.LogWarning("Repair");
             */
 
-
             foreach (var clothRenderer in clothRenderers)
             {
                 if (PrefabUtility.IsPartOfPrefabInstance(clothRenderer))
@@ -2032,17 +2041,15 @@ class AvatarMergeTool : EditorWindow
                 Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}");
 
 
-                /*
-                //var bonesFilters= System.Array.FindAll(bones, x => System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
-                var boneList = new List<Transform>();
-                for (int i = 0; i < clothRenderer.bones.Length; i++)
-                {
-                    //var boneName = clothRenderer.bones[i].name;
-                    //var boneNameParent = clothRenderer.bones[i].parent.name;
-                    //boneList.Add(System.Array.Find(bones, x => (x.name == boneName) && (x.parent.name == boneNameParent)));
-                    boneList.Add(GetEqualBone(bones, clothRenderer.bones[i]));
-                }
-                */
+                ////var bonesFilters= System.Array.FindAll(bones, x => System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
+                //var boneList = new List<Transform>();
+                //for (int i = 0; i < clothRenderer.bones.Length; i++)
+                //{
+                //    //var boneName = clothRenderer.bones[i].name;
+                //    //var boneNameParent = clothRenderer.bones[i].parent.name;
+                //    //boneList.Add(System.Array.Find(bones, x => (x.name == boneName) && (x.parent.name == boneNameParent)));
+                //    boneList.Add(GetEqualBone(bones, clothRenderer.bones[i]));
+                //}
                 //clothRenderer.bones = boneList.ToArray();
                 Debug.Log($"{clothRenderer}.bones.Length (Pre): {clothRenderer.bones.Length}");
                 var equalBones = GetEqualBones(bones, clothRenderer.bones, character.transform, cloth.transform);
@@ -2065,6 +2072,7 @@ class AvatarMergeTool : EditorWindow
                             var relativePath=RelativePath(clothRenderer.probeAnchor, cloth.transform);
                             if (relativePath == null)
                             {
+                                //이미 할당됨
                                 continue;
                             }
                             var equalBone = System.Array.Find(transforms, x => {
@@ -2086,7 +2094,7 @@ class AvatarMergeTool : EditorWindow
                 //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
             }
 
-
+            /*
             {
                 var characterComponents = character.GetComponentsInChildren<Component>(true);
                 var clothComponents = cloth.GetComponentsInChildren<Component>(true);
@@ -2095,7 +2103,7 @@ class AvatarMergeTool : EditorWindow
                 //characterComponents = System.Array.FindAll(characterComponents, x => System.Array.FindIndex(clothRelativePaths, relativePath => RelativePath(x.transform, character.transform) == relativePath) >= 0);
                 //clothComponents = System.Array.FindAll(clothComponents, x => System.Array.FindIndex(clothRelativePaths, relativePath => RelativePath(x.transform, cloth.transform) == relativePath) >= 0);
 
-                foreach (var component in clothComponents)
+                foreach (var component in characterComponents)
                 {
                     if (component == null)
                     {
@@ -2107,29 +2115,46 @@ class AvatarMergeTool : EditorWindow
                     }
                     var relativePath = RelativePath(component.transform, cloth.transform);
 
-                    if (relativePath==null)
+                    if (relativePath!=null)
                     {
-                        continue;
-                    }
-
-
-                    var equalTypeComponents = System.Array.FindAll(characterComponents, x => x.GetType() == component.GetType());
-                    if (System.Array.FindIndex(equalTypeComponents, x => {
-                        var characterRelativePath = RelativePath(x.transform, character.transform);
-                        if (characterRelativePath==null)
+                        //의상의 아마추어 하위는 진행하지 않음
+                        //continue;
+                        if (relativePath.Length > "Armature".Length)
                         {
-                            return false;
+                            if (relativePath.Substring(0, "Armature".Length).ToLower() == "armature")
+                            {
+                                continue;
+                            }
                         }
-                        return relativePath == characterRelativePath;
-                        }) >= 0)
-                    {
-                        continue;
                     }
+
+                    //if (SearchUtils.GetHierarchyPath(component.gameObject, false).Contains(SearchUtils.GetHierarchyPath(cloth.gameObject, false)))
+                    //{
+                    //    continue;
+                    //}
+
+                    //var equalTypeComponents = System.Array.FindAll(characterComponents, x => x.GetType() == component.GetType());
+                    //if (System.Array.FindIndex(equalTypeComponents, x => {
+                    //    var characterRelativePath = RelativePath(x.transform, character.transform);
+                    //    if (characterRelativePath==null)
+                    //    {
+                    //        return false;
+                    //    }
+                    //    return relativePath == characterRelativePath;
+                    //    }) < 0)
+                    //{
+                    //    //동일한 컴포넌트중 캐릭터상에 존재하지 않으면 스킵
+                    //    continue;
+                    //}
 
                     var equalTransform = EqualTransform(component.transform, cloth.transform, character.transform);
 
                     if (equalTransform == null)
                     {
+                        Debug.LogWarning($"equalTransform==null");
+                        Debug.LogWarning($"{SearchUtils.GetHierarchyPath(component.transform.gameObject, false)}" +
+                            $"\n{SearchUtils.GetHierarchyPath(cloth.gameObject, false)}" +
+                            $"\n{SearchUtils.GetHierarchyPath(character.gameObject, false)}");
                         continue;
                     }
                     var newComponent=equalTransform.gameObject.AddComponent(component.GetType());
@@ -2147,11 +2172,7 @@ class AvatarMergeTool : EditorWindow
 
 
             }
-
-
-
-
-
+            */
 
 
 
@@ -2164,11 +2185,13 @@ class AvatarMergeTool : EditorWindow
 
 
             {
+                //기타 컴포넌트 병합
+
                 bool IsArrayCustom(System.Type type)
                 {
                     return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
                 }
-                var components = cloth.GetComponentsInChildren<Component>(true);
+                var components = character.GetComponentsInChildren<Component>(true);
                 foreach (var component in components)
                 {
                     if (component == null)
@@ -2178,6 +2201,20 @@ class AvatarMergeTool : EditorWindow
                     if (component is Transform)
                     {
                         continue;
+                    }
+                    //var compPath = SearchUtils.GetHierarchyPath(component.gameObject, false);
+                    var relativePath = RelativePath(component.transform, cloth.transform);
+                    if (relativePath != null)
+                    {
+                        //의상의 아마추어 하위는 진행하지 않음
+                        //continue;
+                        if (relativePath.Length > "Armature".Length)
+                        {
+                            if (relativePath.Substring(0, "Armature".Length).ToLower() == "armature")
+                            {
+                                continue;
+                            }
+                        }
                     }
                     //Debug.Log($"{component.GetType()} {component.name}");
                     foreach (var field in component.GetType().GetFields())
@@ -2216,7 +2253,18 @@ class AvatarMergeTool : EditorWindow
                                 Debug.Log($"GetComponent:{transform.GetComponent(item.GetType())}");
                                 var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
                                 Debug.Log($"{ilist[i]}:{transform.GetComponent(item.GetType())}");
-                                ilist[i] = equalTransform.GetComponent(item.GetType());
+                                if (equalTransform==null)
+                                {
+                                    Debug.LogWarning($"equalTransform==null");
+                                    Debug.LogWarning($"{SearchUtils.GetHierarchyPath(transform.gameObject, false)}" +
+                                        $"\n{SearchUtils.GetHierarchyPath(cloth.gameObject, false)}" +
+                                        $"\n{SearchUtils.GetHierarchyPath(character.gameObject, false)}");
+                                    ilist[i] = item;
+                                }
+                                else
+                                {
+                                    ilist[i] = equalTransform.GetComponent(item.GetType());
+                                }
                             }
                             field.SetValue(component, ilist);
 
@@ -2227,6 +2275,10 @@ class AvatarMergeTool : EditorWindow
                             {
                                 var transform = value as Transform;
                                 var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                                if (equalTransform==null)
+                                {
+                                    continue;
+                                }
                                 field.SetValue(component, equalTransform);
                                 Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
                                 continue;

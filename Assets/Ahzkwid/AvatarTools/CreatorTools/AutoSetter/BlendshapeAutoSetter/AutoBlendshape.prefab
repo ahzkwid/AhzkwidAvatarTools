@@ -45,4 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoDestroy: 1
-  blendshapeTargets: []
+  blendshapeTargets:
+  - mesh: {fileID: 0}
+    blendshapeValues: []
