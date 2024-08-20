@@ -488,6 +488,10 @@ class AvatarMergeTool : EditorWindow
                     {
                         //Merge(character, cloth);
                         //foreach (var cloth in cloths)
+                        if (cloth.transform.parent== character.transform)
+                        {
+                            cloth.transform.parent = null;
+                        }
                         {
                             Merge(character, cloth, mergeType);
                         }
@@ -1741,25 +1745,80 @@ class AvatarMergeTool : EditorWindow
                 {
                     continue;
                 }
+                if (field.Name == "root")
+                {
+                    continue;
+                }
                 UnityEditor.Handles.Label(transform.position, transform.name);
 
-
-                var newPosition = Handles.PositionHandle(transform.position, Quaternion.identity);
-
-                if (newPosition != transform.position)
+                var symmetricalTransform = GetSymmetricalTransform(transform);
+                switch (UnityEditor.Tools.current)
                 {
-                    UnityEditor.Undo.RecordObject(transform, "Move Transform");
-                    transform.position = newPosition;
+                    case Tool.View:
+                        break;
+                    case Tool.Move:
+                        var newPosition = Handles.PositionHandle(transform.position, Quaternion.identity);
 
-                    var symmetricalTransform = GetSymmetricalTransform(transform);
-                    if (symmetricalTransform != null)
-                    {
-                        var localPosition = root.InverseTransformPoint(newPosition);
-                        localPosition.x = -localPosition.x;
-                        symmetricalTransform.position = root.TransformPoint(localPosition);
-                        UnityEditor.Undo.RecordObject(symmetricalTransform, "Move Transform");
-                    }
+                        if (newPosition != transform.position)
+                        {
+                            UnityEditor.Undo.RecordObject(transform, "Move Transform");
+                            transform.position = newPosition;
+
+                            if (symmetricalTransform != null)
+                            {
+                                UnityEditor.Undo.RecordObject(symmetricalTransform, "Move Transform");
+                                var localPosition = root.InverseTransformPoint(newPosition);
+                                localPosition.x = -localPosition.x;
+                                symmetricalTransform.position = root.TransformPoint(localPosition);
+                            }
+                        }
+                        break;
+                    case Tool.Rotate:
+                        var newRotation = Handles.RotationHandle(transform.rotation, transform.position);
+
+                        if (newRotation != transform.rotation)
+                        {
+                            UnityEditor.Undo.RecordObject(transform, "Rotate Transform");
+                            transform.rotation = newRotation;
+
+                            if (symmetricalTransform != null)
+                            {
+                                UnityEditor.Undo.RecordObject(symmetricalTransform, "Rotate Transform");
+                                var localRotation = Quaternion.Inverse(root.rotation) * newRotation;
+                                localRotation = new Quaternion(-localRotation.x, localRotation.y, localRotation.z, localRotation.w); // 대칭 회전 처리
+                                symmetricalTransform.rotation = root.rotation * localRotation;
+                            }
+                        }
+                        break;
+                    case Tool.Scale:
+                        var newScale = Handles.ScaleHandle(transform.localScale, transform.position, Quaternion.identity);
+
+                        if (newScale != transform.localScale)
+                        {
+                            UnityEditor.Undo.RecordObject(transform, "Scale Transform");
+                            transform.localScale = newScale;
+
+                            if (symmetricalTransform != null)
+                            {
+                                UnityEditor.Undo.RecordObject(symmetricalTransform, "Scale Transform");
+                                var localScale = new Vector3(newScale.x, newScale.y, newScale.z); 
+                                symmetricalTransform.localScale = localScale;
+                            }
+                        }
+
+                        break;
+                    case Tool.Rect:
+                        break;
+                    case Tool.Transform:
+                        break;
+                    case Tool.Custom:
+                        break;
+                    case Tool.None:
+                        break;
+                    default:
+                        break;
                 }
+
             }
 #endif
         }

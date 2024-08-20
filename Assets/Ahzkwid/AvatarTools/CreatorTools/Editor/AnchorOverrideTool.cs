@@ -28,7 +28,7 @@ class AnchorOverrideTool : EditorWindow
     }
     public void SetAnchor(GameObject root, Transform anchor)
     {
-        var renders=root.GetComponentsInChildren<SkinnedMeshRenderer>();
+        var renders=root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
         foreach (var render in renders)
         {
             render.probeAnchor = anchor;
