@@ -39,7 +39,7 @@ public class AnimationRepairToolActionAttribute : PropertyAttribute
 class AnimationRepairTool : EditorWindow
 {
     public AnimationClip animationClip;
-    public Action[] actions;
+    public Action[] actions= new Action[1];
 
     public AnimationData[] animationDatas;
 
@@ -61,7 +61,7 @@ class AnimationRepairTool : EditorWindow
         }
         public enum Option
         {
-            Replace, Add
+            Replace, Add,AddFirst
         }
         public Target target;
         public Option option;
@@ -174,6 +174,9 @@ class AnimationRepairTool : EditorWindow
                         break;
                     case Action.Option.Add:
                         text += action.value;
+                        break;
+                    case Action.Option.AddFirst:
+                        text = action.value+ text;
                         break;
                     default:
                         break;

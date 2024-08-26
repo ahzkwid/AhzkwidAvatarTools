@@ -44,7 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 143c306c6b0e84c42b88966ee8077742, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetMeshs: []
+  category: 0
+  mergeTrigger: 1
+  targetMeshs:
+  - {fileID: 0}
   clothRoots:
   - option: 0
     parentIndex: 1

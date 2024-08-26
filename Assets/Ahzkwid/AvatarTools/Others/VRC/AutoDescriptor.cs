@@ -7,16 +7,29 @@ using VRC.SDK3.Avatars.Components;
 
 namespace Ahzkwid
 {
+    using BestHTTP.SecureProtocol.Org.BouncyCastle.Asn1.Crmf;
     using UnityEditor;
 
-    [CustomEditor(typeof(DescriptorAutoSetter))]
-    public class DescriptorAutoSetterEditor : Editor
+    [CustomEditor(typeof(AutoDescriptor))]
+    public class AutoDescriptorEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
 
 
+            var autoDescriptor= (AutoDescriptor)target;
+            foreach (var actionTrigger in autoDescriptor.actionTriggers)
+            {
+                foreach (var action in actionTrigger.actions)
+                {
+                    if (action.value is GameObject)
+                    {
+                        var gameObject= action.value as GameObject;
+                        action.value = gameObject.GetComponent<Animator>();
+                    }
+                }
+            }
 
 
             serializedObject.Update();
@@ -34,8 +47,10 @@ namespace Ahzkwid
 
 
     [ExecuteInEditMode]
-    public class DescriptorAutoSetter : MonoBehaviour
+    public class AutoDescriptor : MonoBehaviour
     {
+
+         bool debugMode=false;
         public enum Target
         {
             PlayableLayersBase,
@@ -82,7 +97,38 @@ namespace Ahzkwid
         }
 
 
-
+        AvatarTool.AssetManager.FileOptions GetFileOptions()
+        {
+            var fileOption = AvatarTool.AssetManager.FileOptions.Normal;
+            if (EditorApplication.isPlaying)
+            {
+                /*
+                if (debugMode)
+                {
+                    fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+                }
+                else
+                {
+                    fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
+                }
+                */
+                fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+            }
+            else
+            {
+                switch (mergeTrigger)
+                {
+                    case MergeTrigger.Always:
+                        break;
+                    case MergeTrigger.Runtime:
+                        fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return fileOption;
+        }
 
         [System.Serializable]
         public class Action
@@ -95,10 +141,16 @@ namespace Ahzkwid
             public Target target;
             public Option option;
             public Object value;
-            public void Run(VRCAvatarDescriptor avatarDescriptor)
+
+            void SaveAsset(Object asset, AutoDescriptor autoDescriptor)
+            {
+                AvatarTool.AssetManager.SaveAsset(asset, autoDescriptor.GetFileOptions());
+            }
+
+            public void End(VRCAvatarDescriptor avatarDescriptor)
             {
 
-
+                Debug.Log($"{GetType().Name}.End()");
 
 
 
@@ -118,16 +170,92 @@ namespace Ahzkwid
                                 avatarDescriptor.customizeAnimationLayers = true;
                                 avatarDescriptor.baseAnimationLayers[i].isDefault = false;
                                 {
-
-                                    var animatorController = (RuntimeAnimatorController)value;
-                                    if (option == Option.Merge)
+                                    if (value is Animator)
                                     {
-                                        animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController, avatarDescriptor.transform);
-                                        //AnimatorCombiner.ExportAnimatorController(animatorController, "Assets/Temp/TempAnimator.controller");
-                                        //animatorController=AnimatorCombiner.SaveAsset(animatorController) as RuntimeAnimatorController;
-                                        AnimatorCombiner.SaveAsset(animatorController);
+                                        var animator = value as Animator;
+                                        DestroyImmediate(animator);
                                     }
-                                    avatarDescriptor.baseAnimationLayers[i].animatorController = animatorController;
+                                }
+                            }
+                        }
+
+                        break;
+                    case Target.ExpressionsMenu:
+                        break;
+                    case Target.ExpressionsParameters:
+                        break;
+                }
+            }
+            public void Run(VRCAvatarDescriptor avatarDescriptor, AutoDescriptor autoDescriptor)
+            {
+
+                Debug.Log($"{GetType().Name}.Run()");
+
+
+
+                switch (target)
+                {
+                    case Target.PlayableLayersBase:
+                    case Target.PlayableLayersAddtive:
+                    case Target.PlayableLayersGesture:
+                    case Target.PlayableLayersAction:
+                    case Target.PlayableLayersFX:
+                        for (int i = 0; i < avatarDescriptor.baseAnimationLayers.Length; i++)
+                        {
+                            var animLayerType = TargetToAnimLayerType(target);
+                            var baseAnimationLayer = avatarDescriptor.baseAnimationLayers[i];
+                            if (baseAnimationLayer.type == animLayerType)
+                            {
+                                avatarDescriptor.customizeAnimationLayers = true;
+                                avatarDescriptor.baseAnimationLayers[i].isDefault = false;
+                                {
+                                    RuntimeAnimatorController animatorController = null;
+                                    Transform rootChild = null;
+                                    if (value != null)
+                                    {
+                                        if (value is Animator)
+                                        {
+                                            var animator = value as Animator;
+                                            animatorController = animator.runtimeAnimatorController;
+                                            rootChild = animator.transform;
+                                        }
+                                        if (value is RuntimeAnimatorController)
+                                        {
+                                            animatorController = (RuntimeAnimatorController)value;
+                                        }
+                                    }
+                                    if (value == null)
+                                    {
+                                        if (option == Option.Merge)
+                                        {
+                                            continue;
+                                        }
+                                        avatarDescriptor.baseAnimationLayers[i].animatorController = null;
+                                    }
+                                    else
+                                    {
+                                        if (option == Option.Merge)
+                                        {
+                                            /*
+                                            var useSave = true;
+                                            if (debugMode)
+                                            {
+                                            }
+                                            else
+                                            {
+                                                if (EditorApplication.isPlaying)
+                                                {
+                                                    useSave = false;
+                                                }
+                                            }
+                                            */
+                                            animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController, autoDescriptor.GetFileOptions(), avatarDescriptor.transform, rootChild);
+                                            //AnimatorCombiner.ExportAnimatorController(animatorController, "Assets/Temp/TempAnimator.controller");
+                                            //animatorController=AnimatorCombiner.SaveAsset(animatorController) as RuntimeAnimatorController;
+                                            SaveAsset(animatorController, autoDescriptor);
+                                        }
+                                        avatarDescriptor.baseAnimationLayers[i].animatorController = animatorController;
+                                    }
                                 }
                             }
                         }
@@ -140,16 +268,47 @@ namespace Ahzkwid
                             var expressionsMenu = expressionsMenuValue;
                             if (option == Option.Merge)
                             {
-                                //expressionsMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
-                                if (avatarDescriptor.expressionsMenu != null)
+                                /*
+                                static void CopyClass<T>(T source, T target)
                                 {
-                                    expressionsMenu = Instantiate(avatarDescriptor.expressionsMenu);
-                                    var name = $"{avatarDescriptor.expressionsMenu?.name}+{expressionsMenuValue?.name}";
+                                    var fields = typeof(T).GetFields();
+                                    foreach (var field in fields)
+                                    {
+                                        if (field.Name == "m_InstanceID")
+                                        {
+                                            continue;
+                                        }
+                                        field.SetValue(target, field.GetValue(source));
+                                    }
+
+                                    var properties = typeof(T).GetProperties();
+                                    foreach (var property in properties)
+                                    {
+                                        if (!property.CanWrite || !property.CanRead)
+                                        {
+                                            continue;
+                                        }
+                                        property.SetValue(target, property.GetValue(source));
+                                    }
+                                }
+                                */
+                                VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu MergeMenu(params VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu[] menus)
+                                {
+                                    menus = System.Array.FindAll(menus, x => x != null);
+                                    if (menus.Length==0)
+                                    {
+                                        return null;
+                                    }
+
+
+
+                                    var menu = Instantiate(menus.First());
+                                    var name = $"{menus.First()?.name}+{menus.Last()?.name}";
                                     if (name.Length > 40)
                                     {
                                         name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
                                     }
-                                    expressionsMenu.name = name;
+                                    menu.name = name;
 
                                     //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
                                     /*
@@ -169,28 +328,50 @@ namespace Ahzkwid
                                         }
                                     }
                                     */
-                                    if (expressionsMenuValue != null)
+
+                                    for (int i = 1; i < menus.Length; i++)
                                     {
-                                        foreach (var item in expressionsMenuValue.controls)
+                                        foreach (var item in menus[i].controls)
                                         {
                                             var targetClass = item;
                                             var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
                                             var fields = targetClass.GetType().GetFields();
                                             foreach (var field in fields)
                                             {
+                                                if (field.Name == "m_InstanceID")
+                                                {
+                                                    continue;
+                                                }
                                                 field.SetValue(itemCopy, field.GetValue(targetClass));
                                             }
-                                            expressionsMenu.controls.Add(itemCopy);
+                                            var control = menu.controls.Find(x => x.name == item.name);
+
+                                            if ((control == null)
+                                                || (control.type != VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu)
+                                                || (item.type != VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu))
+                                            {
+                                                menu.controls.Add(itemCopy);
+                                            }
+                                            else
+                                            {
+                                                control.subMenu = MergeMenu(control.subMenu, itemCopy.subMenu);
+
+                                                var icons = System.Array.FindAll(new Texture2D[] { control.icon, itemCopy.icon },x=>x!=null);
+                                                control.icon = icons.LastOrDefault();
+                                            }
                                         }
                                         //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
                                     }
-                                    if (expressionsMenu.controls != null)
+                                    if (menu.controls != null)
                                     {
                                         //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
                                     }
                                     //expressionsMenu = AnimatorCombiner.SaveAsset(expressionsMenu) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu;
-                                    AnimatorCombiner.SaveAsset(expressionsMenu);
+                                    SaveAsset(menu, autoDescriptor);
+                                    return menu;
                                 }
+                                //expressionsMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
+                                expressionsMenu = MergeMenu(avatarDescriptor.expressionsMenu, expressionsMenuValue);
                             }
                             avatarDescriptor.expressionsMenu = expressionsMenu;
                         }
@@ -251,7 +432,7 @@ namespace Ahzkwid
                                         expressionParameters.parameters = expressionParameters.parameters.GroupBy(x => x.name).Select(x => x.Last()).ToArray();
                                     }
                                     //expressionParameters=AnimatorCombiner.SaveAsset(expressionParameters) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters;
-                                    AnimatorCombiner.SaveAsset(expressionParameters);
+                                    SaveAsset(expressionParameters, autoDescriptor);
                                 }
                             }
                             if (avatarDescriptor.expressionParameters?.parameters != null)
@@ -333,7 +514,7 @@ namespace Ahzkwid
             public Trigger[] triggers;
             public Action[] actions;
 
-            public void CheckNActionStart(VRCAvatarDescriptor avatarDescriptor)
+             bool Check(VRCAvatarDescriptor avatarDescriptor)
             {
                 var triggerCheckReturns = System.Array.ConvertAll(triggers, x => x.Check(avatarDescriptor));
 
@@ -350,11 +531,40 @@ namespace Ahzkwid
                             break;
                     }
                 }
-                if (triggerCheckReturn)
+                return triggerCheckReturn;
+            }
+            public void CheckNActionStart(VRCAvatarDescriptor avatarDescriptor, AutoDescriptor autoDescriptor)
+            {
+                var triggerCheckReturns = System.Array.ConvertAll(triggers, x => x.Check(avatarDescriptor));
+
+                var triggerCheckReturn = true;
+                if (triggerCheckReturns.Length > 0)
+                {
+                    switch (triggersOperator)
+                    {
+                        case TriggersOperator.AND:
+                            triggerCheckReturn = triggerCheckReturns.All(x => x);
+                            break;
+                        case TriggersOperator.OR:
+                            triggerCheckReturn = triggerCheckReturns.Any(x => x);
+                            break;
+                    }
+                }
+                if (Check(avatarDescriptor))
                 {
                     foreach (var action in actions)
                     {
-                        action.Run(avatarDescriptor);
+                        action.Run(avatarDescriptor, autoDescriptor);
+                    }
+                }
+            }
+            public void End(VRCAvatarDescriptor avatarDescriptor)
+            {
+                if (Check(avatarDescriptor))
+                {
+                    foreach (var action in actions)
+                    {
+                        action.End(avatarDescriptor);
                     }
                 }
             }
@@ -362,66 +572,93 @@ namespace Ahzkwid
 
         bool success = false;
 
-        public bool autoDestroy = true;
+        public enum MergeTrigger
+        {
+            Always, Runtime
+        }
+        public MergeTrigger mergeTrigger= MergeTrigger.Runtime;
+        //public bool autoDestroy = true;
         // List<BlendshapeTarget> blendshapeTargets = new List<BlendshapeTarget>();
         public List<ActionTrigger> actionTriggers = new List<ActionTrigger>();
         void OnDrawGizmos()
         {
-            if (success == false)
+            if (mergeTrigger!=MergeTrigger.Runtime)
             {
-                UnityEditor.Handles.Label(transform.position, "Finding Character");
-            }
-            else
-            {
-                UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
+                if (success == false)
+                {
+                    UnityEditor.Handles.Label(transform.position, "Finding Character");
+                }
+                else
+                {
+                    UnityEditor.Handles.Label(transform.position, "Success AutoSetting");
+                }
             }
             Update();
         }
 
+        public void Run()
+        {
+            var autoDescriptor = this;
+
+            if (autoDescriptor.success)
+            {
+                return;
+            }
+            var parents = autoDescriptor.transform.GetComponentsInParent<Transform>();
+            Transform root = null;
+            if (parents.Length == 1)
+            {
+                root = autoDescriptor.transform;
+            }
+            else
+            {
+                root = System.Array.Find(parents, parent => parent.GetComponentsInParent<Transform>().Length == 1);
+            }
+            var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>();
+
+            if (avatarDescriptor == null)
+            {
+                return;
+            }
+
+
+            foreach (var actionTrigger in autoDescriptor.actionTriggers)
+            {
+                actionTrigger.CheckNActionStart(avatarDescriptor, this);
+            }
+
+            foreach (var actionTrigger in autoDescriptor.actionTriggers)
+            {
+                actionTrigger.End(avatarDescriptor);
+            }
+
+
+
+            //if (descriptorAutoSetter.autoDestroy)
+            {
+                DestroyImmediate(autoDescriptor);
+            }
+            autoDescriptor.success = true;
+        }
         // Update is called once per frame
         void Update()
         {
             //foreach (var descriptorAutoSetter in FindObjectsOfType<DescriptorAutoSetter>())
+            switch (mergeTrigger)
             {
-                var descriptorAutoSetter = this;
-                if (descriptorAutoSetter.success)
-                {
-                    return ;
-                }
-                {
-
-                    var parents = descriptorAutoSetter.transform.GetComponentsInParent<Transform>();
-                    Transform root = null;
-                    if (parents.Length == 1)
+                case MergeTrigger.Always:
                     {
-                        root = descriptorAutoSetter.transform;
+                        Run();
                     }
-                    else
+                    break;
+                case MergeTrigger.Runtime:
+                    if (EditorApplication.isPlaying)
                     {
-                        root = System.Array.Find(parents, parent => parent.GetComponentsInParent<Transform>().Length == 1);
+                        Run();
                     }
-                    var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>();
-
-                    if (avatarDescriptor == null)
-                    {
-                        return;
-                    }
-
-
-                    foreach (var actionTrigger in descriptorAutoSetter.actionTriggers)
-                    {
-                        actionTrigger.CheckNActionStart(avatarDescriptor);
-                    }
-
-
-
-
-                    if (descriptorAutoSetter.autoDestroy)
-                    {
-                        DestroyImmediate(descriptorAutoSetter);
-                    }
-                    descriptorAutoSetter.success = true;
-                }
+                    break;
+                default:
+                    break;
             }
         }
     }

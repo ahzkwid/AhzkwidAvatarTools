@@ -5,18 +5,20 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.Search;
+using System.IO;
+using Ahzkwid.AvatarTool;
 
 public class AnimatorCombiner : MonoBehaviour
 {
-    public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, Transform root)
+    public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent, Transform rootChild=null)
     {
         var controllerA = runtimeControllerA as AnimatorController;
         var controllerB = runtimeControllerB as AnimatorController;
 
-        return CombineAnimators(controllerA, controllerB, root);
+        return CombineAnimators(controllerA, controllerB, rootParent, rootChild, fileOptions);
     }
 
-    public static AnimatorController CombineAnimators(AnimatorController controllerA, AnimatorController controllerB, Transform root)
+    public static AnimatorController CombineAnimators(AnimatorController controllerA, AnimatorController controllerB, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         if (controllerA == null && controllerB == null)
         {
@@ -44,7 +46,7 @@ public class AnimatorCombiner : MonoBehaviour
         }
         newController.name = name;
         CopyParameters(controllerB, newController);
-        CopyLayers(controllerB, newController, root);
+        CopyLayers(controllerB, newController, rootParent, rootChild, fileOptions);
 
         return newController;
     }
@@ -53,11 +55,23 @@ public class AnimatorCombiner : MonoBehaviour
     {
         foreach (var parameter in source.parameters)
         {
-            destination.AddParameter(parameter.name, parameter.type);
+            var newParameter = new UnityEngine.AnimatorControllerParameter();
+            CopyClass(parameter, newParameter);
+
+            var index = System.Array.FindIndex(destination.parameters, x => x.name == parameter.name);
+            if (index >= 0)
+            {
+                destination.parameters[index]= newParameter;
+            }
+            else
+            {
+                //destination.AddParameter(parameter.name, parameter.type);
+                destination.AddParameter(newParameter);
+            }
         }
     }
 
-    private static void CopyLayers(AnimatorController source, AnimatorController destination, Transform root)
+    private static void CopyLayers(AnimatorController source, AnimatorController destination, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         var layers = new List<AnimatorControllerLayer>(destination.layers);
 
@@ -75,14 +89,14 @@ public class AnimatorCombiner : MonoBehaviour
                 newLayer.defaultWeight = 1f;
             }
 
-            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, root);
+            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, rootParent, rootChild, fileOptions);
             layers.Add(newLayer);
         }
-        layers = layers.GroupBy(x => x.name).Select(x => x.Last()).ToList();
+        //layers = layers.GroupBy(x => x.name).Select(x => x.Last()).ToList();
         destination.layers = layers.ToArray();
     }
 
-    private static void CloneStateMachine(AnimatorStateMachine source, AnimatorStateMachine destination, Transform root)
+    private static void CloneStateMachine(AnimatorStateMachine source, AnimatorStateMachine destination, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         if (source == null || destination == null)
         {
@@ -106,6 +120,21 @@ public class AnimatorCombiner : MonoBehaviour
             stateMap[state.state] = newState;
         }
 
+        var stateMachineMap = new Dictionary<AnimatorStateMachine, AnimatorStateMachine>();
+        foreach (var stateMachine in source.stateMachines)
+        {
+            if (stateMachine.stateMachine == null)
+            {
+                continue;
+            }
+            var newStateMachine = new AnimatorStateMachine();
+
+            CopyClass(stateMachine.stateMachine, newStateMachine);
+            destination.AddStateMachine(newStateMachine, stateMachine.position);
+
+            stateMachineMap[stateMachine.stateMachine] = newStateMachine;
+        }
+
         foreach (var state in source.states)
         {
             if (state.state == null)
@@ -114,18 +143,41 @@ public class AnimatorCombiner : MonoBehaviour
             }
             foreach (var transition in state.state.transitions)
             {
-                var newState = stateMap[state.state];
                 AnimatorState newDestinationState = null;
+                AnimatorStateMachine newDestinationStateMachine = null;
+
+
+                if (transition.destinationState != null)
+                {
+                    newDestinationState = stateMap[transition.destinationState];
+                }
+                if (transition.destinationStateMachine != null)
+                {
+                    newDestinationStateMachine = stateMachineMap[transition.destinationStateMachine];
+                }
+
+                var newState = stateMap[state.state];
                 var newTransition = newState.AddTransition(newDestinationState);
 
                 CopyClass(transition, newTransition);
 
-                if (transition.destinationState != null)
-                {
-                    newTransition.destinationState = stateMap[transition.destinationState];
-                }
+                newTransition.destinationStateMachine = newDestinationStateMachine;
+                newTransition.destinationState = newDestinationState;
+
+
+            }
+            {
+
+                var newState = stateMap[state.state];
+
+
+                var oldTransitions = state.state.transitions;
+                newState.transitions = System.Array.FindAll(newState.transitions,x=> oldTransitions.Contains(x) == false);
+                //낡은 트랜지션 제거
             }
         }
+
+
         foreach (var state in source.states)
         {
             if (state.state == null)
@@ -133,24 +185,24 @@ public class AnimatorCombiner : MonoBehaviour
                 continue;
             }
             var newState = stateMap[state.state];
-            ReplaceAnimations(newState, root);
+            ReplaceAnimations(newState, rootParent, rootChild, fileOptions);
         }
     }
 
-    private static void ReplaceAnimations(AnimatorState state, Transform root)
+    private static void ReplaceAnimations(AnimatorState state, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         if (state.motion is BlendTree blendTree)
         {
             Debug.Log("blendTree.name: " + state.motion.name);
-            state.motion = ReplaceAnimationsInBlendTree(blendTree, root);
+            state.motion = ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild, fileOptions);
         }
         else if (state.motion is AnimationClip)
         {
-            state.motion = ReplaceAnimationClipPaths((AnimationClip)state.motion, root);
+            state.motion = ReplaceAnimationClipPaths((AnimationClip)state.motion, rootParent, rootChild, fileOptions);
         }
     }
 
-    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform root)
+    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         var newBlendTree = new BlendTree();
         //var newBlendTree = Instantiate(blendTree);
@@ -167,11 +219,11 @@ public class AnimatorCombiner : MonoBehaviour
 
             if (motion is BlendTree childBlendTree)
             {
-                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, root);
+                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild, fileOptions);
             }
             else if (motion is AnimationClip)
             {
-                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, root);
+                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild, fileOptions);
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}->{newAnim}");
                 childrens[i].motion = newAnim;
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}");
@@ -179,19 +231,41 @@ public class AnimatorCombiner : MonoBehaviour
         }
         newBlendTree.children = childrens;
         //newBlendTree= SaveAsset(newBlendTree) as BlendTree;
-        SaveAsset(newBlendTree);
+        AssetManager.SaveAsset(newBlendTree, fileOptions);
         return newBlendTree;
     }
 
-    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform root)
+    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
-        var transforms = root.GetComponentsInChildren<Transform>();
+        var transforms = rootParent.GetComponentsInChildren<Transform>();
 
 
-        var rootPath = SearchUtils.GetHierarchyPath(root.gameObject, false);
-        var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
+        var rootParentPath = SearchUtils.GetHierarchyPath(rootParent.gameObject, false);
+        var rootChildPath = "";
+
+        if (rootChild != null)
+        {
+            rootChildPath = SearchUtils.GetHierarchyPath(rootChild.gameObject, false);
+            rootChildPath = System.IO.Path.GetRelativePath(rootParentPath, rootChildPath);
+        }
+
         var transformNames = System.Array.ConvertAll(transforms, transform => transform.name);
-        transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootPath, path));
+
+        var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
+        transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootParentPath, path));
+
+
+
+
+
+        /*
+
+        string[] transformChildPaths = null;
+        if (rootChild != null)
+        {
+            transformChildPaths = System.Array.ConvertAll(transformFullPaths, path => System.IO.Path.GetRelativePath(rootChildPath, path));
+        }
+        */
 
 
         var newClip = new AnimationClip();
@@ -205,42 +279,55 @@ public class AnimatorCombiner : MonoBehaviour
 
             //var text = "";
             //text = binding.path;
-
-            if (transformPaths.Contains(binding.path) == false)
+            if (rootChild != null)
             {
-                var index = -1;
-                //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
-
-
-                for (int i = 0; i < transformNames.Length; i++)
+                newBinding.path = Path.Join(rootChildPath, binding.path).Replace("\\", "/");
+                //newBinding.path = rootChildPath + "/" + binding.path;
+                Debug.Log($"{binding.path} -> {newBinding.path}");
+            }
+            else
+            {
+                if (transformPaths.Contains(binding.path) == false)
                 {
-                    if (transformNames[i] != binding.path)
+                    //자동보정
+                    var index = -1;
+                    //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
+
+
+
+                    for (int i = 0; i < transformNames.Length; i++)
                     {
-                        continue;
+                        if (transformNames[i] != binding.path)
+                        {
+                            continue;
+                        }
+                        //if (transformPaths[i].ToLower().Contains("armature"))
+                        if (transformPaths[i].ToLower().StartsWith("armature"))
+                        {
+                            //의상 전용
+                            continue;
+                        }
+                        index = i;
                     }
-                    if (transformPaths[i].ToLower().Contains("armature"))
+                    /*
+                    var paths = System.Array.FindAll(transformNames, name => name == binding.path);
+                    if (paths.Length > 0)
                     {
-                        continue;
-                    }
-                    index = i;
-                }
-                /*
-                var paths = System.Array.FindAll(transformNames, name => name == binding.path);
-                if (paths.Length > 0)
-                {
 
-                }
-                */
-                if (index >= 0)
-                {
-                    newBinding.path = transformPaths[index];
-                    Debug.LogWarning($"{binding.path} -> {newBinding.path}");
-                }
-                else
-                {
-                    Debug.LogWarning($"{binding.path} is Nothing");
+                    }
+                    */
+                    if (index >= 0)
+                    {
+                        newBinding.path = transformPaths[index];
+                        Debug.LogWarning($"{binding.path} -> {newBinding.path}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{binding.path} is Nothing");
+                    }
                 }
             }
+
             //text = clothPath+text;
             //newBinding.path = text;
 
@@ -264,73 +351,21 @@ public class AnimatorCombiner : MonoBehaviour
         }
 
         //newClip = SaveAsset(newClip) as AnimationClip;
-        SaveAsset(newClip);
-
+            AssetManager.SaveAsset(newClip, fileOptions);
 
 
         return newClip;
     }
-    public static void SaveAsset(Object asset)
-    {
-#if UNITY_EDITOR
-        var folderPath = $"Assets/EasyWearDatas/";
-        if (System.IO.Directory.Exists(folderPath) == false)
-        {
-            System.IO.Directory.CreateDirectory(folderPath);
-        }
-        var ext = ".asset";
-        if (asset is RuntimeAnimatorController)
-        {
-            ext = ".controller";
-        }
-        if ((asset is AnimationClip)|| (asset is BlendTree))
-        {
-            ext = ".anim";
-        }
-        //var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
-        var fileName = asset.name;
-
-
-        {
-            var plusIndices = new List<int>();
-            for (int i = 0; i < fileName.Length; i++)
-            {
-                if (fileName[i] == '+')
-                {
-                    plusIndices.Add(i);
-                }
-            }
-
-            if (plusIndices.Count >= 2)
-            {
-                int secondLastPlusIndex = plusIndices[plusIndices.Count - 2];
-                fileName = fileName.Substring(secondLastPlusIndex + 1);
-            }
-        }
-
-
-
-
-        if (fileName.Length > 40)
-        {
-            fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
-        }
-        var path = $"{folderPath}/{fileName}{ext}";
-        path = AssetDatabase.GenerateUniqueAssetPath(path);
-        asset.name = System.IO.Path.GetFileNameWithoutExtension(path);
-        AssetDatabase.CreateAsset(asset, path);
-        AssetDatabase.Refresh();
-
-#endif
-    }
-
-
 
     static void CopyClass<T>(T source, T target)
     {
         var fields = typeof(T).GetFields();
         foreach (var field in fields)
         {
+            if (field.Name == "m_InstanceID")
+            {
+                continue;
+            }
             field.SetValue(target, field.GetValue(source));
         }
 
