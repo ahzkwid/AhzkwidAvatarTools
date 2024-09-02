@@ -46,8 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   category: 0
   mergeTrigger: 1
-  targetMeshs:
-  - {fileID: 0}
+  targetMeshs: []
   clothRoots:
   - option: 0
     parentIndex: 1

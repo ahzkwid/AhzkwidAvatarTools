@@ -11,13 +11,15 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using static AnimationRepairTool;
+using System.Security.Cryptography;
 
 
 [InitializeOnLoad]
 class AssetsCloningTool : EditorWindow
 {
     public Object fromFolder;
-    public Object toFolder;
+    public Object[] toFolders;
     public string[] ignores = new string[] { ".meta", ".asmdef", "MenuItems.cs" };
 
     public enum Option
@@ -71,6 +73,38 @@ class AssetsCloningTool : EditorWindow
         var folderBPath = AssetDatabase.GetAssetPath(folderB);
         Debug.Log(folderBPath);
         ReplaceFiles(folderAPath, folderBPath, ignores, option);
+    }
+    bool IsEqualFile(string filepathA, string filepathB)
+    {
+        if ((File.Exists(filepathA) ==false)|| (File.Exists(filepathB) == false))
+        {
+            return false;
+        }
+        if (new FileInfo(filepathA).Length != new FileInfo(filepathB).Length)
+        {
+            return false;
+
+        }
+        using (var md5 = MD5.Create())
+        {
+            using (var streamA = File.OpenRead(filepathA))
+            using (var streamB = File.OpenRead(filepathB))
+            {
+                var hashA = md5.ComputeHash(streamA);
+                var hashB = md5.ComputeHash(streamB);
+
+                for (int i = 0; i < hashA.Length; i++)
+                {
+                    if (hashA[i] != hashB[i])
+                        return false;
+                }
+            }
+        }
+
+
+
+        return true;
+
     }
     void ReplaceFiles(string folderAPath, string folderBPath, string[] ignores, Option option)
     {
@@ -151,7 +185,7 @@ class AssetsCloningTool : EditorWindow
                 var newNamespace = System.IO.Path.GetDirectoryName(newFilePath); // 파일명제거
                 newNamespace = newNamespace.Replace("Assets\\", ""); // Assets\ 제거
                 newNamespace = ReplaceWhiteList(newNamespace, @"^[a-zA-Z]+$"); //알파벳만
-                jsonObject["rootNamespace"] = newNamespace;
+                //jsonObject["rootNamespace"] = newNamespace;
                 jsonObject["name"] = newNamespace;
                 var newJson = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
 
@@ -159,7 +193,10 @@ class AssetsCloningTool : EditorWindow
             }
             else
             {
-                File.Copy(filepathA, newFilePath);
+                //if (IsEqualFile(filepathA, newFilePath)==false)
+                {
+                    File.Copy(filepathA, newFilePath);
+                }
             }
 
             AssetDatabase.ImportAsset(newFilePath);
@@ -226,7 +263,7 @@ class AssetsCloningTool : EditorWindow
 
 
 
-        Debug.Log("Complete");
+        Debug.Log($"Complete {System.DateTime.Now}");
     }
 
     SerializedObject serializedObject;
@@ -243,9 +280,31 @@ class AssetsCloningTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(fromFolder)));
+            {
+                var property = serializedObject.FindProperty(nameof(fromFolder));
+                EditorGUILayout.PropertyField(property);
+                var value = property.objectReferenceValue;
+                if (value != null)
+                {
+                    EditorGUILayout.LabelField(AssetDatabase.GetAssetPath(value));
+                }
+            }
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toFolder)));
+            {
+                var property = serializedObject.FindProperty(nameof(toFolders));
+                EditorGUILayout.PropertyField(property);
+
+                var length = property.arraySize;
+                for (int i = 0; i < length; i++)
+                {
+                    var propertyIndex = property.GetArrayElementAtIndex(i);
+                    var value = propertyIndex.objectReferenceValue;
+                    if (value != null)
+                    {
+                        EditorGUILayout.LabelField(AssetDatabase.GetAssetPath(value));
+                    }
+                }
+            }
             EditorGUILayout.Space();
             if (option != Option.Default)
             {
@@ -258,7 +317,7 @@ class AssetsCloningTool : EditorWindow
             {
                 allReady = false;
             }
-            if (toFolder == null)
+            if ((toFolders == null)||(toFolders.Length==0))
             {
                 allReady = false;
             }
@@ -272,7 +331,10 @@ class AssetsCloningTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Run"))
         {
-            ReplaceFiles(fromFolder, toFolder, ignores, option);
+            foreach (var toFolder in toFolders)
+            {
+                ReplaceFiles(fromFolder, toFolder, ignores, option);
+            }
             AssetDatabase.Refresh();
         }
         GUI.enabled = true;

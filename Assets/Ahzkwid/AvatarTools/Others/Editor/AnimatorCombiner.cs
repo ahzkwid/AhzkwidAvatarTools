@@ -7,9 +7,10 @@ using System.Linq;
 using UnityEditor.Search;
 using System.IO;
 using Ahzkwid.AvatarTool;
+using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Parameters;
 
 public class AnimatorCombiner : MonoBehaviour
-{
+{ 
     public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent, Transform rootChild=null)
     {
         var controllerA = runtimeControllerA as AnimatorController;
@@ -111,9 +112,9 @@ public class AnimatorCombiner : MonoBehaviour
             {
                 continue;
             }
-
             var newState = new AnimatorState();
 
+            //EditorUtility.CopySerialized(state.state, newState);
             CopyClass(state.state, newState);
             destination.AddState(newState, state.position);
 
@@ -129,6 +130,7 @@ public class AnimatorCombiner : MonoBehaviour
             }
             var newStateMachine = new AnimatorStateMachine();
 
+            //EditorUtility.CopySerialized(stateMachine.stateMachine, newStateMachine);
             CopyClass(stateMachine.stateMachine, newStateMachine);
             destination.AddStateMachine(newStateMachine, stateMachine.position);
 
@@ -159,6 +161,7 @@ public class AnimatorCombiner : MonoBehaviour
                 var newState = stateMap[state.state];
                 var newTransition = newState.AddTransition(newDestinationState);
 
+                //EditorUtility.CopySerialized(transition, newTransition);
                 CopyClass(transition, newTransition);
 
                 newTransition.destinationStateMachine = newDestinationStateMachine;
@@ -207,11 +210,11 @@ public class AnimatorCombiner : MonoBehaviour
         var newBlendTree = new BlendTree();
         //var newBlendTree = Instantiate(blendTree);
 
-        EditorUtility.CopySerialized(blendTree, newBlendTree);
+        //EditorUtility.CopySerialized(blendTree, newBlendTree);
 
 
 
-        //CopyClass(blendTree, newBlendTree);
+        CopyClass(blendTree, newBlendTree);
         var childrens = newBlendTree.children;
         for (int i = 0; i < childrens.Length; i++)
         {
@@ -240,21 +243,23 @@ public class AnimatorCombiner : MonoBehaviour
         var transforms = rootParent.GetComponentsInChildren<Transform>();
 
 
-        var rootParentPath = SearchUtils.GetHierarchyPath(rootParent.gameObject, false);
+        //var rootParentPath = SearchUtils.GetHierarchyPath(rootParent.gameObject, false);
         var rootChildPath = "";
 
         if (rootChild != null)
         {
-            rootChildPath = SearchUtils.GetHierarchyPath(rootChild.gameObject, false);
-            rootChildPath = System.IO.Path.GetRelativePath(rootParentPath, rootChildPath);
+            //rootChildPath = SearchUtils.GetHierarchyPath(rootChild.gameObject, false);
+            //rootChildPath = System.IO.Path.GetRelativePath(rootParentPath, rootChildPath);
+            rootChildPath = Ahzkwid.ObjectPath.GetPath(rootChild, rootParent);
         }
 
         var transformNames = System.Array.ConvertAll(transforms, transform => transform.name);
 
-        var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
-        transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootParentPath, path));
+        //var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
+        var transformPaths = System.Array.ConvertAll(transforms, transform => Ahzkwid.ObjectPath.GetPath(transform, rootParent));
+        //transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootParentPath, path));
 
-
+        
 
 
 
@@ -270,7 +275,7 @@ public class AnimatorCombiner : MonoBehaviour
 
         var newClip = new AnimationClip();
         EditorUtility.CopySerialized(clip, newClip);
-
+        //CopySerialized(clip, newClip);
 
         foreach (var binding in AnimationUtility.GetCurveBindings(newClip))
         {
@@ -285,49 +290,49 @@ public class AnimatorCombiner : MonoBehaviour
                 //newBinding.path = rootChildPath + "/" + binding.path;
                 Debug.Log($"{binding.path} -> {newBinding.path}");
             }
-            else
-            {
-                if (transformPaths.Contains(binding.path) == false)
-                {
-                    //자동보정
-                    var index = -1;
-                    //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
+            //else
+            //{
+            //    if (transformPaths.Contains(binding.path) == false)
+            //    {
+            //        //자동보정
+            //        var index = -1;
+            //        //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
 
 
 
-                    for (int i = 0; i < transformNames.Length; i++)
-                    {
-                        if (transformNames[i] != binding.path)
-                        {
-                            continue;
-                        }
-                        //if (transformPaths[i].ToLower().Contains("armature"))
-                        if (transformPaths[i].ToLower().StartsWith("armature"))
-                        {
-                            //의상 전용
-                            continue;
-                        }
-                        index = i;
-                    }
-                    /*
-                    var paths = System.Array.FindAll(transformNames, name => name == binding.path);
-                    if (paths.Length > 0)
-                    {
+            //        for (int i = 0; i < transformNames.Length; i++)
+            //        {
+            //            if (transformNames[i] != binding.path)
+            //            {
+            //                continue;
+            //            }
+            //            //if (transformPaths[i].ToLower().Contains("armature"))
+            //            if (transformPaths[i].ToLower().StartsWith("armature"))
+            //            {
+            //                //의상 전용
+            //                continue;
+            //            }
+            //            index = i;
+            //        }
+            //        /*
+            //        var paths = System.Array.FindAll(transformNames, name => name == binding.path);
+            //        if (paths.Length > 0)
+            //        {
 
-                    }
-                    */
-                    if (index >= 0)
-                    {
-                        newBinding.path = transformPaths[index];
-                        Debug.LogWarning($"{binding.path} -> {newBinding.path}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"{binding.path} is Nothing");
-                    }
-                }
-            }
-
+            //        }
+            //        */
+            //        if (index >= 0)
+            //        {
+            //            newBinding.path = transformPaths[index];
+            //            Debug.LogWarning($"{binding.path} -> {newBinding.path}");
+            //        }
+            //        else
+            //        {
+            //            Debug.LogWarning($"{binding.path} is Nothing");
+            //        }
+            //    }
+            //}
+           
             //text = clothPath+text;
             //newBinding.path = text;
 
@@ -356,29 +361,45 @@ public class AnimatorCombiner : MonoBehaviour
 
         return newClip;
     }
-
+    /// <summary>
+    /// CopySerialized는 가급적 쓰지말고 이걸 써야됨
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="source"></param>
+    /// <param name="target"></param>
     static void CopyClass<T>(T source, T target)
     {
-        var fields = typeof(T).GetFields();
-        foreach (var field in fields)
+        //lock (source)
         {
-            if (field.Name == "m_InstanceID")
+            var fields = typeof(T).GetFields();
+            foreach (var field in fields)
             {
-                continue;
+                if (field.Name == "m_InstanceID")
+                {
+                    continue;
+                }
+                field.SetValue(target, field.GetValue(source));
             }
-            field.SetValue(target, field.GetValue(source));
-        }
 
-        var properties = typeof(T).GetProperties();
-        foreach (var property in properties)
-        {
-            if (!property.CanWrite || !property.CanRead)
+            var properties = typeof(T).GetProperties();
+            foreach (var property in properties)
             {
-                continue;
+                if (!property.CanWrite || !property.CanRead)
+                {
+                    continue;
+                }
+                property.SetValue(target, property.GetValue(source));
             }
-            property.SetValue(target, property.GetValue(source));
         }
     }
+    static void CopySerialized(Object source, Object target)
+    {
+        //lock (source)
+        {
+            EditorUtility.CopySerialized(source, target);
+        }
+    }
+    
     /*
     public static void ExportAnimatorController(RuntimeAnimatorController controller, string path)
     {

@@ -7,7 +7,6 @@ using VRC.SDK3.Avatars.Components;
 
 namespace Ahzkwid
 {
-    using BestHTTP.SecureProtocol.Org.BouncyCastle.Asn1.Crmf;
     using UnityEditor;
 
     [CustomEditor(typeof(AutoDescriptor))]
@@ -112,7 +111,7 @@ namespace Ahzkwid
                     fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
                 }
                 */
-                fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+                fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
             }
             else
             {
@@ -122,6 +121,7 @@ namespace Ahzkwid
                         break;
                     case MergeTrigger.Runtime:
                         fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+                        //fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
                         break;
                     default:
                         break;
@@ -292,6 +292,75 @@ namespace Ahzkwid
                                     }
                                 }
                                 */
+                                void CreateOutsideMenu(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu)
+                                {
+                                    var controls = menu.controls;
+                                    var maxCount = 8;
+                                    var subMenuControlName = "More...";
+                                    var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
+                                    if (controls.Count > maxCount)
+                                    {
+
+
+                                        var subMenuControl = controls.Find(x=>
+                                        {
+                                            if (x==null)
+                                            {
+                                                return false;
+                                            }
+                                            if (x.type != typeSubMenu)
+                                            {
+                                                return false;
+                                            }
+                                            if (x.name != subMenuControlName)
+                                            {
+                                                return false;
+                                            }
+                                            return true;
+                                        });
+                                        //VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control subMenuControl = null;
+
+                                        var takeCount = maxCount - 1;
+
+                                        if (subMenuControl == null)
+                                        {
+                                            subMenuControl = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control
+                                            {
+                                                name = subMenuControlName,
+                                                type = typeSubMenu
+                                            };
+                                        }
+                                        else
+                                        {
+                                            controls.Remove(subMenuControl);
+                                        }
+
+
+
+                                        var mainControls = controls.Take(takeCount).ToList(); 
+                                        var remainingControls = controls.Skip(takeCount).ToList();
+
+                                        //var subMenu = ScriptableObject.CreateInstance<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu>();
+                                        //var subMenu = Instantiate(menu);
+                                        var subMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
+                                        subMenu.name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                                        subMenu.controls = remainingControls;
+
+                                        CreateOutsideMenu(subMenu);
+
+                                        SaveAsset(subMenu, autoDescriptor);
+
+                                        subMenuControl.subMenu = MergeMenu(subMenuControl.subMenu,subMenu);
+
+
+                                        mainControls.Add(subMenuControl);
+                                        menu.controls = mainControls;
+
+
+
+
+                                    }
+                                }
                                 VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu MergeMenu(params VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu[] menus)
                                 {
                                     menus = System.Array.FindAll(menus, x => x != null);
@@ -328,13 +397,14 @@ namespace Ahzkwid
                                         }
                                     }
                                     */
+                                    var controls = menu.controls.FindAll(x => x != null);
 
                                     for (int i = 1; i < menus.Length; i++)
                                     {
                                         foreach (var item in menus[i].controls)
                                         {
                                             var targetClass = item;
-                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+                                            var clone = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
                                             var fields = targetClass.GetType().GetFields();
                                             foreach (var field in fields)
                                             {
@@ -342,23 +412,59 @@ namespace Ahzkwid
                                                 {
                                                     continue;
                                                 }
-                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                                field.SetValue(clone, field.GetValue(targetClass));
                                             }
-                                            var control = menu.controls.Find(x => x.name == item.name);
+                                            //var control = menu.controls.Find(x => x.name == item.name);
+                                            VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control control = null;
 
-                                            if ((control == null)
-                                                || (control.type != VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu)
-                                                || (item.type != VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu))
+                                            var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
+                                            /*
+                                            var addMenu = true;
+                                            if (control == null)
                                             {
-                                                menu.controls.Add(itemCopy);
+                                                addMenu = true;
                                             }
                                             else
                                             {
-                                                control.subMenu = MergeMenu(control.subMenu, itemCopy.subMenu);
+                                                //if ((control.type != typeSubMenu) || (item.type != typeSubMenu))
+                                                if(item.type != typeSubMenu)
+                                                {
+                                                    control = menu.controls.Find(x => x.name == item.name);
+                                                    if (control.parameter.name != item.parameter.name)
+                                                    {
+                                                        addMenu = true;
+                                                    }
+                                                }
+                                            }
+                                            */
+                                            if (item.type == typeSubMenu)
+                                            {
+                                                var subMenus = controls.FindAll(x=>x.type == typeSubMenu);
+                                                control = subMenus.Find(x => x.name == item.name);
 
-                                                var icons = System.Array.FindAll(new Texture2D[] { control.icon, itemCopy.icon },x=>x!=null);
+                                                if (control != null)
+                                                {
+                                                    control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                var buttons = controls.FindAll(x => x.type != typeSubMenu);
+                                                control = buttons.Find(x => x.parameter.name == item.parameter.name);
+
+                                            }
+                                            if (control != null)
+                                            {
+                                                var icons = System.Array.FindAll(new Texture2D[] { control.icon, clone.icon }, x => x != null);
                                                 control.icon = icons.LastOrDefault();
                                             }
+                                            else
+                                            {
+                                                menu.controls.Add(clone);
+                                            }
+
+
+
                                         }
                                         //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
                                     }
@@ -366,6 +472,20 @@ namespace Ahzkwid
                                     {
                                         //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
                                     }
+
+
+
+
+                                    CreateOutsideMenu(menu);
+
+
+
+
+
+
+
+
+
                                     //expressionsMenu = AnimatorCombiner.SaveAsset(expressionsMenu) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu;
                                     SaveAsset(menu, autoDescriptor);
                                     return menu;

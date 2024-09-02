@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0da7b24e7dac223498859ef2e451c447, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mergeTrigger: 1
+  mergeTrigger: 0
   dataType: 0
   clips:
   - {fileID: 0}

@@ -1,22 +1,65 @@
 
 #if UNITY_EDITOR
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.Search;
 using UnityEngine;
-using VRC.SDK3A.Editor;
 
-//using VRC.SDK3A.Editor;
+using VRC.SDK3A.Editor;
 using VRC.SDKBase;
 using VRC.SDKBase.Editor.BuildPipeline;
 //public class VRCBuildProcessor : IVRCSDKBuildRequestedCallback, IVRCSDKPreprocessAvatarCallback
 
 namespace Ahzkwid
 {
+    //public class EarlyInitialization
+    //{
+    //    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    //    static void OnBeforeSceneLoad()
+    //    {
+    //        VRCBuildProcessor.MergeAll();
+
+    //        /*
+    //    void Awake()
+    //    {
+    //        if (EditorApplication.isPlaying)
+    //        {
+    //            Update();
+    //        }
+    //    }
+    //        */
+    //        Debug.Log("Merge");
+    //    }
+    //}
+    [InitializeOnLoad]
+    public class VRCBuildProcessorPlaying : IVRCSDKPreprocessAvatarCallback//IVRCSDKBuildRequestedCallback
+    {
+        public int callbackOrder => int.MinValue+100;
+        public bool OnPreprocessAvatar(GameObject avatarGameObject)
+        {
+            if (EditorApplication.isPlaying)
+            {
+                VRCBuildProcessor.MergeAll();
+            }
+            return true;
+        }
+        /*
+        public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
+        {
+            if (EditorApplication.isPlaying)
+            {
+                VRCBuildProcessor.MergeAll();
+            }
+            return true;
+        }
+        */
+    }
+
+
+
     [InitializeOnLoad]
     public class VRCBuildProcessor : IVRCSDKPreprocessAvatarCallback
     {
+        /*
         class AllPath
         {
             public GameObject gameObject;
@@ -58,9 +101,14 @@ namespace Ahzkwid
                 return null;
             }
         }
-        public int callbackOrder => 0;
+        */
+        //public int callbackOrder => 0;
+        //public int callbackOrder => -12345;
+        public int callbackOrder => int.MinValue + 101;
+        /*
         static VRCBuildProcessor()
         {
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
         static void OnPlayModeChanged(PlayModeStateChange state)
@@ -70,12 +118,92 @@ namespace Ahzkwid
                 Debug.Log("Entered Play Mode");
             }
         }
+        */
+        /*
+        public static VRC_AvatarDescriptor GetSelectedAvatar()
+        {
+            var type = System.Type.GetType("VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder, Assembly-CSharp-Editor");
+
+            if (type == null)
+                throw new System.InvalidOperationException("클래스를 찾을 수 없습니다.");
+
+            var fieldInfo = type.GetField("_selectedAvatar", BindingFlags.Static | BindingFlags.NonPublic);
+
+            if (fieldInfo == null)
+                throw new System.InvalidOperationException("필드를 찾을 수 없습니다.");
+
+            return (VRC_AvatarDescriptor)fieldInfo.GetValue(null);
+        }
+        */
+        static readonly System.Type[] autoSetterTypes = new System.Type[] { typeof(AutoMerge), typeof(AutoDescriptor), typeof(AutoObjectSetting) };
+        public static void MergeAll()
+        {
+            var roots = ObjectPath.GetRoots();
+            foreach (var root in roots)
+            {
+                VRCBuildProcessor.Merge(root.gameObject);
+            }
+
+        }
+
+        public static void Merge(GameObject avatarGameObject)
+        {
+
+            {
+                //순서보장을 위해 합치면 안됨
+                var objects = avatarGameObject.GetComponentsInChildren<AutoMerge>(true);
+                foreach (var item in objects)
+                {
+                    item.Run();
+                }
+            }
+
+
+            {
+                var scriptCode = Random.Range(0,int.MaxValue); 
+                Debug.Log($"AutoDescriptor Merge Start Time: {System.DateTime.Now} {scriptCode}");
+
+
+                var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
+                foreach (var item in objects)
+                {
+                    item.Run();
+                }
+
+
+                Debug.Log($"AutoDescriptor Merge End Time: {System.DateTime.Now} {scriptCode}");
+            }
+            {
+                var objects = avatarGameObject.GetComponentsInChildren<AutoObjectSetting>(true);
+                foreach (var item in objects)
+                {
+                    item.Run();
+                }
+            }
+            {
+                //RemoveAll
+
+                foreach (var type in autoSetterTypes)
+                {
+                    var objects = avatarGameObject.GetComponentsInChildren(type, true);
+                    foreach (var item in objects)
+                    {
+                        Object.DestroyImmediate(item);
+                    }
+                }
+            }
+        }
         static void Run(GameObject avatarGameObject)
         {
             VRC_AvatarDescriptor selectedAvatar = null;
+
+
+
+
+
             var fieldInfo = typeof(VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder).GetField("_selectedAvatar", BindingFlags.Static | BindingFlags.NonPublic);
             selectedAvatar = (VRC_AvatarDescriptor)fieldInfo.GetValue(null);
-
+            //selectedAvatar = GetSelectedAvatar();
 
             /*
             {
@@ -84,53 +212,14 @@ namespace Ahzkwid
                 var rootPath = SearchUtils.GetHierarchyPath(gameObject, false);
                 var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
                 transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootPath, path));
-            }
+            } 
             */
 
-
             {
-                var types = new System.Type[] { typeof(AutoMerge), typeof(AutoDescriptor), typeof(AutoObjectSetting) };
                 {
-                    ObjectPath.ComponentsCopy(selectedAvatar.transform, avatarGameObject.transform, types);
+                    //ObjectPath.ComponentsCopy(selectedAvatar.transform, avatarGameObject.transform, autoSetterTypes);
                 }
-
-                {
-                    //순서보장을 위해 합치면 안됨
-                    var objects = avatarGameObject.GetComponentsInChildren<AutoMerge>(true);
-                    foreach (var item in objects)
-                    {
-                        item.Run();
-                    }
-                }
-
-
-                {
-                    var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
-                    foreach (var item in objects)
-                    {
-                        item.Run();
-                    }
-                }
-                {
-                    var objects = avatarGameObject.GetComponentsInChildren<AutoObjectSetting>(true);
-                    foreach (var item in objects)
-                    {
-                        item.Run();
-                    }
-                }
-
-                {
-                    //RemoveAll
-
-                    foreach (var type in types)
-                    {
-                        var objects = avatarGameObject.GetComponentsInChildren(type, true);
-                        foreach (var item in objects)
-                        {
-                            Object.DestroyImmediate(item);
-                        }
-                    }
-                }
+                Merge(avatarGameObject);
 
             }
 
@@ -149,82 +238,110 @@ namespace Ahzkwid
         static bool debugMode = false;
 
 
-        private void UploadFinish(object sender, string message)
+        private void UnsubscribeEvents()
         {
-
-            AvatarTool.AssetManager.DeleteTempFolder();
-
+            if (builder == null)
+            {
+                var fieldInfo = typeof(VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
+                builder = (VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder)fieldInfo.GetValue(null);
+            }
             if (builder != null)
             {
+                builder.OnSdkBuildError -= UploadError;
                 builder.OnSdkUploadFinish -= UploadFinish;
             }
         }
-        VRCSdkControlPanelAvatarBuilder builder = null;
+        private void RemoveAll()
+        {
+            AvatarTool.AssetManager.DeleteTempFolder();
+            UnsubscribeEvents();
+        }
+        private void UploadError(object sender, string error)
+        {
+            RemoveAll();
+        }
+        private void UploadFinish(object sender, string message)
+        {
+            RemoveAll();
+        }
+        VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder builder = null;
+        
         public bool OnPreprocessAvatar(GameObject avatarGameObject)
         {
             Debug.Log($"PreprocessAvatar.{System.DateTime.Now}");
 
 
+            //AvatarTool.AssetManager.DeleteTempFolder();
+
+            if (EditorApplication.isPlaying==false)
             {
-                var fieldInfo = typeof(VRCSdkControlPanelAvatarBuilder).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
-                builder = (VRCSdkControlPanelAvatarBuilder)fieldInfo.GetValue(null);
-            }
-            builder.OnSdkUploadFinish -= UploadFinish;
-            builder.OnSdkUploadFinish += UploadFinish;
-
-            //avatar = avatarGameObject;
-
-            /*
-            Debug.Log($"avatarGameObject.name: {avatarGameObject.name}");
-            {
-                var objects = avatar.GetComponentsInChildren<TestScr>(true);
-
-
-                Debug.Log($"objects.Length : {objects.Length}");
-                foreach (var item in objects)
                 {
-                    Debug.Log($"item.Run.{System.DateTime.Now}");
-                    item.Run();
-                    UnityEditor.EditorUtility.SetDirty(item.handyfan);
+                    var fieldInfo = typeof(VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
+                    builder = (VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder)fieldInfo.GetValue(null);
                 }
-            }
-            */
-
-            //{
-
-            //    var editorWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-            //    foreach (var window in editorWindows)
-            //    {
-            //        /*
-            //        if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
-            //        {
-            //            var fieldInfo = window.GetType().GetField("_selectedAvatar", BindingFlags.Instance | BindingFlags.NonPublic);
-            //            if (fieldInfo != null)
-            //            {
-            //                selectedAvatar = (VRC_AvatarDescriptor)fieldInfo.GetValue(window);
-            //                break;
-            //            }
-            //        }
-            //        */
-            //    }
-
-            //}
-            Run(avatarGameObject);
-            /*
-            {
-                var objects = avatar.GetComponentsInChildren<Transform>(true);
-
-
-                Debug.Log($"objects.Length : {objects.Length}");
-                foreach (var item in objects)
+                if (builder != null)
                 {
-                    if (item.name.ToLower().Contains("cube"))
+                    UnsubscribeEvents();
+                    builder.OnSdkUploadFinish += UploadFinish;
+                    builder.OnSdkBuildError += UploadError;
+                }
+
+
+                //avatar = avatarGameObject;
+
+                /*
+                Debug.Log($"avatarGameObject.name: {avatarGameObject.name}");
+                {
+                    var objects = avatar.GetComponentsInChildren<TestScr>(true);
+
+
+                    Debug.Log($"objects.Length : {objects.Length}");
+                    foreach (var item in objects)
                     {
-                        item.gameObject.SetActive(false);
+                        Debug.Log($"item.Run.{System.DateTime.Now}");
+                        item.Run();
+                        UnityEditor.EditorUtility.SetDirty(item.handyfan);
                     }
                 }
+                */
+
+                //{
+
+                //    var editorWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
+                //    foreach (var window in editorWindows)
+                //    {
+                //        /*
+                //        if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
+                //        {
+                //            var fieldInfo = window.GetType().GetField("_selectedAvatar", BindingFlags.Instance | BindingFlags.NonPublic);
+                //            if (fieldInfo != null)
+                //            {
+                //                selectedAvatar = (VRC_AvatarDescriptor)fieldInfo.GetValue(window);
+                //                break;
+                //            }
+                //        }
+                //        */
+                //    }
+
+                //}
+                Run(avatarGameObject);
+
+                /*
+                {
+                    var objects = avatar.GetComponentsInChildren<Transform>(true);
+
+
+                    Debug.Log($"objects.Length : {objects.Length}");
+                    foreach (var item in objects)
+                    {
+                        if (item.name.ToLower().Contains("cube"))
+                        {
+                            item.gameObject.SetActive(false);
+                        }
+                    }
+                }
+                */
             }
-            */
             if (debugMode)
             {
                 return false;

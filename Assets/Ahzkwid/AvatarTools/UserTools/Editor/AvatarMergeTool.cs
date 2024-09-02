@@ -1040,18 +1040,17 @@ namespace Ahzkwid
 
         public static void MergeDefault(GameObject character, GameObject cloth)
         {
+            /*
 
             Transform GetRootBone(GameObject gameObject)
             {
-                /*
-                var armatureNames = new string[] { "Armature", "armature" };
-                {
-                    foreach (var armatureName in armatureNames)
-                    {
-                        return gameObject.transform.Find(armatureName);
-                    }
-                }
-                */
+                //var armatureNames = new string[] { "Armature", "armature" };
+                //{
+                //    foreach (var armatureName in armatureNames)
+                //    {
+                //        return gameObject.transform.Find(armatureName);
+                //    }
+                //}
 
 
                 var characterRenderers = character.GetComponentsInChildren<SkinnedMeshRenderer>(true);
@@ -1096,7 +1095,8 @@ namespace Ahzkwid
             }
 
 
-
+            
+        */
 
 
 
@@ -1135,7 +1135,7 @@ namespace Ahzkwid
                 //        }
                 //    }
                 //}
-                var armature = GetArmature(cloth);
+                var armature = ObjectPath.GetArmature(cloth);
                 if (armature != null)
                 {
                     armature.gameObject.SetActive(false);
@@ -1149,7 +1149,7 @@ namespace Ahzkwid
             var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>(true);
 
 
-            //var bones = (Transform[])characterRenderer.bones.Clone();
+            var bones = (Transform[])characterRenderer.bones.Clone();
 
             {
                 Debug.Log($"characterRenderer.bones.Length: {characterRenderer.bones.Length}");
@@ -1171,8 +1171,8 @@ namespace Ahzkwid
                 */
 
                 {
-                    var characterArmature = GetArmature(character);
-                    var clothArmature = GetArmature(cloth);
+                    var characterArmature = ObjectPath.GetArmature(character);
+                    var clothArmature = ObjectPath.GetArmature(cloth);
 
 
                     if (characterArmature == null)
@@ -1187,7 +1187,7 @@ namespace Ahzkwid
                 }
 
                 //AddChildBones(ref list, GetArmature(character), GetArmature(cloth));
-                AddChildBones(ref list, GetArmature(character));
+                AddChildBones(ref list, ObjectPath.GetArmature(character));
                 Debug.Log($"list.Count: {list.Count}");
 
                 /*
@@ -1204,105 +1204,105 @@ namespace Ahzkwid
                 */
 
 
-                //var bones = characterRenderer.bones;
-                var bones = list.ToArray();
-                Debug.Log($"bones.Length: {bones.Length}");
-                //Debug.Log($"characterRenderer.bones: {string.Join(",", System.Array.ConvertAll(characterRenderer.bones, x => x.name))}"); //BlendshapeAutoSetter와 충돌
-                Debug.Log($"bones: {string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
+                ////var bones = characterRenderer.bones;
+                //var bones = list.ToArray();
+                //Debug.Log($"bones.Length: {bones.Length}");
+                ////Debug.Log($"characterRenderer.bones: {string.Join(",", System.Array.ConvertAll(characterRenderer.bones, x => x.name))}"); //BlendshapeAutoSetter와 충돌
+                //Debug.Log($"bones: {string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
 
-                //return;
-                //targetRenderer.sharedMesh = originalRenderer.sharedMesh;
-
-
+                ////return;
+                ////targetRenderer.sharedMesh = originalRenderer.sharedMesh;
 
 
 
-                /*
-                var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(cloth);
-                var originalPrefabRenderers = originalPrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
-
-                foreach (var clothRenderer in clothRenderers)
-                {
-                    var originalPrefabRender = System.Array.Find(originalPrefabRenderers, x => x.sharedMesh == clothRenderer.sharedMesh);
-                    clothRenderer.bones = originalPrefabRender.bones;
-                }
-                Debug.LogWarning("Repair");
-                */
-
-                foreach (var clothRenderer in clothRenderers)
-                {
-                    if (PrefabUtility.IsPartOfPrefabInstance(clothRenderer))
-                    {
-                        //PrefabUtility.RevertObjectOverride(clothRenderer, InteractionMode.UserAction);
-                        var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
-                        if ((clothRenderer.bones != null) && (originalPrefab.bones != null))
-                        {
-                            Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}" +
-                                $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(originalPrefab.bones, x => x?.name))}");
-                        }
-                        clothRenderer.bones = originalPrefab.bones;
-                    }
 
 
-                    Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}");
+                ///*
+                //var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(cloth);
+                //var originalPrefabRenderers = originalPrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                //foreach (var clothRenderer in clothRenderers)
+                //{
+                //    var originalPrefabRender = System.Array.Find(originalPrefabRenderers, x => x.sharedMesh == clothRenderer.sharedMesh);
+                //    clothRenderer.bones = originalPrefabRender.bones;
+                //}
+                //Debug.LogWarning("Repair");
+                //*/
+
+                //foreach (var clothRenderer in clothRenderers)
+                //{
+                //    if (PrefabUtility.IsPartOfPrefabInstance(clothRenderer))
+                //    {
+                //        //PrefabUtility.RevertObjectOverride(clothRenderer, InteractionMode.UserAction);
+                //        var originalPrefab = PrefabUtility.GetCorrespondingObjectFromSource(clothRenderer);
+                //        if ((clothRenderer.bones != null) && (originalPrefab.bones != null))
+                //        {
+                //            Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}" +
+                //                $"->originalPrefab.bones: {string.Join(",", System.Array.ConvertAll(originalPrefab.bones, x => x?.name))}");
+                //        }
+                //        clothRenderer.bones = originalPrefab.bones;
+                //    }
 
 
-                    ////var bonesFilters= System.Array.FindAll(bones, x => System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
-                    //var boneList = new List<Transform>();
-                    //for (int i = 0; i < clothRenderer.bones.Length; i++)
-                    //{
-                    //    //var boneName = clothRenderer.bones[i].name;
-                    //    //var boneNameParent = clothRenderer.bones[i].parent.name;
-                    //    //boneList.Add(System.Array.Find(bones, x => (x.name == boneName) && (x.parent.name == boneNameParent)));
-                    //    boneList.Add(GetEqualBone(bones, clothRenderer.bones[i]));
-                    //}
-                    //clothRenderer.bones = boneList.ToArray();
-                    //ObjectPath.RepathFields(cloth.transform, character.transform, clothRenderer,clothRenderer.GetType().GetFields());
-                    
-                    Debug.Log($"{clothRenderer}.bones.Length (Pre): {clothRenderer.bones.Length}");
-                    //var equalBones = GetEqualBones(bones, clothRenderer.bones, character.transform, cloth.transform);
-                    var equalBones = ObjectPath.EqualTransforms(cloth.transform, character.transform, clothRenderer.bones);
-                    if (equalBones.Length > 0)
-                    {
-                        clothRenderer.bones = equalBones;
-                    }
-                    //clothRenderer.bones = System.Array.FindAll(characterRenderer.bones,x=> System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
-                    Debug.Log($"{clothRenderer}.bones.Length (After): {clothRenderer.bones.Length}");
-                    //clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone, character.transform, cloth.transform);
-                    clothRenderer.rootBone = ObjectPath.EqualTransform(cloth.transform, character.transform, clothRenderer.rootBone);
-                    {
-                        Transform probeAnchor = null;
-                        //probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
-                        if (clothRenderer.probeAnchor != null)
-                        {
-                            //본이 아니면 일반 오브젝트경로
-                            if (probeAnchor == null)
-                            {
-                                var transforms = character.GetComponentsInChildren<Transform>();
-                                var relativePath = ObjectPath.GetPath(clothRenderer.probeAnchor, cloth.transform);
-                                if (relativePath == null)
-                                {
-                                    //이미 할당됨
-                                    continue;
-                                }
-                                var equalBone = System.Array.Find(transforms, x =>
-                                {
-                                    var characterRelativePath = ObjectPath.GetPath(x, character.transform);
-                                    if (characterRelativePath == null)
-                                    {
-                                        return false;
-                                    }
-                                    return characterRelativePath == relativePath;
-                                });
-                                probeAnchor = equalBone;
-                            }
-                        }
-                        clothRenderer.probeAnchor = probeAnchor;
-                    }
+            //        Debug.Log($"clothRenderer.bones: {string.Join(",", System.Array.ConvertAll(clothRenderer.bones, x => x?.name))}");
 
-                    UnityEditor.EditorUtility.SetDirty(clothRenderer);
-                    //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
-                }
+
+            //        ////var bonesFilters= System.Array.FindAll(bones, x => System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
+            //        //var boneList = new List<Transform>();
+            //        //for (int i = 0; i < clothRenderer.bones.Length; i++)
+            //        //{
+            //        //    //var boneName = clothRenderer.bones[i].name;
+            //        //    //var boneNameParent = clothRenderer.bones[i].parent.name;
+            //        //    //boneList.Add(System.Array.Find(bones, x => (x.name == boneName) && (x.parent.name == boneNameParent)));
+            //        //    boneList.Add(GetEqualBone(bones, clothRenderer.bones[i]));
+            //        //}
+            //        //clothRenderer.bones = boneList.ToArray();
+            //        //ObjectPath.RepathFields(cloth.transform, character.transform, clothRenderer,clothRenderer.GetType().GetFields());
+
+            //        Debug.Log($"{clothRenderer}.bones.Length (Pre): {clothRenderer.bones.Length}");
+            //        //var equalBones = GetEqualBones(bones, clothRenderer.bones, character.transform, cloth.transform);
+            //        var equalBones = ObjectPath.EqualTransforms(cloth.transform, character.transform, clothRenderer.bones);
+            //        if (equalBones.Length > 0)
+            //        {
+            //            clothRenderer.bones = equalBones;
+            //        }
+            //        //clothRenderer.bones = System.Array.FindAll(characterRenderer.bones,x=> System.Array.FindIndex(clothRenderer.bones, y => y.name == x.name) >= 0);
+            //        Debug.Log($"{clothRenderer}.bones.Length (After): {clothRenderer.bones.Length}");
+            //        //clothRenderer.rootBone = GetEqualBone(bones, clothRenderer.rootBone, character.transform, cloth.transform);
+            //        clothRenderer.rootBone = ObjectPath.EqualTransform(cloth.transform, character.transform, clothRenderer.rootBone);
+            //        {
+            //            Transform probeAnchor = null;
+            //            //probeAnchor = GetEqualBone(bones, clothRenderer.probeAnchor);
+            //            if (clothRenderer.probeAnchor != null)
+            //            {
+            //                //본이 아니면 일반 오브젝트경로
+            //                if (probeAnchor == null)
+            //                {
+            //                    var transforms = character.GetComponentsInChildren<Transform>();
+            //                    var relativePath = ObjectPath.GetPath(clothRenderer.probeAnchor, cloth.transform);
+            //                    if (relativePath == null)
+            //                    {
+            //                        //이미 할당됨
+            //                        continue;
+            //                    }
+            //                    var equalBone = System.Array.Find(transforms, x =>
+            //                    {
+            //                        var characterRelativePath = ObjectPath.GetPath(x, character.transform);
+            //                        if (characterRelativePath == null)
+            //                        {
+            //                            return false;
+            //                        }
+            //                        return characterRelativePath == relativePath;
+            //                    });
+            //                    probeAnchor = equalBone;
+            //                }
+            //            }
+            //            clothRenderer.probeAnchor = probeAnchor;
+            //        }
+
+            //        UnityEditor.EditorUtility.SetDirty(clothRenderer);
+            //        //clothRenderer.probeAnchor = characterRenderer.probeAnchor;
+            //    }
 
                 /*
                 {
@@ -1389,135 +1389,146 @@ namespace Ahzkwid
 
 
 
+                ObjectPath.RepathComponents(cloth.transform, character.transform);
 
 
 
+                //ObjectPath.ComponentsCopy(cloth.transform, character.transform);
+                //var components = character.GetComponentsInChildren<Component>(true);
 
-                //ObjectPath.ComponentsCopy(cloth.transform, character.transform.transform);
-
-
+                /*
+                var components = character.GetComponentsInChildren<Component>(true);
+                foreach (var component in components)
                 {
-                    //기타 컴포넌트 병합
-
-                    bool IsArrayCustom(System.Type type)
-                    {
-                        return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
-                    }
-                    var components = character.GetComponentsInChildren<Component>(true);
-                    foreach (var component in components)
-                    {
-                        if (component == null)
-                        {
-                            continue;
-                        }
-                        if (component is Transform)
-                        {
-                            continue;
-                        }
-                        //var compPath = SearchUtils.GetHierarchyPath(component.gameObject, false);
-                        //var relativePath = RelativePath(component.transform, cloth.transform);
-                        var relativePath = ObjectPath.GetPath(component.transform, cloth.transform);
-                        if (relativePath != null)
-                        {
-                            //의상의 아마추어 하위는 진행하지 않음
-                            //continue;
-
-                            if (relativePath.ToLower().StartsWith("armature"))
-                            {
-                                continue;
-                            }
-                            /*
-                            if (relativePath.Length > "Armature".Length)
-                            {
-                                if (relativePath.Substring(0, "Armature".Length).ToLower() == "armature")
-                                {
-                                    continue;
-                                }
-                            }
-                            */
-                        }
-                        //Debug.Log($"{component.GetType()} {component.name}");
-
-                        //ObjectPath.RepathFields(cloth.transform, character.transform, component, component.GetType().GetFields());
-                        
-                        foreach (var field in component.GetType().GetFields())
-                        {
-
-                            var value = field.GetValue(component);
-                            if (value == null)
-                            {
-                                continue;
-                            }
-                            if (value.Equals(null))
-                            {
-                                continue;
-                            }
-                            if (IsArrayCustom(field.FieldType))
-                            {
-                                var ilist = (System.Collections.IList)value;
-                                for (int i = 0; i < ilist.Count; i++)
-                                {
-                                    var item = ilist[i];
-                                    var transform = item as Transform;
-                                    if (transform == null)
-                                    {
-                                        var property = item.GetType().GetProperty("transform");
-                                        if (property == null)
-                                        {
-                                            continue;
-                                        }
-                                        transform = property.GetValue(item) as Transform;
-                                    }
-                                    if (transform == null)
-                                    {
-                                        continue;
-                                    }
-                                    Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{transform}");
-                                    Debug.Log($"GetComponent:{transform.GetComponent(item.GetType())}");
-                                    //var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
-                                    var equalTransform = ObjectPath.EqualTransform(cloth.transform, character.transform, transform);
-                                    Debug.Log($"{ilist[i]}:{transform.GetComponent(item.GetType())}");
-                                    if (equalTransform == null)
-                                    {
-                                        Debug.LogWarning($"equalTransform==null");
-                                        Debug.LogWarning($"{SearchUtils.GetHierarchyPath(transform.gameObject, false)}" +
-                                            $"\n{SearchUtils.GetHierarchyPath(cloth.gameObject, false)}" +
-                                            $"\n{SearchUtils.GetHierarchyPath(character.gameObject, false)}");
-                                        ilist[i] = item;
-                                    }
-                                    else
-                                    {
-                                        ilist[i] = equalTransform.GetComponent(item.GetType());
-                                    }
-                                }
-                                field.SetValue(component, ilist);
-
-                            }
-                            else
-                            {
-                                if (field.FieldType == typeof(Transform))
-                                {
-                                    var transform = value as Transform;
-                                    //var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
-                                    var equalTransform = ObjectPath.EqualTransform(cloth.transform, character.transform, transform);
-                                    if (equalTransform == null)
-                                    {
-                                        continue;
-                                    }
-                                    field.SetValue(component, equalTransform);
-                                    Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
-                                    continue;
-                                }
-                            }
-                        //Debug.Log($"{component.name}.{field.Name}");
-                        }
-                        
-                    }
-
-
-
-
+                    ObjectPath.RepathFields(cloth.transform, character.transform, component, component.GetType().GetFields());
                 }
+                */
+                //{
+                //    //기타 컴포넌트 병합
+
+                //    bool IsArrayCustom(System.Type type)
+                //    {
+                //        return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
+                //    }
+                //    var components = character.GetComponentsInChildren<Component>(true);
+                //    foreach (var component in components)
+                //    {
+                //        if (component == null)
+                //        {
+                //            continue;
+                //        }
+                //        if (component is Transform)
+                //        {
+                //            continue;
+                //        }
+                //        //var compPath = SearchUtils.GetHierarchyPath(component.gameObject, false);
+                //        //var relativePath = RelativePath(component.transform, cloth.transform);
+                //        var relativePath = ObjectPath.GetPath(component.transform, cloth.transform);
+                //        if (relativePath != null)
+                //        {
+                //            //의상의 아마추어 하위는 진행하지 않음
+                //            //continue;
+
+                //            if (relativePath.ToLower().StartsWith("armature"))
+                //            {
+                //                continue;
+                //            }
+                //            /*
+                //            if (relativePath.Length > "Armature".Length)
+                //            {
+                //                if (relativePath.Substring(0, "Armature".Length).ToLower() == "armature")
+                //                {
+                //                    continue;
+                //                }
+                //            }
+                //            */
+                //        }
+                //        //Debug.Log($"{component.GetType()} {component.name}");
+
+                //        //ObjectPath.RepathFields(cloth.transform, character.transform, component, component.GetType().GetFields());
+
+                //        foreach (var field in component.GetType().GetFields())
+                //        {
+
+                //            var value = field.GetValue(component);
+                //            if (value == null)
+                //            {
+                //                continue;
+                //            }
+                //            if (value.Equals(null))
+                //            {
+                //                continue;
+                //            }
+                //            if (IsArrayCustom(field.FieldType))
+                //            {
+                //                var ilist = (System.Collections.IList)value;
+                //                for (int i = 0; i < ilist.Count; i++)
+                //                {
+                //                    var item = ilist[i];
+                //                    var transform = item as Transform;
+                //                    if (transform == null)
+                //                    {
+                //                        if (item == null)
+                //                        {
+                //                            continue;
+                //                        }
+                //                        var property = item.GetType().GetProperty("transform");
+                //                        if (property == null)
+                //                        {
+                //                            continue;
+                //                        }
+                //                        transform = property.GetValue(item) as Transform;
+                //                    }
+                //                    if (transform == null)
+                //                    {
+                //                        continue;
+                //                    }
+                //                    Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{transform}");
+                //                    Debug.Log($"GetComponent:{transform.GetComponent(item.GetType())}");
+                //                    //var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                //                    var equalTransform = ObjectPath.EqualTransform(cloth.transform, character.transform, transform);
+                //                    Debug.Log($"{ilist[i]}:{transform.GetComponent(item.GetType())}");
+                //                    if (equalTransform == null)
+                //                    {
+                //                        Debug.LogWarning($"equalTransform==null");
+                //                        Debug.LogWarning($"{SearchUtils.GetHierarchyPath(transform.gameObject, false)}" +
+                //                            $"\n{SearchUtils.GetHierarchyPath(cloth.gameObject, false)}" +
+                //                            $"\n{SearchUtils.GetHierarchyPath(character.gameObject, false)}");
+                //                        ilist[i] = item;
+                //                    }
+                //                    else
+                //                    {
+                //                        ilist[i] = equalTransform.GetComponent(item.GetType());
+                //                    }
+                //                }
+                //                field.SetValue(component, ilist);
+
+                //            }
+                //            else
+                //            {
+                //                if (field.FieldType == typeof(Transform))
+                //                {
+                //                    var transform = value as Transform;
+                //                    //var equalTransform = EqualTransform(transform, cloth.transform, character.transform);
+                //                    var equalTransform = ObjectPath.EqualTransform(cloth.transform, character.transform, transform);
+                //                    if (equalTransform == null)
+                //                    {
+                //                        continue;
+                //                    }
+                //                    field.SetValue(component, equalTransform);
+                //                    Debug.Log($"{component.transform.name}.{component.name}.{field.Name}.{value}\n{transform}->{equalTransform}");
+                //                    continue;
+                //                }
+                //            }
+                //        //Debug.Log($"{component.name}.{field.Name}");
+                //        }
+
+                //    }
+
+
+
+
+                //}
                 /*
                 {
                     var components = character.GetComponentsInChildren<Component>(true);

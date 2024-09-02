@@ -20,7 +20,7 @@ namespace Ahzkwid.AvatarTool
         {
             if (state == PlayModeStateChange.ExitingPlayMode)
             {
-                DeleteTempFolder();
+                //DeleteTempFolder();
             }
         }
         public enum FileOptions
@@ -41,7 +41,10 @@ namespace Ahzkwid.AvatarTool
         public static void DeleteTempFolder()
         {
             var folderPath = GetFolderPath(FileOptions.TempSave);
-            Directory.Delete(folderPath, true);
+            if (Directory.Exists(folderPath))
+            {
+                Directory.Delete(folderPath, true);
+            }
             AssetDatabase.Refresh();
         }
         public static void SaveAsset(Object asset, FileOptions fileOptions)

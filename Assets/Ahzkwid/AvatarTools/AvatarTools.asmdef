@@ -1,6 +1,6 @@
 {
     "name": "AvatarTools",
-    "rootNamespace": "Ahzkwid",
+    "rootNamespace": "",
     "references": [
         "GUID:b906909fcc54f634db50f2cad0f988d9"
     ],
@@ -9,7 +9,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [
         "UNITY_2021_1_OR_NEWER"
     ],

@@ -68,13 +68,12 @@ namespace Ahzkwid
             AnimationRepairTool.Init();
         }
 
-#if DEBUG
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(GetBoneNamesTool))]
         public static void GetBoneNamesToolInit()
         {
             GetBoneNamesTool.Init();
         }
-#endif
+
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(IntervalTool))]
         public static void IntervalToolInit()

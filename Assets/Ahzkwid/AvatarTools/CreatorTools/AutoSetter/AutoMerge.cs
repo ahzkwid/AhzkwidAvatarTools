@@ -676,7 +676,7 @@ namespace Ahzkwid
 
             var transforms=from.GetComponentsInChildren<Transform>(true);
 
-
+            //from.localScale = Vector3.one;
             foreach (var transform in transforms)
             {
                 var equalTransform = ObjectPath.EqualTransform(from, to, transform);
@@ -687,6 +687,9 @@ namespace Ahzkwid
                 transform.localScale = equalTransform.localScale;
                 transform.localPosition = equalTransform.localPosition;
                 transform.localRotation = equalTransform.localRotation;
+                //transform.position = equalTransform.position;
+                //transform.rotation = equalTransform.rotation;
+                //transform.lossyScale = equalTransform.lossyScale;
             }
 
 
@@ -779,7 +782,19 @@ namespace Ahzkwid
                 default:
                     break;
             }
-            FollowBones();
+
+
+
+            switch (category)
+            {
+                case Category.Cloth:
+                    FollowBones();
+                    break;
+                case Category.Item:
+                    return;
+                default:
+                    break;
+            }
         }
     }
 }
