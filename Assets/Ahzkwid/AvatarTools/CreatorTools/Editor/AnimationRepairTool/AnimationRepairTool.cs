@@ -43,6 +43,33 @@ class AnimationRepairTool : EditorWindow
 
     public AnimationData[] animationDatas;
 
+
+
+    public void SaveSettingToJson(string path)
+    {
+        var json = JsonUtility.ToJson(this);
+        System.IO.File.WriteAllText(path, json);
+        AssetDatabase.Refresh();
+    }
+
+    public void LoadSettingFromJson(string path)
+    {
+        if (System.IO.File.Exists(path))
+        {
+            var preAnimationClip= animationClip;
+            var json = System.IO.File.ReadAllText(path);
+            JsonUtility.FromJsonOverwrite(json, this);
+
+            animationClip= preAnimationClip;
+        }
+    }
+
+
+
+
+
+
+
     [System.Serializable]
     public class AnimationData
     {
@@ -114,12 +141,13 @@ class AnimationRepairTool : EditorWindow
                 AnimationUtility.SetEditorCurve(clip, curveBinding, curve);
             }
         }
-        UnityEditor.AssetDatabase.SaveAssetIfDirty(animationClip);
-        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(animationClip));
+        UnityEditor.AssetDatabase.SaveAssetIfDirty(clip);
+        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(clip));
     }
     public void Repair(AnimationClip clip, Action[] actions)
     {
-        foreach (var binding in AnimationUtility.GetCurveBindings(clip))
+        var bindings = AnimationUtility.GetCurveBindings(clip);
+        foreach (var binding in bindings)
         {
             var newBinding = binding;
             foreach (var action in actions)
@@ -130,13 +158,13 @@ class AnimationRepairTool : EditorWindow
                 switch (action.target)
                 {
                     case Action.Target.Path:
-                        text = binding.path;
+                        text = newBinding.path;
                         break;
                     case Action.Target.Property:
-                        text = binding.propertyName;
+                        text = newBinding.propertyName;
                         break;
                     case Action.Target.Type:
-                        text = binding.type.ToString();
+                        text = newBinding.type.ToString();
                         break;
                 }
                 switch (action.option)
@@ -184,9 +212,17 @@ class AnimationRepairTool : EditorWindow
                 switch (action.target)
                 {
                     case Action.Target.Path:
+                        if (newBinding.path != text)
+                        {
+                            Debug.Log($"Path: {newBinding.path} -> {text}");
+                        }
                         newBinding.path = text;
                         break;
                     case Action.Target.Property:
+                        if (newBinding.propertyName != text)
+                        {
+                            Debug.Log($"propertyName: {newBinding.propertyName} -> {text}");
+                        }
                         newBinding.propertyName = text;
                         break;
                     case Action.Target.Type:
@@ -201,6 +237,10 @@ class AnimationRepairTool : EditorWindow
                         }
                         if (type != null)
                         {
+                            if (newBinding.type != type)
+                            {
+                                Debug.Log($"type: {newBinding.type} -> {text}");
+                            }
                             newBinding.type = type;
                         }
                         break;
@@ -225,8 +265,8 @@ class AnimationRepairTool : EditorWindow
                 throw;
             }
         }
-        UnityEditor.AssetDatabase.SaveAssetIfDirty(animationClip);
-        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(animationClip));
+        UnityEditor.AssetDatabase.SaveAssetIfDirty(clip);
+        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(clip));
         //UnityEditor.EditorUtility.SetDirty(animationClip);
 
     }
@@ -255,7 +295,7 @@ class AnimationRepairTool : EditorWindow
             }
             //if (EditorGUI.EndChangeCheck())
             {
-                if (animationClip == null)
+                if ((animationClip == null)||(animationClip.Equals(null)))
                 {
                     animationDatas = null;
                 }
@@ -286,8 +326,43 @@ class AnimationRepairTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(actions)));
             EditorGUILayout.Space();
+
+            EditorGUILayout.Space();
+
+
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(value)));
             EditorGUILayout.Space();
+
+
+
+            EditorGUILayout.Space();
+            GUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.LabelField("SettingData");
+                if (GUILayout.Button("Save"))
+                {
+                    var path = EditorUtility.SaveFilePanel("Save Setting", "", "AnimRepairToolSetting.json", "json");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        SaveSettingToJson(path);
+                    }
+                }
+
+                if (GUILayout.Button("Load"))
+                {
+                    var path = EditorUtility.OpenFilePanel("Load Setting", "", "json");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        LoadSettingFromJson(path);
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
+
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
             if (animationClip == null)
             {
                 //allReady = false;

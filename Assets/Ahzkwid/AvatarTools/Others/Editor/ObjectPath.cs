@@ -212,6 +212,7 @@ namespace Ahzkwid
                 gameObjects = gameObjects.FindAll(x => x.activeInHierarchy);
                 targetTransforms = gameObjects.ConvertAll(x => x.transform);
                 targetTransforms = targetTransforms.FindAll(x => GetVRCRoot(x, vrcRootSearchOption));
+                gameObjects = gameObjects.FindAll(x => x != null);
             }
             return targetTransforms;
         }
@@ -679,6 +680,14 @@ namespace Ahzkwid
                     for (int i = 0; i < ilist.Count; i++)
                     {
                         var item = ilist[i];
+                        if (item == null)
+                        {
+                            continue;
+                        }
+                        if (item.Equals(null))
+                        {
+                            continue;
+                        }
                         if (ilist[i] is Component component)
                         {
                             Debug.Log($"RepathFields.IsArray.IsComponent {ilist[i]}");

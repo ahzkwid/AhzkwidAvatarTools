@@ -102,6 +102,10 @@ class InsertMaterialsTool : EditorWindow
 
             foreach (var importerMaterial in importer.GetExternalObjectMap())
             {
+                if (importerMaterial.Value==null)
+                {
+                    continue;
+                }
                 Debug.Log($"{importerMaterial.Value.name}");
 
                 materialNames.Remove(importerMaterial.Value.name);

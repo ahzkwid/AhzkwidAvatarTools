@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using BestHTTP.SecureProtocol.Org.BouncyCastle.Asn1.X509;
 
 namespace Ahzkwid
 {
@@ -386,6 +387,7 @@ namespace Ahzkwid
             var targetTransforms = new List<Transform>();
             if ((targetMeshs == null) || (targetMeshs.Length == 0))
             {
+                /*
                 var activeScene = SceneManager.GetActiveScene();
                 if (activeScene!=null)
                 {
@@ -395,6 +397,13 @@ namespace Ahzkwid
                     targetTransforms = targetTransforms.FindAll(x=> ObjectPath.GetVRCRoot(x, ObjectPath.VRCRootSearchOption.VRCRootOnly));
 
                 }
+
+                */
+                targetTransforms= ObjectPath.GetRoots(ObjectPath.VRCRootSearchOption.VRCRootOnly);
+
+
+
+
                 //return null;
             }
             else
@@ -415,8 +424,8 @@ namespace Ahzkwid
                     }
 
                     //화면상거리
-                    var screenPoint = HandleUtility.WorldToGUIPoint(transform.position);
-                    targets = targets.OrderBy(target => Vector2.Distance(HandleUtility.WorldToGUIPoint(target.transform.position), screenPoint)).ToList();
+                    //var screenPoint = HandleUtility.WorldToGUIPoint(transform.position);
+                    //targets = targets.OrderBy(target => Vector2.Distance(HandleUtility.WorldToGUIPoint(target.transform.position), screenPoint)).ToList();
 
                     //절대거리
                     //targets = targets.OrderBy(target => Vector3.Distance(target.transform.position, transform.position)).ToArray();
@@ -441,6 +450,13 @@ namespace Ahzkwid
             }
 
 
+
+            //화면상거리
+            var screenPoint = HandleUtility.WorldToGUIPoint(transform.position);
+            targetTransforms = targetTransforms.OrderBy(target => Vector2.Distance(HandleUtility.WorldToGUIPoint(target.transform.position), screenPoint)).ToList();
+
+            //절대거리
+            //targets = targets.OrderBy(target => Vector3.Distance(target.transform.position, transform.position)).ToArray();
 
 
             if (targetTransforms.Count > 0)
@@ -679,16 +695,24 @@ namespace Ahzkwid
             //from.localScale = Vector3.one;
             foreach (var transform in transforms)
             {
+                if (transform == from)
+                {
+                    transform.localPosition = Vector3.zero;
+                    transform.localRotation = Quaternion.identity;
+                    continue;
+                }
+
+
                 var equalTransform = ObjectPath.EqualTransform(from, to, transform);
                 if (equalTransform == null)
                 {
                     continue;
                 }
                 transform.localScale = equalTransform.localScale;
-                transform.localPosition = equalTransform.localPosition;
-                transform.localRotation = equalTransform.localRotation;
-                //transform.position = equalTransform.position;
-                //transform.rotation = equalTransform.rotation;
+                //transform.localPosition = equalTransform.localPosition;
+                //transform.localRotation = equalTransform.localRotation;
+                transform.position = equalTransform.position;
+                transform.rotation = equalTransform.rotation;
                 //transform.lossyScale = equalTransform.lossyScale;
             }
 
