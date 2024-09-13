@@ -115,11 +115,21 @@ namespace Ahzkwid.AvatarTool
 
 
 
-
-            if (fileName.Length > 40)
+            switch (fileOptions)
             {
-                fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                case FileOptions.TempSave:
+                    fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                    break;
+                case FileOptions.Normal:
+                case FileOptions.NoSave:
+                default:
+                    if (fileName.Length > 40)
+                    {
+                        fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                    }
+                    break;
             }
+
             var path = $"{folderPath}/{fileName}{ext}";
             path = AssetDatabase.GenerateUniqueAssetPath(path);
             asset.name = System.IO.Path.GetFileNameWithoutExtension(path);

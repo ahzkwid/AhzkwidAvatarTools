@@ -219,6 +219,10 @@ namespace Ahzkwid
 
         public static Transform GetVRCRoot(Transform transform, VRCRootSearchOption vrcRootSearchOption = VRCRootSearchOption.IncludeVRCRoot)
         {
+            if (transform == null)
+            {
+                return null;
+            }
             var root = transform.root;
             if (root == null)
             {
@@ -577,6 +581,14 @@ namespace Ahzkwid
                 if (property.CanWrite == false)
                 {
                     continue;
+                }
+                switch (property.Name)
+                {
+                    case "bodyPosition":
+                    case "bodyRotation":
+                        continue;
+                    default:
+                        break;
                 }
                 if (blacklist.Find(x => x == property.PropertyType) != null)
                 {

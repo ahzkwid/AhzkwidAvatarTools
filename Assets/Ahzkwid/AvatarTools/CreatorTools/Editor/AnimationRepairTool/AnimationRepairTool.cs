@@ -8,7 +8,6 @@
 using UnityEngine;
 
 using UnityEditor;
-
 /*
 
 [CustomPropertyDrawer(typeof(AnimationRepairToolActionAttribute))]
@@ -38,7 +37,116 @@ public class AnimationRepairToolActionAttribute : PropertyAttribute
 [InitializeOnLoad]
 class AnimationRepairTool : EditorWindow
 {
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationRepairTool))]
+    public static void Init()
+    {
+        var window = GetWindow<AnimationRepairTool>(utility: false, title: nameof(AnimationRepairTool));
+        window.minSize = new Vector2(300, 200);
+        //window.maxSize = window.minSize;
+        window.Show();
+    }
+
+
+
+
+    [CustomPropertyDrawer(typeof(ActionAttribute))]
+    public class ActionDrawer : PropertyDrawer
+    {
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var option = (Action.Option)property.FindPropertyRelative(nameof(Action.option)).intValue;
+            switch (option)
+            {
+                case Action.Option.Destroy:
+                    return EditorGUIUtility.singleLineHeight * 4;
+                case Action.Option.Replace:
+                case Action.Option.Add:
+                case Action.Option.AddFirst:
+                default:
+                    break;
+            }
+            return EditorGUI.GetPropertyHeight(property, label, true);
+        }
+        public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
+        {
+            var fieldRect = rect;
+            //fieldRect.width /= 2;
+            fieldRect.height = EditorGUIUtility.singleLineHeight;
+
+            var option = (Action.Option)property.FindPropertyRelative(nameof(Action.option)).intValue;
+
+
+            switch (option)
+            {
+                case Action.Option.Destroy:
+                    /*
+                    {
+                        //가로배치할때 사용
+                        var path = nameof(Action.key);
+                        EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                    }
+                    */
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(nameof(Action.option)));
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(nameof(Action.target)));
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(nameof(Action.key)));
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(nameof(Action.comparison)));
+                    break;
+                case Action.Option.Replace:
+                case Action.Option.Add:
+                case Action.Option.AddFirst:
+                default:
+                    EditorGUI.PropertyField(rect, property, label, true);
+                    break;
+            }
+            //fieldRect.y += fieldRect.width;
+            //EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(nameof(BlendshapeAutoSetter.BlendshapeSettingData.value)), label, true);
+        }
+    }
+    public class ActionAttribute : PropertyAttribute
+    {
+
+    }
+
+    [System.Serializable]
+    public class Action
+    {
+        public enum Target
+        {
+            Path, Property, Type
+        }
+        public enum Option
+        {
+            Replace, Add, AddFirst, Destroy
+        }
+        public enum Comparison
+        {
+            Contains, Equal, NotEqual
+        }
+        public Option option;
+        public Target target;
+        [HideInInspector]
+        public Comparison comparison;
+        public string key = "";
+        public string value = "";
+    }
+
+
+
+
+
+
+
+
+
     public AnimationClip animationClip;
+
+    [ActionAttribute]
     public Action[] actions= new Action[1];
 
     public AnimationData[] animationDatas;
@@ -77,24 +185,6 @@ class AnimationRepairTool : EditorWindow
         public string propertyName = "";
         public string type = "";
     }
-
-
-    [System.Serializable]
-    public class Action
-    {
-        public enum Target
-        {
-            Path, Property, Type
-        }
-        public enum Option
-        {
-            Replace, Add,AddFirst
-        }
-        public Target target;
-        public Option option;
-        public string key = "";
-        public string value = "";
-    }
     [System.Serializable]
     public class Value
     {
@@ -107,14 +197,6 @@ class AnimationRepairTool : EditorWindow
     }
     public Value value;
 
-    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationRepairTool))]
-    public static void Init()
-    {
-        var window = GetWindow<AnimationRepairTool>(utility: false, title: nameof(AnimationRepairTool));
-        window.minSize = new Vector2(300, 200);
-        //window.maxSize = window.minSize;
-        window.Show();
-    }
     public void ChangeValue(AnimationClip clip, Value value)
     {
         var curveBindings = AnimationUtility.GetCurveBindings(clip);
@@ -126,7 +208,7 @@ class AnimationRepairTool : EditorWindow
             {
                 for (int i = 0; i < curve.keys.Length; i++)
                 {
-                    Keyframe keyframe = curve.keys[i];
+                    var keyframe = curve.keys[i];
                     switch(value.option)
                     {
                         case Value.Option.Multiply:
@@ -204,7 +286,7 @@ class AnimationRepairTool : EditorWindow
                         text += action.value;
                         break;
                     case Action.Option.AddFirst:
-                        text = action.value+ text;
+                        text = action.value + text;
                         break;
                     default:
                         break;
@@ -231,7 +313,7 @@ class AnimationRepairTool : EditorWindow
                         {
                             type = System.Type.GetType(value + ", UnityEngine");
                         }
-                        if (type==null)
+                        if (type == null)
                         {
                             Debug.LogWarning($"type: {type}");
                         }
@@ -264,6 +346,79 @@ class AnimationRepairTool : EditorWindow
                 Debug.LogError($"newBinding.type:{newBinding.type}");
                 throw;
             }
+        }
+        UnityEditor.AssetDatabase.SaveAssetIfDirty(clip);
+        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(clip));
+        //UnityEditor.EditorUtility.SetDirty(animationClip);
+
+    }
+    public void Delete(AnimationClip clip, Action[] actions)
+    {
+        var bindings = AnimationUtility.GetCurveBindings(clip);
+        foreach (var binding in bindings)
+        {
+            var newBinding = binding;
+            var isDelete = false;
+            foreach (var action in actions)
+            {
+                //Debug.Log($"Path: {action.option}, Property: {binding.propertyName}");
+
+                if (action.option != Action.Option.Destroy)
+                {
+                    continue;
+                }
+                var text = "";
+                switch (action.target)
+                {
+                    case Action.Target.Path:
+                        text = newBinding.path;
+                        break;
+                    case Action.Target.Property:
+                        text = newBinding.propertyName;
+                        break;
+                    case Action.Target.Type:
+                        text = newBinding.type.ToString();
+                        break;
+                }
+
+                switch (action.comparison)
+                {
+                    case Action.Comparison.Contains:
+                        if (string.IsNullOrWhiteSpace(action.key)==false)
+                        {
+                            if (text.Contains(action.key))
+                            {
+                                isDelete = true;
+                            }
+                        }
+                        break;
+                    case Action.Comparison.Equal:
+                        if (text.Equals(action.key))
+                        {
+                            isDelete = true;
+                        }
+                        break;
+                    case Action.Comparison.NotEqual:
+                        if (text.Equals(action.key)==false)
+                        {
+                            isDelete = true;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if (isDelete)
+                {
+                    break;
+                }
+            }
+
+            if (isDelete==false)
+            {
+                continue;
+            }
+            AnimationUtility.SetEditorCurve(clip, binding, null);//제거
+
         }
         UnityEditor.AssetDatabase.SaveAssetIfDirty(clip);
         AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(clip));
@@ -378,6 +533,7 @@ class AnimationRepairTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Repair"))
         {
+            Delete(animationClip, actions);
             Repair(animationClip, actions);
             ChangeValue(animationClip, value);
         }

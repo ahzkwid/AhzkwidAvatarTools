@@ -218,7 +218,7 @@ namespace Ahzkwid
             Parent, GameObject
         }
         [PositionDataAttribute]
-        public List<PositionData> PositionDatas = new List<PositionData>();
+        public List<PositionData> PositionDatas = new List<PositionData>() { new PositionData()};
         [System.Serializable]
         public class PositionData
         {

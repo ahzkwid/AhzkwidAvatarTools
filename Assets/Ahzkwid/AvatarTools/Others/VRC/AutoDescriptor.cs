@@ -724,6 +724,8 @@ namespace Ahzkwid
             {
                 return;
             }
+
+            /*
             var parents = autoDescriptor.transform.GetComponentsInParent<Transform>();
             Transform root = null;
             if (parents.Length == 1)
@@ -734,7 +736,14 @@ namespace Ahzkwid
             {
                 root = System.Array.Find(parents, parent => parent.GetComponentsInParent<Transform>().Length == 1);
             }
+
+            */
+            var root = ObjectPath.GetVRCRoot(autoDescriptor.transform);
+
             var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>();
+
+
+
 
             if (avatarDescriptor == null)
             {

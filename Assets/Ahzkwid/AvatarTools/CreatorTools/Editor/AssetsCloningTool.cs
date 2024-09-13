@@ -14,7 +14,6 @@ using Newtonsoft.Json;
 using static AnimationRepairTool;
 using System.Security.Cryptography;
 
-
 [InitializeOnLoad]
 class AssetsCloningTool : EditorWindow
 {
@@ -114,20 +113,17 @@ class AssetsCloningTool : EditorWindow
             Debug.LogError($"folderBPath: {folderBPath}");
             return;
         }
+        var ignoresB = new string[] { ".meta"};
         if (option == Option.Default)
         {
             ignores = new string[] { ".meta", "MenuItems.cs" };
         }
 
-        var filesA = Directory.GetFiles(folderAPath, "*", SearchOption.AllDirectories)
-            .Where(file => System.Array.Find(ignores, ignore => Path.GetFileName(file).Contains(ignore)) == null)
-            .Where(file => !ignores.Contains(Path.GetExtension(file)))
-            .ToList();
 
-        var filesB = Directory.GetFiles(folderBPath, "*", SearchOption.AllDirectories)
-            .Where(file => System.Array.Find(ignores, ignore => Path.GetFileName(file).Contains(ignore)) == null)
-            .Where(file => !ignores.Contains(Path.GetExtension(file)))
-            .ToList();
+        var filesA = GetFiles(folderAPath, ignores);
+        var filesB = GetFiles(folderBPath, ignoresB);
+
+
         Debug.Log($"Directory.GetFiles(folderAPath).Length:{Directory.GetFiles(folderAPath).Length}");
         Debug.Log($"filesA.Count:{filesA.Count}");
         Debug.Log($"filesB.Count:{filesB.Count}");
@@ -185,6 +181,11 @@ class AssetsCloningTool : EditorWindow
                 var newNamespace = System.IO.Path.GetDirectoryName(newFilePath); // 파일명제거
                 newNamespace = newNamespace.Replace("Assets\\", ""); // Assets\ 제거
                 newNamespace = ReplaceWhiteList(newNamespace, @"^[a-zA-Z]+$"); //알파벳만
+
+                if (newNamespace.Length>20)
+                {
+                    newNamespace = System.DateTime.Now.Ticks.ToString();
+                }
                 //jsonObject["rootNamespace"] = newNamespace;
                 jsonObject["name"] = newNamespace;
                 var newJson = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
@@ -199,10 +200,145 @@ class AssetsCloningTool : EditorWindow
                 }
             }
 
-            AssetDatabase.ImportAsset(newFilePath);
+            //AssetDatabase.ImportAsset(newFilePath);
+        }
+        //AssetDatabase.Refresh();
+
+
+
+
+        //여기서부터 Repath
+
+
+        
+        
+
+        //var guidsA = AssetDatabase.FindAssets("", new[] { folderAPath }).ToList();
+
+        var guidsB = AssetDatabase.FindAssets("", new[] { folderBPath }).ToList();
+
+        var assetGUIDs = guidsB.FindAll(x =>
+        {
+
+            if (string.IsNullOrWhiteSpace(x))
+            {
+                return false;
+            }
+
+
+            var path = AssetDatabase.GUIDToAssetPath(x);
+
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                return false;
+            }
+
+
+            var type = AssetDatabase.GetMainAssetTypeAtPath(path);
+            if (type == typeof(AnimationClip))
+            {
+                return false;
+            }
+            if (type == typeof(AudioClip))
+            {
+                return false;
+            }
+            if (type == typeof(Texture))
+            {
+                return false;
+            }
+            if (type == typeof(Mesh))
+            {
+                return false;
+            }
+            return true;
+        });
+
+
+        var relativeGUIDs = new Dictionary<string, string>();
+        {
+            foreach (var guid in guidsB)
+            {
+
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    continue;
+                }
+                if (path.StartsWith(folderBPath) == false)
+                {
+                    continue;
+                }
+                var oldPath = path.Replace(folderBPath, folderAPath);
+
+                //var newAsset = AssetDatabase.LoadAssetAtPath<Object>(newPath);
+                //if (newAsset == null)
+                //{
+                //    continue;
+                //}
+
+                if (System.IO.File.Exists(oldPath) == false)
+                {
+                    continue;
+                }
+
+
+                var oldGUID = AssetDatabase.AssetPathToGUID(oldPath);
+
+                if (string.IsNullOrWhiteSpace(oldGUID))
+                {
+                    continue;
+                }
+                //relativeGUIDs.Add("guid: " + oldGUID, "guid: " + guid);
+                relativeGUIDs.Add(oldGUID, guid);
+            }
         }
 
 
+        var importPaths = new List<string>();
+        foreach (var guid in assetGUIDs)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+            if (System.IO.File.Exists(path) == false)
+            {
+                continue;
+            }
+            var text = System.IO.File.ReadAllText(path);
+            var replaceCount = 0;
+            foreach (var key in relativeGUIDs.Keys)
+            {
+                if (text.Contains(key) == false)
+                {
+                    continue;
+                }
+                text = text.Replace(key, relativeGUIDs[key]);
+                Debug.Log($"{path}.{key} -> {relativeGUIDs[key]}");
+                replaceCount++;
+            }
+            if (replaceCount==0)
+            {
+                continue;
+            }
+            importPaths.Add(path);
+            System.IO.File.WriteAllText(path, text);
+        }
+        //var assetPaths = assetGUIDs.ConvertAll(guid => AssetDatabase.GUIDToAssetPath(guid));
+        foreach (var path in importPaths)
+        {
+            AssetDatabase.ImportAsset(path);
+        }
+        /*
+        foreach (var guid in guidsB)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            AssetDatabase.ImportAsset(path);
+        }
+        */
+        /*
         var prefabGUIDs = AssetDatabase.FindAssets("t:Prefab", new[] { folderBPath });
         var prefabPaths = System.Array.ConvertAll(prefabGUIDs, guid => AssetDatabase.GUIDToAssetPath(guid));
 
@@ -256,6 +392,7 @@ class AssetsCloningTool : EditorWindow
         {
             AssetDatabase.ImportAsset(path);
         }
+        */
 
 
 
@@ -264,6 +401,26 @@ class AssetsCloningTool : EditorWindow
 
 
         Debug.Log($"Complete {System.DateTime.Now}");
+    }
+    string Repath(string folderAPath, string folderBPath, string path)
+    {
+        if (path.StartsWith(folderAPath) == false)
+        {
+            return path;
+        }
+
+        return path.Replace(folderAPath, folderBPath);
+    }
+    List<string> GetFiles(string folderPath, string[] ignores = null)
+    {
+        var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories);
+        if (ignores==null)
+        {
+            return files.ToList();
+        }
+        return files.Where(file => System.Array.Find(ignores, ignore => Path.GetFileName(file).Contains(ignore)) == null)
+            .Where(file => !ignores.Contains(Path.GetExtension(file)))
+            .ToList();
     }
 
     SerializedObject serializedObject;

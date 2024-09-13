@@ -6,9 +6,6 @@ using UnityEngine;
 
 using UnityEditor;
 using System.Linq;
-using UnityEngine.SceneManagement;
-using BestHTTP.SecureProtocol.Org.BouncyCastle.Asn1.X509;
-
 namespace Ahzkwid
 {
 
@@ -54,32 +51,34 @@ namespace Ahzkwid
                 var autoMerge = target as AutoMerge;
                 var targetMeshs = autoMerge.targetMeshs;
                 var valueChanged = false;
-
-
-                targetMeshs = System.Array.ConvertAll(targetMeshs, value =>
+                if (targetMeshs!=null)
                 {
-                    if (value is GameObject)
+                    targetMeshs = System.Array.ConvertAll(targetMeshs, value =>
                     {
-                        var gameObject = value as GameObject;
-                        var renderer = gameObject.GetComponent<SkinnedMeshRenderer>();
-                        if (renderer != null)
+                        if (value is GameObject)
                         {
-                            value = renderer.sharedMesh;
+                            var gameObject = value as GameObject;
+                            var renderer = gameObject.GetComponent<SkinnedMeshRenderer>();
+                            if (renderer != null)
+                            {
+                                value = renderer.sharedMesh;
+                                valueChanged = true;
+                            }
+                        }
+                        if ((value is Mesh) == false)
+                        {
+                            value = null;
                             valueChanged = true;
                         }
-                    }
-                    if ((value is Mesh) == false)
+                        return value;
+                    });
+                    if (valueChanged)
                     {
-                        value = null;
-                        valueChanged = true;
+                        autoMerge.targetMeshs = targetMeshs;
+                        UnityEditor.EditorUtility.SetDirty(target);
                     }
-                    return value;
-                });
-                if (valueChanged)
-                {
-                    autoMerge.targetMeshs= targetMeshs;
-                    UnityEditor.EditorUtility.SetDirty(target);
                 }
+
             }
 
             serializedObject.Update();
@@ -342,11 +341,15 @@ namespace Ahzkwid
 
         public Transform GetClothRootTransform()
         {
-            return GetClothRootTransform(clothRoots.First());
+            return GetClothRootTransform(clothRoots.FirstOrDefault());
         }
         public Transform GetClothRootTransform(ClothRoot clothRoot)
         {
 
+            if (clothRoot==null)
+            {
+                return null;
+            }
 
 
             Transform target = null;

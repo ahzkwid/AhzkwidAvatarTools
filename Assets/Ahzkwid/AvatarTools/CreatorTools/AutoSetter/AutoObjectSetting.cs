@@ -243,21 +243,28 @@ namespace Ahzkwid
                     {
                         case DataType.Animation:
                             {
+                                Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
                                 var animator = root.GetComponent<Animator>();
                                 Avatar originalAvatar = null;
+                                RuntimeAnimatorController originalController = null;
                                 if (animator)
                                 {
                                     originalAvatar = animator.avatar;
+                                    originalController = animator.runtimeAnimatorController;
                                     animator.avatar = null;
+                                    animator.runtimeAnimatorController = null;
                                 }
                                 foreach (var clip in clips)
                                 {
                                     clip.SampleAnimation(root.gameObject, clip.length);
                                 }
+                                //EditorUtility.SetDirty(root.gameObject);
 
                                 if (animator)
                                 {
                                     animator.avatar = originalAvatar;
+                                    animator.runtimeAnimatorController = originalController;
+                                    //animator.avatar = null;
                                 }
                                 EditorUtility.SetDirty(root.gameObject);
                             }
