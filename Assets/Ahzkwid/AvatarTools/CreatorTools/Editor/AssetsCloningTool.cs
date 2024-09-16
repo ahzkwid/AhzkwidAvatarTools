@@ -200,7 +200,7 @@ class AssetsCloningTool : EditorWindow
                 }
             }
 
-            //AssetDatabase.ImportAsset(newFilePath);
+            AssetDatabase.ImportAsset(newFilePath);
         }
         //AssetDatabase.Refresh();
 
