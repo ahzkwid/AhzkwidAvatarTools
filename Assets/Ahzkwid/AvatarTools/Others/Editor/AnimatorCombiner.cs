@@ -4,11 +4,8 @@ using UnityEditor.Animations;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Search;
 using System.IO;
 using Ahzkwid.AvatarTool;
-using BestHTTP.SecureProtocol.Org.BouncyCastle.Crypto.Parameters;
-
 public class AnimatorCombiner : MonoBehaviour
 { 
     public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent, Transform rootChild=null)
@@ -75,6 +72,7 @@ public class AnimatorCombiner : MonoBehaviour
     private static void CopyLayers(AnimatorController source, AnimatorController destination, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
     {
         var layers = new List<AnimatorControllerLayer>(destination.layers);
+        var newLayers = new List<AnimatorControllerLayer>();
 
         for (int i = 0; i < source.layers.Length; i++)
         {
@@ -89,10 +87,24 @@ public class AnimatorCombiner : MonoBehaviour
             {
                 newLayer.defaultWeight = 1f;
             }
-
-            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, rootParent, rootChild, fileOptions);
-            layers.Add(newLayer);
+            if (newLayer.syncedLayerIndex>=0)
+            {
+                newLayer.syncedLayerIndex += source.layers.Length;
+            }
+            newLayers.Add(newLayer);
         }
+
+
+        for (int i = 0; i < source.layers.Length; i++)
+        {
+            var layer = source.layers[i];
+            var newLayer = newLayers[i];
+            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, rootParent, rootChild, fileOptions);
+        }
+        layers.AddRange(newLayers);
+
+
+
         //layers = layers.GroupBy(x => x.name).Select(x => x.Last()).ToList();
         destination.layers = layers.ToArray();
     }
@@ -116,10 +128,13 @@ public class AnimatorCombiner : MonoBehaviour
 
             //EditorUtility.CopySerialized(state.state, newState);
             CopyClass(state.state, newState);
+
             destination.AddState(newState, state.position);
 
             stateMap[state.state] = newState;
         }
+
+        destination.stateMachines=new ChildAnimatorStateMachine[]{ };
 
         var stateMachineMap = new Dictionary<AnimatorStateMachine, AnimatorStateMachine>();
         foreach (var stateMachine in source.stateMachines)
@@ -128,11 +143,21 @@ public class AnimatorCombiner : MonoBehaviour
             {
                 continue;
             }
-            var newStateMachine = new AnimatorStateMachine();
+            //var newStateMachine = new AnimatorStateMachine();
+
+
+
+            var newStateMachine = Instantiate(stateMachine.stateMachine);
+
 
             //EditorUtility.CopySerialized(stateMachine.stateMachine, newStateMachine);
-            CopyClass(stateMachine.stateMachine, newStateMachine);
+            //CopyClass(stateMachine.stateMachine, newStateMachine);
+
             destination.AddStateMachine(newStateMachine, stateMachine.position);
+
+
+
+
 
             stateMachineMap[stateMachine.stateMachine] = newStateMachine;
         }
@@ -190,6 +215,11 @@ public class AnimatorCombiner : MonoBehaviour
             var newState = stateMap[state.state];
             ReplaceAnimations(newState, rootParent, rootChild, fileOptions);
         }
+        if (source.defaultState!=null)
+        {
+            destination.defaultState = stateMap[source.defaultState];
+        }
+
     }
 
     private static void ReplaceAnimations(AnimatorState state, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)

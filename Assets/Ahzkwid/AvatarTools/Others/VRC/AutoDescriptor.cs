@@ -112,6 +112,7 @@ namespace Ahzkwid
                 }
                 */
                 fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
+                fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
             }
             else
             {
