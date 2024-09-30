@@ -29,12 +29,18 @@ namespace Ahzkwid.AvatarTool
         }
         public static string GetFolderPath(FileOptions fileOptions)
         {
-            var folderPath = $"Assets/EasyWearDatas/";
+            var folderPath = $"Assets/EasyWearDatas";
 
             if (fileOptions == FileOptions.TempSave)
             {
-                folderPath += "Temp/";
+                folderPath += "/Temp";
             }
+            return folderPath;
+        }
+        public static string GetFolderPath(DefaultAsset forder)
+        {
+            var folderPath = AssetDatabase.GetAssetPath(forder);
+            //folderPath =$"{folderPath}/";
             return folderPath;
         }
         //[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -47,22 +53,17 @@ namespace Ahzkwid.AvatarTool
             }
             AssetDatabase.Refresh();
         }
-        public static void SaveAsset(Object asset, FileOptions fileOptions)
+        public static string GetUniqueFileName()
+        {
+            return $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+        }
+        public static void SaveAsset(Object asset, string folderPath)
         {
 
-            switch (fileOptions)
+            if (asset == null)
             {
-                case FileOptions.Normal:
-                    break;
-                case FileOptions.NoSave:
-                    return;
-                case FileOptions.TempSave:
-                    break;
-                default:
-                    break;
+                return;
             }
-
-            var folderPath = GetFolderPath(fileOptions);
 
             /*
             var folderPath = $"Assets/EasyWearDatas/";
@@ -94,7 +95,10 @@ namespace Ahzkwid.AvatarTool
             }
             //var fileName = $"{asset.name}{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks) / 1000}";
             var fileName = asset.name;
-
+            if (string.IsNullOrEmpty(fileName))
+            {
+                fileName = GetUniqueFileName();
+            }
 
             {
                 var plusIndices = new List<int>();
@@ -114,27 +118,62 @@ namespace Ahzkwid.AvatarTool
             }
 
 
-
-            switch (fileOptions)
+            /*
+            switch (fileOption)
             {
                 case FileOptions.TempSave:
-                    fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                    fileName = GetUniqueFileName();
                     break;
                 case FileOptions.Normal:
                 case FileOptions.NoSave:
                 default:
                     if (fileName.Length > 40)
                     {
-                        fileName = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                        fileName = GetUniqueFileName();
                     }
                     break;
             }
+            */
+
+            if (fileName.Length == 0)
+            {
+                fileName = GetUniqueFileName();
+            }
+            if (fileName.Length > 40)
+            {
+                fileName = GetUniqueFileName();
+            }
 
             var path = $"{folderPath}/{fileName}{ext}";
+            Debug.Log($"path: {path}");
             path = AssetDatabase.GenerateUniqueAssetPath(path);
             asset.name = System.IO.Path.GetFileNameWithoutExtension(path);
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.Refresh();
+
+        }
+        public static void SaveAsset(Object asset, DefaultAsset forder)
+        {
+            var folderPath = AssetDatabase.GetAssetPath(forder);
+            SaveAsset(asset, folderPath);
+        }
+        public static void SaveAsset(Object asset, FileOptions fileOption)
+        {
+
+            switch (fileOption)
+            {
+                case FileOptions.Normal:
+                    break;
+                case FileOptions.NoSave:
+                    return;
+                case FileOptions.TempSave:
+                    break;
+                default:
+                    break;
+            }
+
+            var folderPath = GetFolderPath(fileOption);
+            SaveAsset(asset, folderPath);
 
         }
 

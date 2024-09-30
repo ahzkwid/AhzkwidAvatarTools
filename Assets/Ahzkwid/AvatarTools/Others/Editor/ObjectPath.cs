@@ -2,12 +2,13 @@
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor.Search;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
+using static AnimationRepairTool;
 
 namespace Ahzkwid
 {
@@ -352,19 +353,219 @@ namespace Ahzkwid
                 }
 
                 var newComponent = equalTransform.gameObject.AddComponent(component.GetType());
-
-
+                ComponentCopy(component,newComponent);
+                /*
                 foreach (var field in component.GetType().GetFields())
                 {
                     var value = field.GetValue(component);
                     field.SetValue(newComponent, value);
                 }
 
+
+                var properties = component.GetType().GetProperties();
+                foreach (var property in properties)
+                {
+                    if (!property.CanWrite || !property.CanRead)
+                    {
+                        continue;
+                    }
+                    property.SetValue(newComponent, property.GetValue(component));
+                }
+                */
+
             }
 
             ObjectPath.RepathComponents(from.transform, to.transform, types);
 
         }
+        public static void ComponentCopy(Component from, Component to)
+        {
+            if (from == null)
+            {
+                return;
+            }
+
+            if (to == null)
+            {
+                return;
+            }
+
+            if (from.GetType() != to.GetType())
+            {
+                return;
+            }
+
+            foreach (var field in from.GetType().GetFields())
+            {
+                if (field.Name == "m_InstanceID")
+                {
+                    continue;
+                }
+                var value = field.GetValue(from);
+                field.SetValue(to, value);
+            }
+            if (from is Transform)
+            {
+                return;
+            }
+
+            var properties = from.GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                if (!property.CanWrite || !property.CanRead)
+                {
+                    continue;
+                }
+                if (property.Name == "name")
+                {
+                    continue;
+                }
+                var value = property.GetValue(from);
+                property.SetValue(to, value);
+            }
+            if (from is RotationConstraint rotationConstraintFrom)
+            {
+                var rotationConstraintTo= to as RotationConstraint;
+                var sources = new List<ConstraintSource>();
+                rotationConstraintFrom.GetSources(sources);
+                rotationConstraintTo.SetSources(sources);
+            }
+        }
+        public static void ComponentMoveFields(Component from, Component to, object target)
+        {
+
+            bool Equal(Component component1, Component component2)
+            {
+                return component1 == component2;
+                if (component1.GetType() != component2.GetType())
+                {
+                    return false;
+                }
+                return component1.transform == component2.transform;
+            }
+            foreach (var field in target.GetType().GetFields())
+            {
+                var value = field.GetValue(target);
+
+
+
+                if (value == null)
+                {
+                    continue;
+                }
+                if (value.Equals(null))
+                {
+                    continue;
+                }
+                if (IsArray(value.GetType()))
+                {
+                    var ilist = (System.Collections.IList)value;
+                    for (int i = 0; i < ilist.Count; i++)
+                    {
+                        var item = ilist[i];
+                        if (item == null)
+                        {
+                            continue;
+                        }
+                        if (item.Equals(null))
+                        {
+                            continue;
+                        }
+                        if (ilist[i] is Component component)
+                        {
+                            Debug.Log($"RepathFields.IsArray.IsComponent {ilist[i]}");
+                            if (Equal(from, component) == false)
+                            {
+                                continue;
+                            }
+                            ilist[i] = to;
+                            continue;
+                        }
+                        else if (IsClass(ilist[i].GetType()))
+                        {
+                            ComponentMoveFields(from, to, ilist[i]);
+                        }
+                    }
+                    field.SetValue(target, ilist);
+
+                }
+                /*
+                else if (IsClass(value.GetType()))
+                {
+                    ComponentMoveFields(from, to, value);
+                }
+                */
+                else
+                {
+                    if (value is Component component)
+                    {
+                        //var transform = GetTransform(value);
+                        if (Equal(from, component) == false)
+                        {
+                            continue;
+                        }
+                        Debug.Log($"RepathFields.Normal : {target}.{field.Name}.{value.GetType()}");
+                        field.SetValue(target, to);
+                    }
+                }
+                //Debug.Log($"ComponentMove : {ObjectPath.GetPath(component.transform)} -> {ObjectPath.GetPath(to.transform)}");
+                //field.SetValue(target, to);
+            }
+
+
+        }
+        public static void ComponentMove(Component from, GameObject to)
+        {
+            var newComponent = to.AddComponent(from.GetType());
+            if (newComponent == null)
+            {
+                newComponent = to.GetComponent(from.GetType());
+            }
+            if (newComponent == null)
+            {
+                return;
+            }
+
+            ObjectPath.ComponentMove(from, newComponent);
+        }
+
+        static void ComponentMove(Component from, Component to)
+        {
+            ObjectPath.ComponentCopy(from, to);
+
+            var components = Object.FindObjectsByType<Component>(FindObjectsInactive.Include,FindObjectsSortMode.None);
+            foreach (var component in components)
+            {
+                if (component == null)
+                {
+                    continue;
+                }
+                if (component is Transform)
+                {
+                    continue;
+                }
+                ComponentMoveFields(from, to, component);
+            }
+            //RepathComponents(from.transform, to.transform, new System.Type[] { from.GetType() });
+            from.gameObject.SetActive(false);
+            //Object.DestroyImmediate(from);
+            /*
+            var field = from.GetType().GetField("m_InstanceID");
+            ObjectPath.ComponentCopy(from, to);
+
+            if (field != null)
+            {
+                var value = field.GetValue(from);
+                Object.DestroyImmediate(from);
+                field.SetValue(to, value);
+            }
+            else
+            {
+                Object.DestroyImmediate(from);
+            }
+            */
+        }
+
 
         public static void RepathComponents(Transform from, Transform to, System.Type[] whiteList = null)
         {
@@ -534,34 +735,34 @@ namespace Ahzkwid
             return equalTransform.GetComponent(component.GetType());
 
         }
+        static bool IsArray(System.Type type)
+        {
+            return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
+        }
+        static bool IsClass(System.Type type)
+        {
+            return type.IsClass && (type.IsArray == false) && (type.Equals(typeof(string)) == false);
+        }
+        static Transform GetTransform(object value)
+        {
+
+            var transform = value as Transform;
+            if (transform == null)
+            {
+                var property = value.GetType().GetProperty("transform");
+                if (property == null)
+                {
+                    return null;
+                }
+                transform = property.GetValue(value) as Transform;
+            }
+            return transform;
+
+        }
         public static void RepathFields(Transform from, Transform to, object target, System.Type targetType)
         {
             // FieldInfo[] fields
-            bool IsArray(System.Type type)
-            {
-                return (type.IsArray) || ((type.IsGenericType) && type.GetGenericTypeDefinition() == typeof(List<>));
-            }
-            bool IsClass(System.Type type)
-            {
-                return type.IsClass && (type.IsArray == false) && (type.Equals(typeof(string)) == false);
-            }
             var blacklist = new List<System.Type> { typeof(Material), typeof(Material[]), typeof(Mesh) };
-            Transform GetTransform(object value)
-            {
-
-                var transform = value as Transform;
-                if (transform == null)
-                {
-                    var property = value.GetType().GetProperty("transform");
-                    if (property == null)
-                    {
-                        return null;
-                    }
-                    transform = property.GetValue(value) as Transform;
-                }
-                return transform;
-
-            }
 
             var fields = targetType.GetFields();
             var properties = targetType.GetProperties();
@@ -648,6 +849,10 @@ namespace Ahzkwid
                         {
                             continue;
                         }
+                        if (equalComponent.Equals(null))
+                        {
+                            continue;
+                        }
                         if (GetTransform(equalComponent) == to)
                         {
                             continue;
@@ -705,6 +910,10 @@ namespace Ahzkwid
                             Debug.Log($"RepathFields.IsArray.IsComponent {ilist[i]}");
                             var equalComponent = EqualComponent(from, to, component);
                             if (equalComponent == null)
+                            {
+                                continue;
+                            }
+                            if (equalComponent.Equals(null))
                             {
                                 continue;
                             }
@@ -804,6 +1013,10 @@ namespace Ahzkwid
                         //var transform = GetTransform(value);
                         var equalComponent = EqualComponent(from, to, component);
                         if (equalComponent == null)
+                        {
+                            continue;
+                        }
+                        if (equalComponent.Equals(null))
                         {
                             continue;
                         }

@@ -27,6 +27,49 @@ namespace Ahzkwid
                         var gameObject= action.value as GameObject;
                         action.value = gameObject.GetComponent<Animator>();
                     }
+
+
+
+                    if ((action.value is Animator) || (action.value is RuntimeAnimatorController))
+                    {
+                        switch (action.target)
+                        {
+                            case AutoDescriptor.Target.PlayableLayersBase:
+                            case AutoDescriptor.Target.PlayableLayersAddtive:
+                            case AutoDescriptor.Target.PlayableLayersGesture:
+                            case AutoDescriptor.Target.PlayableLayersAction:
+                            case AutoDescriptor.Target.PlayableLayersFX:
+                                break;
+                            default:
+                                var name = action.value.name.ToLower();
+                                action.target = AutoDescriptor.Target.PlayableLayersFX;
+                                if (name.Contains("base"))
+                                {
+                                    action.target = AutoDescriptor.Target.PlayableLayersBase;
+                                }
+                                if (name.Contains("addtive"))
+                                {
+                                    action.target = AutoDescriptor.Target.PlayableLayersAddtive;
+                                }
+                                if (name.Contains("gesture"))
+                                {
+                                    action.target = AutoDescriptor.Target.PlayableLayersGesture;
+                                }
+                                if (name.Contains("action"))
+                                {
+                                    action.target = AutoDescriptor.Target.PlayableLayersAction;
+                                }
+                                break;
+                        }
+                    }
+                    if (action.value is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters)
+                    {
+                        action.target = AutoDescriptor.Target.ExpressionsParameters;
+                    }
+                    if (action.value is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu)
+                    {
+                        action.target = AutoDescriptor.Target.ExpressionsMenu;
+                    }
                 }
             }
 
@@ -138,6 +181,7 @@ namespace Ahzkwid
             {
                 Replace
                 , Merge
+                , Remove
             }
             public Target target;
             public Option option;
@@ -214,6 +258,10 @@ namespace Ahzkwid
                                     Transform rootChild = null;
                                     if (value != null)
                                     {
+                                        if (value is AnimationCreator animationCreator)
+                                        {
+                                            animatorController = animationCreator.CreateAnimator(autoDescriptor.GetFileOptions());
+                                        }
                                         if (value is Animator)
                                         {
                                             var animator = value as Animator;
@@ -267,232 +315,295 @@ namespace Ahzkwid
                         {
                             var expressionsMenuValue = (VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu)value;
                             var expressionsMenu = expressionsMenuValue;
-                            if (option == Option.Merge)
+
+                            switch (option)
                             {
-                                /*
-                                static void CopyClass<T>(T source, T target)
-                                {
-                                    var fields = typeof(T).GetFields();
-                                    foreach (var field in fields)
-                                    {
-                                        if (field.Name == "m_InstanceID")
-                                        {
-                                            continue;
-                                        }
-                                        field.SetValue(target, field.GetValue(source));
-                                    }
-
-                                    var properties = typeof(T).GetProperties();
-                                    foreach (var property in properties)
-                                    {
-                                        if (!property.CanWrite || !property.CanRead)
-                                        {
-                                            continue;
-                                        }
-                                        property.SetValue(target, property.GetValue(source));
-                                    }
-                                }
-                                */
-                                void CreateOutsideMenu(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu)
-                                {
-                                    var controls = menu.controls;
-                                    var maxCount = 8;
-                                    var subMenuControlName = "More...";
-                                    var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
-                                    if (controls.Count > maxCount)
-                                    {
-
-
-                                        var subMenuControl = controls.Find(x=>
-                                        {
-                                            if (x==null)
-                                            {
-                                                return false;
-                                            }
-                                            if (x.type != typeSubMenu)
-                                            {
-                                                return false;
-                                            }
-                                            if (x.name != subMenuControlName)
-                                            {
-                                                return false;
-                                            }
-                                            return true;
-                                        });
-                                        //VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control subMenuControl = null;
-
-                                        var takeCount = maxCount - 1;
-
-                                        if (subMenuControl == null)
-                                        {
-                                            subMenuControl = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control
-                                            {
-                                                name = subMenuControlName,
-                                                type = typeSubMenu
-                                            };
-                                        }
-                                        else
-                                        {
-                                            controls.Remove(subMenuControl);
-                                        }
-
-
-
-                                        var mainControls = controls.Take(takeCount).ToList(); 
-                                        var remainingControls = controls.Skip(takeCount).ToList();
-
-                                        //var subMenu = ScriptableObject.CreateInstance<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu>();
-                                        //var subMenu = Instantiate(menu);
-                                        var subMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
-                                        subMenu.name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
-                                        subMenu.controls = remainingControls;
-
-                                        CreateOutsideMenu(subMenu);
-
-                                        SaveAsset(subMenu, autoDescriptor);
-
-                                        subMenuControl.subMenu = MergeMenu(subMenuControl.subMenu,subMenu);
-
-
-                                        mainControls.Add(subMenuControl);
-                                        menu.controls = mainControls;
-
-
-
-
-                                    }
-                                }
-                                VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu MergeMenu(params VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu[] menus)
-                                {
-                                    menus = System.Array.FindAll(menus, x => x != null);
-                                    if (menus.Length==0)
-                                    {
-                                        return null;
-                                    }
-
-
-
-                                    var menu = Instantiate(menus.First());
-                                    var name = $"{menus.First()?.name}+{menus.Last()?.name}";
-                                    if (name.Length > 40)
-                                    {
-                                        name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
-                                    }
-                                    menu.name = name;
-
-                                    //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
+                                case Option.Replace:
+                                    break;
+                                case Option.Merge:
+                                case Option.Remove:
                                     /*
-                                    if (avatarDescriptor.expressionsMenu != null)
+                                    static void CopyClass<T>(T source, T target)
                                     {
-                                        //expressionsMenu.controls.AddRange(avatarDescriptor.expressionsMenu.controls);
-                                        foreach (var item in avatarDescriptor.expressionsMenu.controls)
+                                        var fields = typeof(T).GetFields();
+                                        foreach (var field in fields)
                                         {
-                                            var targetClass = item;
-                                            var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
-                                            var fields = targetClass.GetType().GetFields();
-                                            foreach (var field in fields)
+                                            if (field.Name == "m_InstanceID")
                                             {
-                                                field.SetValue(itemCopy, field.GetValue(targetClass));
+                                                continue;
                                             }
-                                            expressionsMenu.controls.Add(itemCopy);
+                                            field.SetValue(target, field.GetValue(source));
+                                        }
+
+                                        var properties = typeof(T).GetProperties();
+                                        foreach (var property in properties)
+                                        {
+                                            if (!property.CanWrite || !property.CanRead)
+                                            {
+                                                continue;
+                                            }
+                                            property.SetValue(target, property.GetValue(source));
                                         }
                                     }
                                     */
-                                    var controls = menu.controls.FindAll(x => x != null);
-
-                                    for (int i = 1; i < menus.Length; i++)
+                                    void CreateOutsideMenu(VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu)
                                     {
-                                        foreach (var item in menus[i].controls)
+                                        var controls = menu.controls;
+                                        var maxCount = 8;
+                                        var subMenuControlName = "More...";
+                                        var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
+                                        if (controls.Count > maxCount)
                                         {
-                                            var targetClass = item;
-                                            var clone = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
-                                            var fields = targetClass.GetType().GetFields();
-                                            foreach (var field in fields)
-                                            {
-                                                if (field.Name == "m_InstanceID")
-                                                {
-                                                    continue;
-                                                }
-                                                field.SetValue(clone, field.GetValue(targetClass));
-                                            }
-                                            //var control = menu.controls.Find(x => x.name == item.name);
-                                            VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control control = null;
 
-                                            var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
-                                            /*
-                                            var addMenu = true;
-                                            if (control == null)
+
+                                            var subMenuControl = controls.Find(x =>
                                             {
-                                                addMenu = true;
+                                                if (x == null)
+                                                {
+                                                    return false;
+                                                }
+                                                if (x.type != typeSubMenu)
+                                                {
+                                                    return false;
+                                                }
+                                                if (x.name != subMenuControlName)
+                                                {
+                                                    return false;
+                                                }
+                                                return true;
+                                            });
+                                            //VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control subMenuControl = null;
+
+                                            var takeCount = maxCount - 1;
+
+                                            if (subMenuControl == null)
+                                            {
+                                                subMenuControl = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control
+                                                {
+                                                    name = subMenuControlName,
+                                                    type = typeSubMenu
+                                                };
                                             }
                                             else
                                             {
-                                                //if ((control.type != typeSubMenu) || (item.type != typeSubMenu))
-                                                if(item.type != typeSubMenu)
-                                                {
-                                                    control = menu.controls.Find(x => x.name == item.name);
-                                                    if (control.parameter.name != item.parameter.name)
-                                                    {
-                                                        addMenu = true;
-                                                    }
-                                                }
+                                                controls.Remove(subMenuControl);
                                             }
-                                            */
-                                            if (item.type == typeSubMenu)
-                                            {
-                                                var subMenus = controls.FindAll(x=>x.type == typeSubMenu);
-                                                control = subMenus.Find(x => x.name == item.name);
 
-                                                if (control != null)
-                                                {
-                                                    control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                var buttons = controls.FindAll(x => x.type != typeSubMenu);
-                                                control = buttons.Find(x => x.parameter.name == item.parameter.name);
 
-                                            }
-                                            if (control != null)
-                                            {
-                                                var icons = System.Array.FindAll(new Texture2D[] { control.icon, clone.icon }, x => x != null);
-                                                control.icon = icons.LastOrDefault();
-                                            }
-                                            else
-                                            {
-                                                menu.controls.Add(clone);
-                                            }
+
+                                            var mainControls = controls.Take(takeCount).ToList();
+                                            var remainingControls = controls.Skip(takeCount).ToList();
+
+                                            //var subMenu = ScriptableObject.CreateInstance<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu>();
+                                            //var subMenu = Instantiate(menu);
+                                            var subMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
+                                            subMenu.name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                                            subMenu.controls = remainingControls;
+
+                                            CreateOutsideMenu(subMenu);
+
+                                            SaveAsset(subMenu, autoDescriptor);
+
+                                            subMenuControl.subMenu = MergeMenu(subMenuControl.subMenu, subMenu);
+
+
+                                            mainControls.Add(subMenuControl);
+                                            menu.controls = mainControls;
+
 
 
 
                                         }
-                                        //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
                                     }
-                                    if (menu.controls != null)
+                                    VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu MergeMenu(params VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu[] menus)
                                     {
-                                        //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
+                                        menus = System.Array.FindAll(menus, x => x != null);
+                                        if (menus.Length == 0)
+                                        {
+                                            return null;
+                                        }
+
+
+
+                                        var menu = Instantiate(menus.First());
+                                        var name = $"{menus.First()?.name}+{menus.Last()?.name}";
+                                        if (name.Length > 40)
+                                        {
+                                            name = $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
+                                        }
+                                        menu.name = name;
+
+                                        //expressionsMenu.controls = new List<VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control>();
+                                        /*
+                                        if (avatarDescriptor.expressionsMenu != null)
+                                        {
+                                            //expressionsMenu.controls.AddRange(avatarDescriptor.expressionsMenu.controls);
+                                            foreach (var item in avatarDescriptor.expressionsMenu.controls)
+                                            {
+                                                var targetClass = item;
+                                                var itemCopy = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+                                                var fields = targetClass.GetType().GetFields();
+                                                foreach (var field in fields)
+                                                {
+                                                    field.SetValue(itemCopy, field.GetValue(targetClass));
+                                                }
+                                                expressionsMenu.controls.Add(itemCopy);
+                                            }
+                                        }
+                                        */
+                                        var controls = menu.controls.FindAll(x => x != null);
+
+                                        for (int i = 1; i < menus.Length; i++)
+                                        {
+                                            foreach (var item in menus[i].controls)
+                                            {
+                                                var targetClass = item;
+                                                var clone = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control();
+                                                var fields = targetClass.GetType().GetFields();
+                                                foreach (var field in fields)
+                                                {
+                                                    if (field.Name == "m_InstanceID")
+                                                    {
+                                                        continue;
+                                                    }
+                                                    field.SetValue(clone, field.GetValue(targetClass));
+                                                }
+                                                //var control = menu.controls.Find(x => x.name == item.name);
+                                                VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control control = null;
+
+                                                var typeSubMenu = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.SubMenu;
+                                                var radialPuppet = VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu.Control.ControlType.RadialPuppet;
+                                                /*
+                                                var addMenu = true;
+                                                if (control == null)
+                                                {
+                                                    addMenu = true;
+                                                }
+                                                else
+                                                {
+                                                    //if ((control.type != typeSubMenu) || (item.type != typeSubMenu))
+                                                    if(item.type != typeSubMenu)
+                                                    {
+                                                        control = menu.controls.Find(x => x.name == item.name);
+                                                        if (control.parameter.name != item.parameter.name)
+                                                        {
+                                                            addMenu = true;
+                                                        }
+                                                    }
+                                                }
+                                                */
+
+                                                if (item.type == typeSubMenu)
+                                                {
+                                                    var subMenus = controls.FindAll(x => x.type == typeSubMenu);
+                                                    control = subMenus.Find(x => x.name == item.name);
+
+                                                    if (control != null)
+                                                    {
+                                                        control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    var buttons = controls.FindAll(x => x.type != typeSubMenu);
+                                                    if (string.IsNullOrWhiteSpace(item.parameter.name) == false)
+                                                    {
+                                                        control = buttons.Find(x => x.parameter.name == item.parameter.name);
+                                                    }
+                                                    if (item.type== radialPuppet)
+                                                    {
+                                                        var itemSubParameter = item.subParameters.FirstOrDefault();
+                                                        if (itemSubParameter != null)
+                                                        {
+                                                            if (string.IsNullOrWhiteSpace(itemSubParameter.name)==false)
+                                                            {
+                                                                control = buttons.Find(x =>
+                                                                {
+                                                                    var subParameter = x.subParameters.FirstOrDefault();
+                                                                    if (subParameter == null)
+                                                                    {
+                                                                        return false;
+                                                                    }
+                                                                    return subParameter.name == itemSubParameter.name;
+                                                                });
+                                                            }
+                                                        }
+                                                    }
+
+                                                }
+                                                switch (option)
+                                                {
+                                                    case Option.Replace:
+                                                        break;
+                                                    case Option.Merge:
+                                                        if (control != null)
+                                                        {
+                                                            var icons = System.Array.FindAll(new Texture2D[] { control.icon, clone.icon }, x => x != null);
+                                                            control.icon = icons.LastOrDefault();
+                                                        }
+                                                        else
+                                                        {
+                                                            menu.controls.Add(clone);
+                                                        }
+                                                        break;
+                                                    case Option.Remove:
+                                                        if (item.type == typeSubMenu)
+                                                        {
+                                                        }
+                                                        else
+                                                        {
+                                                            if (control != null)
+                                                            {
+                                                                menu.controls.Remove(control);
+                                                            }
+
+                                                            /*
+                                                            var controlIndex = controls.FindIndex(x => (x.parameter.name == item.parameter.name) && (x.type != typeSubMenu));
+                                                            if (controlIndex >= 0)
+                                                            {
+                                                                menu.controls.RemoveAt(controlIndex);
+                                                            }
+                                                            if (control != null)
+                                                            {
+                                                                menu.controls.Remove(control);
+                                                            }
+                                                            */
+                                                        }
+                                                        break;
+                                                    default:
+                                                        break;
+                                                }
+
+                                            }
+                                            //expressionsMenu.controls.AddRange(expressionsMenuValue.controls);
+                                        }
+                                        if (menu.controls != null)
+                                        {
+                                            //expressionsMenu.controls = expressionsMenu.controls.GroupBy(x => x.name).Select(x => x.Last()).ToList();
+                                        }
+
+
+
+
+                                        CreateOutsideMenu(menu);
+
+
+
+
+
+
+
+
+
+                                        //expressionsMenu = AnimatorCombiner.SaveAsset(expressionsMenu) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu;
+                                        SaveAsset(menu, autoDescriptor);
+                                        return menu;
                                     }
-
-
-
-
-                                    CreateOutsideMenu(menu);
-
-
-
-
-
-
-
-
-
-                                    //expressionsMenu = AnimatorCombiner.SaveAsset(expressionsMenu) as VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu;
-                                    SaveAsset(menu, autoDescriptor);
-                                    return menu;
-                                }
-                                //expressionsMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
-                                expressionsMenu = MergeMenu(avatarDescriptor.expressionsMenu, expressionsMenuValue);
+                                    //expressionsMenu = new VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu();
+                                    expressionsMenu = MergeMenu(avatarDescriptor.expressionsMenu, expressionsMenuValue);
+                                    break;
+                                default:
+                                    break;
                             }
                             avatarDescriptor.expressionsMenu = expressionsMenu;
                         }

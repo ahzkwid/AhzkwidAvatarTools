@@ -19,7 +19,7 @@ class AssetsCloningTool : EditorWindow
 {
     public Object fromFolder;
     public Object[] toFolders;
-    public string[] ignores = new string[] { ".meta", ".asmdef", "MenuItems.cs" };
+    public string[] ignores = new string[] { ".meta", ".asmdef", "MenuItems.cs", "MenuItem.cs" };
 
     public enum Option
     {
@@ -116,7 +116,7 @@ class AssetsCloningTool : EditorWindow
         var ignoresB = new string[] { ".meta"};
         if (option == Option.Default)
         {
-            ignores = new string[] { ".meta", "MenuItems.cs" };
+            ignores = new string[] { ".meta", "MenuItems.cs", "MenuItem.cs" };
         }
 
 

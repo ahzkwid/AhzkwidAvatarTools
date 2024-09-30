@@ -33,10 +33,10 @@ namespace Ahzkwid
                 //base.OnInspectorGUI();
 
 
-                DrawPropertiesExcluding(serializedObject, "m_Script", nameof(AutoObjectSetting.clips), nameof(AutoObjectSetting.objectActiveDatas));
+                DrawPropertiesExcluding(serializedObject, "m_Script", nameof(AutoObjectSetting.clips), nameof(AutoObjectSetting.objectSettingDatas));
 
 
-
+                /*
                 {
                     var dataType = (AutoObjectSetting.DataType)serializedObject.FindProperty(nameof(AutoObjectSetting.dataType)).enumValueIndex;
                     switch (dataType)
@@ -44,14 +44,16 @@ namespace Ahzkwid
                         case AutoObjectSetting.DataType.Animation:
                             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoObjectSetting.clips)));
                             break;
-                        case AutoObjectSetting.DataType.ObjectActiveData:
-                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoObjectSetting.objectActiveDatas)));
+                        case AutoObjectSetting.DataType.ObjectSettingDatas:
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoObjectSetting.objectSettingDatas)));
                             break;
                         default:
                             break;
                     }
                 }
-
+                */
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoObjectSetting.clips)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoObjectSetting.objectSettingDatas)));
 
 
             }
@@ -65,16 +67,16 @@ namespace Ahzkwid
             }
             {
                 var autoObjectSetting = target as AutoObjectSetting;
-                for (int i = 0; i < autoObjectSetting.objectActiveDatas.Count; i++)
+                for (int i = 0; i < autoObjectSetting.objectSettingDatas.Count; i++)
                 {
-                    var objectActiveData = autoObjectSetting.objectActiveDatas[i];
+                    var objectActiveData = autoObjectSetting.objectSettingDatas[i];
                     if (objectActiveData.gameObject != null)
                     {
                         var objectActiveDataRoot = AutoObjectSetting.GetRoot(objectActiveData.gameObject.transform);
                         if (objectActiveDataRoot != null)
                         {
-                            autoObjectSetting.objectActiveDatas[i].path = AutoObjectSetting.GetPath(objectActiveData.gameObject, objectActiveDataRoot.gameObject);
-                            autoObjectSetting.objectActiveDatas[i].gameObject = null;
+                            autoObjectSetting.objectSettingDatas[i].path = AutoObjectSetting.GetPath(objectActiveData.gameObject, objectActiveDataRoot.gameObject);
+                            autoObjectSetting.objectSettingDatas[i].gameObject = null;
                         }
                     }
                 }
@@ -99,24 +101,24 @@ namespace Ahzkwid
 
         public enum DataType
         {
-            Animation, ObjectActiveData
+            Animation, ObjectSettingDatas
         }
-        public DataType dataType= DataType.Animation;
+        //public DataType dataType= DataType.Animation;
 
         public AnimationClip[] clips;
 
         [System.Serializable]
-        public class ObjectActiveData
+        public class ObjectSettingDatas
         {
             public GameObject gameObject;
             public string path;
 
-            public Enabled objEnabled;
-            public Enabled rendererEnabled;
-            public Enabled physboneEnabled;
+            //public Enabled objEnabled;
+            //public Enabled rendererEnabled;
+            //public Enabled physboneEnabled;
             public Tag tag;
-            public bool changeScale=false;
-            public Vector3 localScale=Vector3.one;
+            //public bool changeScale=false;
+            //public Vector3 localScale=Vector3.one;
         }
 
         public enum Enabled
@@ -185,7 +187,7 @@ namespace Ahzkwid
 
         //public bool autoDestroy = true;
         // List<BlendshapeTarget> blendshapeTargets = new List<BlendshapeTarget>();
-        public List<ObjectActiveData> objectActiveDatas = new List<ObjectActiveData>();
+        public List<ObjectSettingDatas> objectSettingDatas = new List<ObjectSettingDatas>();
         void OnDrawGizmos()
         {
             if (mergeTrigger != MergeTrigger.Runtime)
@@ -212,6 +214,14 @@ namespace Ahzkwid
                     return;
                 }
 
+
+
+
+
+
+
+
+                //Animation
                 {
                     var root = ObjectPath.GetVRCRoot(autoObjectSetting.transform,ObjectPath.VRCRootSearchOption.VRCRootOnly);
                     /*
@@ -238,132 +248,149 @@ namespace Ahzkwid
                     //Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply Animation");
 
 
-
-                    switch (dataType)
                     {
-                        case DataType.Animation:
-                            {
-                                Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
-                                var animator = root.GetComponent<Animator>();
-                                Avatar originalAvatar = null;
-                                RuntimeAnimatorController originalController = null;
-                                if (animator)
-                                {
-                                    originalAvatar = animator.avatar;
-                                    originalController = animator.runtimeAnimatorController;
-                                    animator.avatar = null;
-                                    animator.runtimeAnimatorController = null;
-                                }
-                                foreach (var clip in clips)
-                                {
-                                    clip.SampleAnimation(root.gameObject, clip.length);
-                                }
-                                //EditorUtility.SetDirty(root.gameObject);
+                        Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
+                        var animator = root.GetComponent<Animator>();
+                        Avatar originalAvatar = null;
+                        RuntimeAnimatorController originalController = null;
+                        if (animator)
+                        {
+                            originalAvatar = animator.avatar;
+                            originalController = animator.runtimeAnimatorController;
+                            animator.avatar = null;
+                            animator.runtimeAnimatorController = null;
+                        }
+                        foreach (var clip in clips)
+                        {
+                            clip.SampleAnimation(root.gameObject, clip.length);
+                        }
+                        //EditorUtility.SetDirty(root.gameObject);
 
-                                if (animator)
-                                {
-                                    animator.avatar = originalAvatar;
-                                    animator.runtimeAnimatorController = originalController;
-                                    //animator.avatar = null;
-                                }
-                                EditorUtility.SetDirty(root.gameObject);
+                        if (animator)
+                        {
+                            animator.avatar = originalAvatar;
+                            animator.runtimeAnimatorController = originalController;
+                            //animator.avatar = null;
+                        }
+                        EditorUtility.SetDirty(root.gameObject);
+                    }
+
+
+
+
+
+
+
+
+                    //ObjectSettingDatas
+                    {
+                        var childrens = root.GetComponentsInChildren<Transform>(true);
+                        foreach (var objectActiveData in autoObjectSetting.objectSettingDatas)
+                        {
+                            if (string.IsNullOrEmpty(objectActiveData.path))
+                            {
+                                continue;
                             }
-
-                            break;
-                        case DataType.ObjectActiveData:
+                            var target = System.Array.Find(childrens, x => objectActiveData.path == GetPath(x.gameObject, root.gameObject));
+                            if (target == null)
                             {
-                                var childrens = root.GetComponentsInChildren<Transform>(true);
-                                foreach (var objectActiveData in autoObjectSetting.objectActiveDatas)
-                                {
-                                    if (string.IsNullOrEmpty(objectActiveData.path))
+                                continue;
+                            }
+                            /*
+                            switch (objectActiveData.objEnabled)
+                            {
+                                case Enabled.Enable:
+                                    target.gameObject.SetActive(true);
+                                    break;
+                                case Enabled.Disable:
+                                    target.gameObject.SetActive(false);
+                                    break;
+                            }
+                            switch (objectActiveData.rendererEnabled)
+                            {
+                                case Enabled.Enable:
+                                case Enabled.Disable:
+                                    var renderer = target.GetComponent<Renderer>();
+                                    if (renderer == null)
                                     {
-                                        continue;
-                                    }
-                                    var target = System.Array.Find(childrens, x => objectActiveData.path == GetPath(x.gameObject, root.gameObject));
-                                    if (target == null)
-                                    {
-                                        continue;
-                                    }
-                                    switch (objectActiveData.objEnabled)
-                                    {
-                                        case Enabled.Enable:
-                                            target.gameObject.SetActive(true);
-                                            break;
-                                        case Enabled.Disable:
-                                            target.gameObject.SetActive(false);
-                                            break;
+                                        break;
                                     }
                                     switch (objectActiveData.rendererEnabled)
                                     {
                                         case Enabled.Enable:
+                                            renderer.enabled = true;
+                                            break;
                                         case Enabled.Disable:
-                                            var renderer = target.GetComponent<Renderer>();
-                                            if (renderer == null)
-                                            {
-                                                break;
-                                            }
-                                            switch (objectActiveData.rendererEnabled)
-                                            {
-                                                case Enabled.Enable:
-                                                    renderer.enabled = true;
-                                                    break;
-                                                case Enabled.Disable:
-                                                    renderer.enabled = false;
-                                                    break;
-                                            }
+                                            renderer.enabled = false;
                                             break;
                                     }
-                                    switch (objectActiveData.physboneEnabled)
-                                    {
-                                        case Enabled.Enable:
-                                        case Enabled.Disable:
-                                            var components = target.GetComponents<Component>();
-                                            foreach (var component in components)
-                                            {
-                                                if (component == null)
-                                                {
-                                                    continue;
-                                                }
-                                                if (component.GetType().Name.ToLower().Contains("physbone") == false)
-                                                {
-                                                    continue;
-                                                }
-                                                switch (objectActiveData.physboneEnabled)
-                                                {
-                                                    case Enabled.Enable:
-                                                        ((Behaviour)component).enabled = true;
-                                                        break;
-                                                    case Enabled.Disable:
-                                                        ((Behaviour)component).enabled = false;
-                                                        break;
-                                                }
-                                            }
-                                            break;
-                                    }
-                                    switch (objectActiveData.tag)
-                                    {
-                                        case Tag.None:
-                                            break;
-                                        default:
-                                            var tagString = objectActiveData.tag.ToString();
-                                            if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags, x => x == tagString) != null)
-                                            {
-
-                                                target.tag = tagString;
-                                            }
-                                            break;
-                                    }
-                                    if (objectActiveData.changeScale)
-                                    {
-                                        target.transform.localScale = objectActiveData.localScale;
-                                    }
-                                }
+                                    break;
                             }
+                            switch (objectActiveData.physboneEnabled)
+                            {
+                                case Enabled.Enable:
+                                case Enabled.Disable:
+                                    var components = target.GetComponents<Component>();
+                                    foreach (var component in components)
+                                    {
+                                        if (component == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (component.GetType().Name.ToLower().Contains("physbone") == false)
+                                        {
+                                            continue;
+                                        }
+                                        switch (objectActiveData.physboneEnabled)
+                                        {
+                                            case Enabled.Enable:
+                                                ((Behaviour)component).enabled = true;
+                                                break;
+                                            case Enabled.Disable:
+                                                ((Behaviour)component).enabled = false;
+                                                break;
+                                        }
+                                    }
+                                    break;
+                            }
+                            if (objectActiveData.changeScale)
+                            {
+                                target.transform.localScale = objectActiveData.localScale;
+                            }
+                            */
+                            switch (objectActiveData.tag)
+                            {
+                                case Tag.None:
+                                    break;
+                                default:
+                                    var tagString = objectActiveData.tag.ToString();
+                                    if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags, x => x == tagString) != null)
+                                    {
+
+                                        target.tag = tagString;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+
+
+
+
+                    /*
+
+                    switch (dataType)
+                    {
+                        case DataType.Animation:
+
+                            break;
+                        case DataType.ObjectSettingDatas:
                             break;
                         default:
                             break;
                     }
-
+                    */
 
                     autoObjectSetting.success = true;
                     //if (success)

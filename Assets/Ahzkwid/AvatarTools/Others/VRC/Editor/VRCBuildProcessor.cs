@@ -135,7 +135,7 @@ namespace Ahzkwid
             return (VRC_AvatarDescriptor)fieldInfo.GetValue(null);
         }
         */
-        static readonly System.Type[] autoSetterTypes = new System.Type[] { typeof(AutoMerge), typeof(AutoDescriptor), typeof(AutoObjectSetting) };
+        static readonly System.Type[] autoSetterTypes = new System.Type[] { typeof(AutoMerge), typeof(AutoDescriptor), typeof(AutoObjectSetting), typeof(AutoPosition), typeof(AnimationCreator) };
         public static void MergeAll()
         {
             var roots = ObjectPath.GetRoots();
@@ -158,10 +158,16 @@ namespace Ahzkwid
                 }
             }
 
-
             {
-                var scriptCode = Random.Range(0,int.MaxValue); 
-                Debug.Log($"AutoDescriptor Merge Start Time: {System.DateTime.Now} {scriptCode}");
+                var objects = avatarGameObject.GetComponentsInChildren<AutoPosition>(true);
+                foreach (var item in objects)
+                {
+                    item.Run();
+                }
+            }
+            {
+                //var scriptCode = Random.Range(0,int.MaxValue); 
+                //Debug.Log($"AutoDescriptor Merge Start Time: {System.DateTime.Now} {scriptCode}");
 
 
                 var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
@@ -171,7 +177,7 @@ namespace Ahzkwid
                 }
 
 
-                Debug.Log($"AutoDescriptor Merge End Time: {System.DateTime.Now} {scriptCode}");
+                //Debug.Log($"AutoDescriptor Merge End Time: {System.DateTime.Now} {scriptCode}");
             }
             {
                 var objects = avatarGameObject.GetComponentsInChildren<AutoObjectSetting>(true);
