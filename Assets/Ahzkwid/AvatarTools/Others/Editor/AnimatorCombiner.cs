@@ -6,17 +6,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Ahzkwid.AvatarTool;
+using UnityEditor.VersionControl;
 public class AnimatorCombiner : MonoBehaviour
 { 
-    public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent, Transform rootChild=null)
+    public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent = null, Transform rootChild=null)
     {
         var controllerA = runtimeControllerA as AnimatorController;
         var controllerB = runtimeControllerB as AnimatorController;
 
         return CombineAnimators(controllerA, controllerB, rootParent, rootChild, fileOptions);
     }
+    public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, string folderPath, Transform rootParent = null, Transform rootChild = null)
+    {
+        var controllerA = runtimeControllerA as AnimatorController;
+        var controllerB = runtimeControllerB as AnimatorController;
+
+        return CombineAnimators(controllerA, controllerB, folderPath, rootParent, rootChild);
+    }
 
     public static AnimatorController CombineAnimators(AnimatorController controllerA, AnimatorController controllerB, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+    {
+        var folderPath = AssetManager.GetFolderPath(fileOptions);
+        return CombineAnimators(controllerA, controllerB, folderPath, rootParent, rootChild);
+    }
+    public static AnimatorController CombineAnimators(AnimatorController controllerA, AnimatorController controllerB, string folderPath, Transform rootParent = null, Transform rootChild = null)
     {
         if (controllerA == null && controllerB == null)
         {
@@ -44,8 +57,9 @@ public class AnimatorCombiner : MonoBehaviour
         }
         newController.name = name;
         CopyParameters(controllerB, newController);
-        CopyLayers(controllerB, newController, rootParent, rootChild, fileOptions);
+        CopyLayers(controllerB, newController, rootParent, rootChild, folderPath);
 
+        UnityEditor.EditorUtility.SetDirty(newController);
         return newController;
     }
 
@@ -69,7 +83,7 @@ public class AnimatorCombiner : MonoBehaviour
         }
     }
 
-    private static void CopyLayers(AnimatorController source, AnimatorController destination, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+    private static void CopyLayers(AnimatorController source, AnimatorController destination, Transform rootParent, Transform rootChild, string folderPath)
     {
         var layers = new List<AnimatorControllerLayer>(destination.layers);
         var newLayers = new List<AnimatorControllerLayer>();
@@ -99,8 +113,213 @@ public class AnimatorCombiner : MonoBehaviour
         {
             var layer = source.layers[i];
             var newLayer = newLayers[i];
-            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, rootParent, rootChild, fileOptions);
+            CloneStateMachine(layer.stateMachine, newLayer.stateMachine, rootParent, rootChild, folderPath);
         }
+
+
+
+
+
+
+
+
+        //#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+        //#if UDON
+        //#else
+
+        //        for (int i = 0; i < newLayers.Count; i++)
+        //        {
+        //            var newLayer = newLayers[i];
+
+        //            foreach (var state in newLayer.stateMachine.states)
+        //            {
+        //                var behaviours = state.state.behaviours;
+        //                for (int j = 0; j < behaviours.Length; j++)
+        //                {
+
+        //                    var behaviour = behaviours[j];
+
+        //                    if (behaviour == null)
+        //                    {
+        //                        continue;
+        //                    }
+
+
+        //                    if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl layerControl)
+        //                    {
+        //                        layerControl.layer += layers.Count;
+        //                    }
+
+        //                }
+        //            }
+        //        }
+
+
+        //#endif
+        //#endif
+
+
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+        //VRCAvatar
+        for (int i = 0; i < newLayers.Count; i++)
+        {
+            var newLayer = newLayers[i];
+
+            foreach (var state in newLayer.stateMachine.states)
+            {
+                var behaviours = state.state.behaviours.ToArray();
+
+
+                for (int j = 0; j < behaviours.Length; j++)
+                {
+
+                    var behaviour = behaviours[j];
+
+                    if (behaviour == null)
+                    {
+                        continue;
+                    }
+
+
+
+                    if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
+                    {
+
+                        var newBehaviour = Instantiate(behaviour);
+                        newBehaviour.name = behaviour.name;
+
+                        var layerControl = newBehaviour as VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl;
+                        layerControl.layer += layers.Count;
+
+
+                        behaviours[j] = newBehaviour;
+
+                        EditorUtility.SetDirty(newBehaviour);
+                        //AssetManager.SaveAsset(newBehaviour,folderPath);
+                        //AssetDatabase.SaveAssetIfDirty(newBehaviour);
+                    }
+
+                }
+                state.state.behaviours= behaviours;
+            }
+        }
+#endif
+#endif
+
+        /*
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+        //VRCAvatar
+        for (int i = 0; i < newLayers.Count; i++)
+        {
+            var newLayer = newLayers[i];
+
+            foreach (var state in newLayer.stateMachine.states)
+            {
+                var behaviours = state.state.behaviours;
+                state.state.behaviours = new StateMachineBehaviour[] { };
+
+
+
+                for (int j = 0; j < behaviours.Length; j++)
+                {
+
+                    var behaviour = behaviours[j];
+
+                    {
+                        if (behaviour == null)
+                        {
+                            continue;
+                        }
+                        var newBehaviour = state.state.AddStateMachineBehaviour(behaviour.GetType());
+
+                        CopyClass(behaviour, newBehaviour);
+
+                        EditorUtility.SetDirty(newBehaviour);
+                        //AssetDatabase.SaveAssetIfDirty(newBehaviour);
+
+                        if (newBehaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl layerControl)
+                        {
+                            layerControl.layer += layers.Count;
+
+                        }
+                    }
+
+                }
+            }
+        }
+#endif
+#endif
+        */
+        //var behaviours = state.state.behaviours;
+        // var behavioursLength = behaviours.Length;
+
+
+        // if (behavioursLength!= behaviours.Length)
+        // {
+        //     state.state.behaviours = behaviours;
+        //     foreach (var behaviour in newBehaviours)
+        //     {
+        //         var newBehaviour=state.state.AddStateMachineBehaviour(behaviour.GetType());
+        //     }
+        // }
+
+        /*
+            foreach (var behaviour in behaviours)
+            {
+                if (behaviour == null)
+                {
+                    continue;
+                }
+
+
+
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+                if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl layerControl)
+                {
+                    layerControl.layer += layers.Count;
+
+
+                    var newBehaviour = Instantiate(behaviour);
+                    newBehaviours.Add(newBehaviour);
+                }
+#endif
+#endif
+            }
+          */
+
+
+        /*
+        var newBehaviours = new List<StateMachineBehaviour>();
+        foreach (var behaviour in newState.behaviours)
+        {
+            if (behaviour == null)
+            {
+                continue;
+            }
+            //if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
+            {
+                var newBehaviour = Instantiate(behaviour);
+                newBehaviours.Add(newBehaviour);
+            }
+        }
+        newState.behaviours = newBehaviours.ToArray();
+        */
+
+
+
+
+
+
+
+
+
+
         layers.AddRange(newLayers);
 
 
@@ -109,7 +328,7 @@ public class AnimatorCombiner : MonoBehaviour
         destination.layers = layers.ToArray();
     }
 
-    private static void CloneStateMachine(AnimatorStateMachine source, AnimatorStateMachine destination, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+    private static void CloneStateMachine(AnimatorStateMachine source, AnimatorStateMachine destination, Transform rootParent, Transform rootChild, string folderPath)
     {
         if (source == null || destination == null)
         {
@@ -125,14 +344,97 @@ public class AnimatorCombiner : MonoBehaviour
                 continue;
             }
             var newState = new AnimatorState();
+            //var newState = destination.AddState(state.state.name);
 
             //EditorUtility.CopySerialized(state.state, newState);
             CopyClass(state.state, newState);
+            /*
+            {
+                //Behaviours추가
+
+                var newBehaviours = new List<StateMachineBehaviour>();
+
+
+                foreach (var behaviour in newState.behaviours)
+                {
+                    if (behaviour == null)
+                    {
+                        continue;
+                    }
+                    //if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
+                    {
+                        var newBehaviour = Instantiate(behaviour);
+                        newBehaviours.Add(newBehaviour);
+                    }
+                }
+                newState.behaviours = newBehaviours.ToArray();
+            }
+            */
 
             destination.AddState(newState, state.position);
 
             stateMap[state.state] = newState;
         }
+
+
+
+
+
+
+
+
+        /*
+
+        foreach (var state in source.states)
+        {
+            if (state.state == null)
+            {
+                continue;
+            }
+
+
+
+            var behaviours = state.state.behaviours;
+            foreach (var behaviour in behaviours)
+            {
+                if (behaviour == null)
+                {
+                    continue;
+                }
+                if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
+                {
+                    var newBehaviour = Instantiate(behaviour);
+                    state.state.AddStateMachineBehaviour(newBehaviour.GetType());
+                    EditorUtility.CopySerialized(behaviour, newBehaviour);
+
+                    Destroy(behaviour);
+                }
+            }
+
+        }
+
+
+
+        */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         destination.stateMachines=new ChildAnimatorStateMachine[]{ };
 
@@ -146,7 +448,7 @@ public class AnimatorCombiner : MonoBehaviour
             //var newStateMachine = new AnimatorStateMachine();
 
 
-
+            //var newStateMachine = destination.AddStateMachine(stateMachine.stateMachine.name);
             var newStateMachine = Instantiate(stateMachine.stateMachine);
 
 
@@ -161,6 +463,22 @@ public class AnimatorCombiner : MonoBehaviour
 
             stateMachineMap[stateMachine.stateMachine] = newStateMachine;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         foreach (var state in source.states)
         {
@@ -213,8 +531,16 @@ public class AnimatorCombiner : MonoBehaviour
                 continue;
             }
             var newState = stateMap[state.state];
-            ReplaceAnimations(newState, rootParent, rootChild, fileOptions);
+            ReplaceAnimations(newState, rootParent, rootChild, folderPath);
         }
+
+
+
+
+
+
+
+
         if (source.defaultState!=null)
         {
             destination.defaultState = stateMap[source.defaultState];
@@ -222,20 +548,21 @@ public class AnimatorCombiner : MonoBehaviour
 
     }
 
-    private static void ReplaceAnimations(AnimatorState state, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+
+    private static void ReplaceAnimations(AnimatorState state, Transform rootParent, Transform rootChild, string folderPath)
     {
         if (state.motion is BlendTree blendTree)
         {
             Debug.Log("blendTree.name: " + state.motion.name);
-            state.motion = ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild, fileOptions);
+            state.motion = ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild,  folderPath);
         }
         else if (state.motion is AnimationClip)
         {
-            state.motion = ReplaceAnimationClipPaths((AnimationClip)state.motion, rootParent, rootChild, fileOptions);
+            state.motion = ReplaceAnimationClipPaths((AnimationClip)state.motion, rootParent, rootChild,  folderPath);
         }
     }
 
-    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild, string folderPath)
     {
         var newBlendTree = new BlendTree();
         //var newBlendTree = Instantiate(blendTree);
@@ -252,11 +579,11 @@ public class AnimatorCombiner : MonoBehaviour
 
             if (motion is BlendTree childBlendTree)
             {
-                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild, fileOptions);
+                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild,  folderPath);
             }
             else if (motion is AnimationClip)
             {
-                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild, fileOptions);
+                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild,  folderPath);
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}->{newAnim}");
                 childrens[i].motion = newAnim;
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}");
@@ -264,129 +591,134 @@ public class AnimatorCombiner : MonoBehaviour
         }
         newBlendTree.children = childrens;
         //newBlendTree= SaveAsset(newBlendTree) as BlendTree;
-        AssetManager.SaveAsset(newBlendTree, fileOptions);
+        //AssetManager.SaveAsset(newBlendTree, folderPath);
         return newBlendTree;
     }
 
-    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild, AssetManager.FileOptions fileOptions)
+    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild, string folderPath)
     {
-        var transforms = rootParent.GetComponentsInChildren<Transform>();
-
-
-        //var rootParentPath = SearchUtils.GetHierarchyPath(rootParent.gameObject, false);
-        var rootChildPath = "";
-
-        if (rootChild != null)
-        {
-            //rootChildPath = SearchUtils.GetHierarchyPath(rootChild.gameObject, false);
-            //rootChildPath = System.IO.Path.GetRelativePath(rootParentPath, rootChildPath);
-            rootChildPath = Ahzkwid.ObjectPath.GetPath(rootChild, rootParent);
-        }
-
-        var transformNames = System.Array.ConvertAll(transforms, transform => transform.name);
-
-        //var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
-        var transformPaths = System.Array.ConvertAll(transforms, transform => Ahzkwid.ObjectPath.GetPath(transform, rootParent));
-        //transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootParentPath, path));
-
-        
-
-
-
-        /*
-
-        string[] transformChildPaths = null;
-        if (rootChild != null)
-        {
-            transformChildPaths = System.Array.ConvertAll(transformFullPaths, path => System.IO.Path.GetRelativePath(rootChildPath, path));
-        }
-        */
-
-
         var newClip = new AnimationClip();
         EditorUtility.CopySerialized(clip, newClip);
-        //CopySerialized(clip, newClip);
 
-        foreach (var binding in AnimationUtility.GetCurveBindings(newClip))
+
+        if (rootParent != null)
         {
-            var newBinding = binding;
+            var transforms = rootParent.GetComponentsInChildren<Transform>();
 
 
-            //var text = "";
-            //text = binding.path;
+            //var rootParentPath = SearchUtils.GetHierarchyPath(rootParent.gameObject, false);
+            var rootChildPath = "";
+
             if (rootChild != null)
             {
-                newBinding.path = Path.Join(rootChildPath, binding.path).Replace("\\", "/");
-                //newBinding.path = rootChildPath + "/" + binding.path;
-                Debug.Log($"{binding.path} -> {newBinding.path}");
+                //rootChildPath = SearchUtils.GetHierarchyPath(rootChild.gameObject, false);
+                //rootChildPath = System.IO.Path.GetRelativePath(rootParentPath, rootChildPath);
+                rootChildPath = Ahzkwid.ObjectPath.GetPath(rootChild, rootParent);
             }
-            //else
-            //{
-            //    if (transformPaths.Contains(binding.path) == false)
-            //    {
-            //        //자동보정
-            //        var index = -1;
-            //        //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
+
+            var transformNames = System.Array.ConvertAll(transforms, transform => transform.name);
+
+            //var transformPaths = System.Array.ConvertAll(transforms, transform => SearchUtils.GetHierarchyPath(transform.gameObject, false));
+            var transformPaths = System.Array.ConvertAll(transforms, transform => Ahzkwid.ObjectPath.GetPath(transform, rootParent));
+            //transformPaths = System.Array.ConvertAll(transformPaths, path => System.IO.Path.GetRelativePath(rootParentPath, path));
 
 
 
-            //        for (int i = 0; i < transformNames.Length; i++)
-            //        {
-            //            if (transformNames[i] != binding.path)
-            //            {
-            //                continue;
-            //            }
-            //            //if (transformPaths[i].ToLower().Contains("armature"))
-            //            if (transformPaths[i].ToLower().StartsWith("armature"))
-            //            {
-            //                //의상 전용
-            //                continue;
-            //            }
-            //            index = i;
-            //        }
-            //        /*
-            //        var paths = System.Array.FindAll(transformNames, name => name == binding.path);
-            //        if (paths.Length > 0)
-            //        {
-
-            //        }
-            //        */
-            //        if (index >= 0)
-            //        {
-            //            newBinding.path = transformPaths[index];
-            //            Debug.LogWarning($"{binding.path} -> {newBinding.path}");
-            //        }
-            //        else
-            //        {
-            //            Debug.LogWarning($"{binding.path} is Nothing");
-            //        }
-            //    }
-            //}
-           
-            //text = clothPath+text;
-            //newBinding.path = text;
 
 
-            var curve = AnimationUtility.GetEditorCurve(newClip, binding);
-            AnimationUtility.SetEditorCurve(newClip, binding, null);//제거
+            /*
 
-            try
+            string[] transformChildPaths = null;
+            if (rootChild != null)
             {
-                AnimationUtility.SetEditorCurve(newClip, newBinding, curve);
+                transformChildPaths = System.Array.ConvertAll(transformFullPaths, path => System.IO.Path.GetRelativePath(rootChildPath, path));
             }
-            catch (System.Exception ex)
+            */
+
+
+            //CopySerialized(clip, newClip);
+
+            foreach (var binding in AnimationUtility.GetCurveBindings(newClip))
             {
-                Debug.LogError(ex);
-                Debug.LogError($"clip:{newClip}");
-                Debug.LogError($"newBinding:{newBinding}");
-                Debug.LogError($"curve:{curve}");
-                Debug.LogError($"newBinding.type:{newBinding.type}");
-                throw;
+                var newBinding = binding;
+
+
+                //var text = "";
+                //text = binding.path;
+                if (rootChild != null)
+                {
+                    newBinding.path = Path.Join(rootChildPath, binding.path).Replace("\\", "/");
+                    //newBinding.path = rootChildPath + "/" + binding.path;
+                    Debug.Log($"{binding.path} -> {newBinding.path}");
+                }
+                //else
+                //{
+                //    if (transformPaths.Contains(binding.path) == false)
+                //    {
+                //        //자동보정
+                //        var index = -1;
+                //        //var index = System.Array.FindIndex(transformNames, name => name == binding.path);
+
+
+
+                //        for (int i = 0; i < transformNames.Length; i++)
+                //        {
+                //            if (transformNames[i] != binding.path)
+                //            {
+                //                continue;
+                //            }
+                //            //if (transformPaths[i].ToLower().Contains("armature"))
+                //            if (transformPaths[i].ToLower().StartsWith("armature"))
+                //            {
+                //                //의상 전용
+                //                continue;
+                //            }
+                //            index = i;
+                //        }
+                //        /*
+                //        var paths = System.Array.FindAll(transformNames, name => name == binding.path);
+                //        if (paths.Length > 0)
+                //        {
+
+                //        }
+                //        */
+                //        if (index >= 0)
+                //        {
+                //            newBinding.path = transformPaths[index];
+                //            Debug.LogWarning($"{binding.path} -> {newBinding.path}");
+                //        }
+                //        else
+                //        {
+                //            Debug.LogWarning($"{binding.path} is Nothing");
+                //        }
+                //    }
+                //}
+
+                //text = clothPath+text;
+                //newBinding.path = text;
+
+
+                var curve = AnimationUtility.GetEditorCurve(newClip, binding);
+                AnimationUtility.SetEditorCurve(newClip, binding, null);//제거
+
+                try
+                {
+                    AnimationUtility.SetEditorCurve(newClip, newBinding, curve);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError(ex);
+                    Debug.LogError($"clip:{newClip}");
+                    Debug.LogError($"newBinding:{newBinding}");
+                    Debug.LogError($"curve:{curve}");
+                    Debug.LogError($"newBinding.type:{newBinding.type}");
+                    throw;
+                }
             }
+
         }
-
         //newClip = SaveAsset(newClip) as AnimationClip;
-            AssetManager.SaveAsset(newClip, fileOptions);
+        //AssetManager.SaveAsset(newClip, folderPath);
 
 
         return newClip;
@@ -422,6 +754,7 @@ public class AnimatorCombiner : MonoBehaviour
             }
         }
     }
+    /*
     static void CopySerialized(Object source, Object target)
     {
         //lock (source)
@@ -429,7 +762,7 @@ public class AnimatorCombiner : MonoBehaviour
             EditorUtility.CopySerialized(source, target);
         }
     }
-    
+    */
     /*
     public static void ExportAnimatorController(RuntimeAnimatorController controller, string path)
     {

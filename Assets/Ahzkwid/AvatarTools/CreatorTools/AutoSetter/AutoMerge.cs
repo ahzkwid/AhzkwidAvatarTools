@@ -339,9 +339,15 @@ namespace Ahzkwid
         }
 
 
-        public Transform GetClothRootTransform()
+        //public Transform GetClothRootTransform()
+        //{
+        //    return GetClothRootTransform(clothRoots.FirstOrDefault());
+        //}
+        public Transform[] GetClothRootTransforms()
         {
-            return GetClothRootTransform(clothRoots.FirstOrDefault());
+            var rootTransforms = clothRoots.ConvertAll(root => GetClothRootTransform(root));
+            rootTransforms = rootTransforms.FindAll(root => root != null);
+            return rootTransforms.ToArray();
         }
         public Transform GetClothRootTransform(ClothRoot clothRoot)
         {
@@ -489,24 +495,26 @@ namespace Ahzkwid
             {
                 return;
             }
-            var clothRoot = GetClothRootTransform();
-            if (clothRoot == null)
-            {
-                return;
-            }
+
             var targetTransform = GetTargetTransform();
             if (targetTransform == null)
             {
                 return;
             }
-            var targetPosition = targetTransform.position + targetTransform.up * 0.5f;
 
 
-            Gizmos.DrawLine(clothRoot.position, targetPosition);
-            //DrawWireCub(targetPosition, Vector3.one, Quaternion.identity);
-            //UnityEditor.Handles.DrawLine(clothRoot.position, targetPosition);
-            //Gizmos.DrawWireSphere(transform.position, 1);
-            Gizmos.DrawWireSphere(targetPosition, 0.5f);
+            var clothRootTransforms = GetClothRootTransforms();
+            foreach (var clothRootTransform in clothRootTransforms)
+            {
+                var targetPosition = targetTransform.position + targetTransform.up * 0.5f;
+
+
+                Gizmos.DrawLine(clothRootTransform.position, targetPosition);
+                //DrawWireCub(targetPosition, Vector3.one, Quaternion.identity);
+                //UnityEditor.Handles.DrawLine(clothRoot.position, targetPosition);
+                //Gizmos.DrawWireSphere(transform.position, 1);
+                Gizmos.DrawWireSphere(targetPosition, 0.5f);
+            }
         }
         static void DrawWireCub(Vector3 center, Vector3 size, Quaternion rotation)
         {
@@ -560,10 +568,12 @@ namespace Ahzkwid
         }
         public void SetParent()
         {
-            var clothRoot = GetClothRootTransform();
+            var clothRootTransforms = GetClothRootTransforms();
             var targetTransform = GetTargetTransform();
-
-            clothRoot.parent = targetTransform;
+            foreach (var clothRootTransform in clothRootTransforms)
+            {
+                clothRootTransform.parent = targetTransform;
+            }
         }
 
 
@@ -644,12 +654,22 @@ namespace Ahzkwid
 
         bool SnapCheck()
         {
-            var clothRoot = GetClothRootTransform();
-            if (clothRoot.parent == null)
+            var clothRootTransforms = GetClothRootTransforms();
+            if (clothRootTransforms.Length==0)
             {
-                return true;
+                return false;
             }
-            return false;
+
+
+            var snap = true;
+            foreach (var clothRootTransform in clothRootTransforms)
+            {
+                if (clothRootTransform.parent != null)
+                {
+                    snap= false;
+                }
+            }
+            return snap;
         }
 
         void Snap()
@@ -670,24 +690,28 @@ namespace Ahzkwid
 
         public void Merge()
         {
-            var clothRoot = GetClothRootTransform();
-            /*
-            var targetTransform = GetTargetTransform();
-            if (targetTransform == null)
+            var clothRootTransforms = GetClothRootTransforms();
+
+            foreach (var clothRoot in clothRootTransforms)
             {
-                return;
-            }
-            if (clothRoot.parent == targetTransform)
-            {
-                AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject);
-                DestroyImmediate(this);
-            }
-            */
-            var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
-            if (targetTransform != clothRoot)
-            {
-                AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject);
-                DestroyImmediate(this);
+                /*
+                var targetTransform = GetTargetTransform();
+                if (targetTransform == null)
+                {
+                    return;
+                }
+                if (clothRoot.parent == targetTransform)
+                {
+                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject);
+                    DestroyImmediate(this);
+                }
+                */
+                var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
+                if (targetTransform != clothRoot)
+                {
+                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject);
+                    DestroyImmediate(this);
+                }
             }
         }
         public void FollowBones(Transform from,Transform to)
@@ -738,13 +762,16 @@ namespace Ahzkwid
             }
 
 
-            var clothRoot = GetClothRootTransform();
-
-            var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
-            if (targetTransform != clothRoot)
+            var clothRootTransforms = GetClothRootTransforms();
+            foreach (var clothRootTransform in clothRootTransforms)
             {
-                FollowBones(clothRoot,targetTransform);
+                var targetTransform = ObjectPath.GetVRCRoot(clothRootTransform, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
+                if (targetTransform != clothRootTransform)
+                {
+                    FollowBones(clothRootTransform, targetTransform);
+                }
             }
+
         }
         public void Run()
         {

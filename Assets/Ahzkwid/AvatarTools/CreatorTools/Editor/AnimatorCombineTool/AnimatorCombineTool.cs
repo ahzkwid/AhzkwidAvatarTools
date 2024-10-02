@@ -11,20 +11,23 @@ using UnityEngine;
 using Ahzkwid.AvatarTool;
 
 
+using UnityEditor.Animations;
 using UnityEditor;
+using System.Linq;
+using UnityEditor.VersionControl;
 
 [InitializeOnLoad]
-class AnimationCreateTool : EditorWindow
+class AnimatorCombineTool : EditorWindow
 {
 
-    public AnimationCreator.ToggleData[] toggleDatas;
+    public AnimatorController[] animators;
 
     public DefaultAsset exportForder;
 
 
     public static void Init()
     {
-        var window = GetWindow<AnimationCreateTool>(utility: false, title: nameof(AnimationCreateTool));
+        var window = GetWindow<AnimatorCombineTool>(utility: false, title: nameof(AnimatorCombineTool));
         window.minSize = new Vector2(300, 200);
         //window.maxSize = window.minSize;
         window.Show();
@@ -46,11 +49,11 @@ class AnimationCreateTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toggleDatas)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(animators)));
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(exportForder)));
             EditorGUILayout.Space();
-            if (toggleDatas == null || toggleDatas.Length == 0) 
+            if (animators == null || animators.Length == 0) 
             {
                 allReady = false;
             }
@@ -69,17 +72,30 @@ class AnimationCreateTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Run"))
         {
-            var animatorController= AnimationCreator.CreateAnimator(toggleDatas);
-            if (exportForder!=null)
+            AnimatorController animatorMain = null;
+            string folderPath;
+            if (exportForder != null)
             {
-                animatorController.name = exportForder.name;
-                AssetManager.SaveAsset(animatorController, exportForder);
+                folderPath = AssetDatabase.GetAssetPath(exportForder);
             }
             else
             {
                 var fileOption = AssetManager.FileOptions.Normal;
-                AssetManager.SaveAsset(animatorController, fileOption);
+                folderPath = AssetManager.GetFolderPath(fileOption);
             }
+            foreach (var animator in animators)
+            {
+                if (animatorMain==null)
+                {
+                    animatorMain = animator;
+                    continue;
+                }
+                if (string.IsNullOrWhiteSpace(folderPath)==false)
+                {
+                    animatorMain = AnimatorCombiner.CombineAnimators(animatorMain, animator, folderPath);
+                }
+            }
+            AssetManager.SaveAsset(animatorMain, folderPath);
         }
         GUI.enabled = true;
     }

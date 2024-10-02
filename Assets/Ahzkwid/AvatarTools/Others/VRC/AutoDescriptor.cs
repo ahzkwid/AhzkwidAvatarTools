@@ -164,6 +164,7 @@ namespace Ahzkwid
                     case MergeTrigger.Always:
                         break;
                     case MergeTrigger.Runtime:
+                        //fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
                         fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
                         //fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
                         break;
@@ -260,7 +261,8 @@ namespace Ahzkwid
                                     {
                                         if (value is AnimationCreator animationCreator)
                                         {
-                                            animatorController = animationCreator.CreateAnimator(autoDescriptor.GetFileOptions());
+                                            //animatorController = animationCreator.CreateAnimator(autoDescriptor.GetFileOptions());
+                                            animatorController = animationCreator.CreateAnimator();
                                         }
                                         if (value is Animator)
                                         {
@@ -301,6 +303,32 @@ namespace Ahzkwid
                                             animatorController = AnimatorCombiner.CombineAnimators(avatarDescriptor.baseAnimationLayers[i].animatorController, animatorController, autoDescriptor.GetFileOptions(), avatarDescriptor.transform, rootChild);
                                             //AnimatorCombiner.ExportAnimatorController(animatorController, "Assets/Temp/TempAnimator.controller");
                                             //animatorController=AnimatorCombiner.SaveAsset(animatorController) as RuntimeAnimatorController;
+
+                                            /*
+                                            var fileOption = AvatarTool.AssetManager.FileOptions.Normal;
+                                            if (EditorApplication.isPlaying)
+                                            {
+                                                fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
+                                            }
+                                            else
+                                            {
+                                                switch (autoDescriptor.mergeTrigger)
+                                                {
+                                                    case MergeTrigger.Always:
+                                                        break;
+                                                    case MergeTrigger.Runtime:
+                                                        fileOption = AvatarTool.AssetManager.FileOptions.NoSave;
+                                                        //fileOption = AvatarTool.AssetManager.FileOptions.TempSave;
+                                                        break;
+                                                    default:
+                                                        break;
+                                                }
+                                            }
+                                            if (fileOption!= AvatarTool.AssetManager.FileOptions.NoSave)
+                                            {
+                                                SaveAsset(animatorController, autoDescriptor);
+                                            }
+                                            */
                                             SaveAsset(animatorController, autoDescriptor);
                                         }
                                         avatarDescriptor.baseAnimationLayers[i].animatorController = animatorController;

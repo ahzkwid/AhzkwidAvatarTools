@@ -4,7 +4,8 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using System.IO;
-
+using UnityEngine.EventSystems;
+using static UnityEditor.Experimental.GraphView.GraphView;
 namespace Ahzkwid.AvatarTool
 {
     public class AssetManager
@@ -35,6 +36,10 @@ namespace Ahzkwid.AvatarTool
             {
                 folderPath += "/Temp";
             }
+            if (fileOptions == FileOptions.NoSave)
+            {
+                return null;
+            }
             return folderPath;
         }
         public static string GetFolderPath(DefaultAsset forder)
@@ -57,14 +62,17 @@ namespace Ahzkwid.AvatarTool
         {
             return $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
         }
-        public static void SaveAsset(Object asset, string folderPath)
+        public static void SaveAsset(Object asset, string folderPath, bool refresh = true)
         {
 
             if (asset == null)
             {
                 return;
             }
-
+            if (folderPath==null)
+            {
+                return;
+            }
             /*
             var folderPath = $"Assets/EasyWearDatas/";
 
@@ -148,8 +156,120 @@ namespace Ahzkwid.AvatarTool
             Debug.Log($"path: {path}");
             path = AssetDatabase.GenerateUniqueAssetPath(path);
             asset.name = System.IO.Path.GetFileNameWithoutExtension(path);
-            AssetDatabase.CreateAsset(asset, path);
-            AssetDatabase.Refresh();
+            if (AssetDatabase.GetAssetPath(asset) == string.Empty)
+            {
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+
+            if (asset is RuntimeAnimatorController runtimeAnimatorController)
+            {
+                var controller = runtimeAnimatorController as AnimatorController;
+                foreach (var layer in controller.layers)
+                {
+                    if (layer.stateMachine == null)
+                    {
+                        continue;
+                    }
+
+                    if (AssetDatabase.GetAssetPath(layer.stateMachine) == string.Empty)
+                    {
+                        SaveAsset(layer.stateMachine, $"{folderPath}/StateMachine",false);
+                    }
+
+                    foreach (var state in layer.stateMachine.states)
+                    {
+                        if (state.state==null)
+                        {
+                            continue;
+                        }
+                        /*
+                        if (AssetDatabase.GetAssetPath(state.state) == string.Empty)
+                        {
+                            SaveAsset(state.state, $"{folderPath}/State");
+                        }
+
+                        */
+
+                        var motion = state.state.motion;
+                        if (motion != null)
+                        {
+                            if (AssetDatabase.GetAssetPath(motion) == string.Empty)
+                            {
+                                SaveAsset(motion, $"{folderPath}/Motion", false);
+                            }
+                        }
+
+
+                        foreach (var behaviour in state.state.behaviours)
+                        {
+                            if (behaviour == null)
+                            {
+                                continue;
+                            }
+                            //EditorUtility.SetDirty(behaviour);
+                            //AssetDatabase.SaveAssetIfDirty(behaviour);
+                            if (AssetDatabase.GetAssetPath(behaviour) == string.Empty)
+                            {
+                                SaveAsset(behaviour, $"{folderPath}/Behaviour", false);
+                            }
+                        }
+                    }
+                }
+            }
+            /*
+
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+
+
+            if (asset is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menus)
+            {
+                var controller = runtimeAnimatorController as AnimatorController;
+                foreach (var layer in controller.layers)
+                {
+                    foreach (var state in layer.stateMachine.states)
+                    {
+                        if (state.state == null)
+                        {
+                            continue;
+                        }
+
+                        var motion = state.state.motion;
+                        if (motion != null)
+                        {
+                            if (AssetDatabase.GetAssetPath(motion) == string.Empty)
+                            {
+                                SaveAsset(motion, $"{folderPath}/Motion");
+                            }
+                        }
+
+
+                        foreach (var behaviour in state.state.behaviours)
+                        {
+                            if (behaviour == null)
+                            {
+                                continue;
+                            }
+                            //EditorUtility.SetDirty(behaviour);
+                            //AssetDatabase.SaveAssetIfDirty(behaviour);
+                            if (AssetDatabase.GetAssetPath(behaviour) == string.Empty)
+                            {
+                                SaveAsset(behaviour, $"{folderPath}/Behaviour");
+                            }
+                        }
+                    }
+                }
+            }
+#endif
+#endif
+            */
+            if (refresh)
+            {
+                AssetDatabase.Refresh();
+            }
 
         }
         public static void SaveAsset(Object asset, DefaultAsset forder)
@@ -159,7 +279,7 @@ namespace Ahzkwid.AvatarTool
         }
         public static void SaveAsset(Object asset, FileOptions fileOption)
         {
-
+            /*
             switch (fileOption)
             {
                 case FileOptions.Normal:
@@ -171,7 +291,7 @@ namespace Ahzkwid.AvatarTool
                 default:
                     break;
             }
-
+            */
             var folderPath = GetFolderPath(fileOption);
             SaveAsset(asset, folderPath);
 

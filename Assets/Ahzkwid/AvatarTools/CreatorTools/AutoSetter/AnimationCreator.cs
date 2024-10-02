@@ -166,11 +166,12 @@ public class AnimationCreator : MonoBehaviour
             layers.Add(newLayer);
             */
             var layer = toggleData.CreateLayer();
-
+            /*
             foreach (var state in layer.stateMachine.states)
             {
                 AssetManager.SaveAsset(state.state.motion, fileOption);
             }
+            */
 
             layers.Add(layer);
         }
@@ -192,9 +193,15 @@ public class AnimationCreator : MonoBehaviour
 
         return layers.ToArray();
     }
+    /*
     public AnimatorController CreateAnimator(AssetManager.FileOptions fileOption)
     {
         return CreateAnimator(toggleDatas, fileOption);
+    }
+    */
+    public AnimatorController CreateAnimator()
+    {
+        return CreateAnimator(toggleDatas);
     }
     public static AnimatorController CreateAnimator(ToggleData[] toggleDatas)
     {
@@ -237,19 +244,22 @@ public class AnimationCreator : MonoBehaviour
 
         return controller;
     }
+    /*
     public static AnimatorController CreateAnimator(ToggleData[] toggleDatas, DefaultAsset forder)
     {
         var animatorController = CreateAnimator(toggleDatas);
         animatorController.name = forder.name;
-        SaveAnimator(animatorController, forder);
+        //SaveAnimator(animatorController, forder);
         return animatorController;
     }
     public static AnimatorController CreateAnimator(ToggleData[] toggleDatas, AssetManager.FileOptions fileOption)
     {
         var animatorController = CreateAnimator(toggleDatas);
-        SaveAnimator(animatorController, fileOption);
+        //SaveAnimator(animatorController, fileOption);
         return animatorController;
     }
+    */
+    /*
     public static void SaveAnimator(AnimatorController controller, DefaultAsset forder)
     {
         foreach (var layer in controller.layers)
@@ -263,20 +273,13 @@ public class AnimationCreator : MonoBehaviour
     }
     public static void SaveAnimator(AnimatorController controller, AssetManager.FileOptions fileOption)
     {
-        foreach (var layer in controller.layers)
-        {
-            foreach (var state in layer.stateMachine.states)
-            {
-                AssetManager.SaveAsset(state.state.motion, fileOption);
-            }
-        }
         AssetManager.SaveAsset(controller, fileOption);
 
     }
 
 
 
-
+    */
 
 
 

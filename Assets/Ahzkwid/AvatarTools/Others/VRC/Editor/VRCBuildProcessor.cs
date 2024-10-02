@@ -1,12 +1,15 @@
 
 #if UNITY_EDITOR
+using Ahzkwid.AvatarTool;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
-using VRC.SDK3A.Editor;
+using VRC.SDK3.Avatars.Components;
 using VRC.SDKBase;
 using VRC.SDKBase.Editor.BuildPipeline;
+using static AnimationRepairTool;
 //public class VRCBuildProcessor : IVRCSDKBuildRequestedCallback, IVRCSDKPreprocessAvatarCallback
 
 namespace Ahzkwid
@@ -52,6 +55,21 @@ namespace Ahzkwid
             return true;
         }
         */
+    }
+
+
+    [InitializeOnLoad]
+    public class VRCBuildProcessorSave : IVRCSDKPreprocessAvatarCallback//IVRCSDKBuildRequestedCallback
+    {
+        public int callbackOrder => int.MinValue + 200;
+        public bool OnPreprocessAvatar(GameObject avatarGameObject)
+        {
+            if (EditorApplication.isPlaying==false)
+            {
+                VRCBuildProcessor.SaveAll(avatarGameObject);
+            }
+            return true;
+        }
     }
 
 
@@ -144,6 +162,102 @@ namespace Ahzkwid
                 VRCBuildProcessor.Merge(root.gameObject);
             }
 
+        }
+
+        public static void SaveAll(GameObject avatarGameObject)
+        {
+            void Save(Object asset)
+            {
+                var fileOption = AssetManager.FileOptions.TempSave;
+                if (AssetDatabase.GetAssetPath(asset) == string.Empty)
+                {
+                    AssetManager.SaveAsset(asset, fileOption);
+                }
+            }
+            var avatarDescriptor = avatarGameObject.GetComponentInChildren<VRCAvatarDescriptor>(true);
+
+            if (avatarDescriptor.customizeAnimationLayers)
+            {
+                for (int i = 0; i < avatarDescriptor.baseAnimationLayers.Length; i++)
+                {
+                    var baseAnimationLayer = avatarDescriptor.baseAnimationLayers[i];
+                    if (baseAnimationLayer.isDefault)
+                    {
+                        continue;
+                    }
+                    switch (baseAnimationLayer.type)
+                    {
+                        case VRCAvatarDescriptor.AnimLayerType.Base:
+                        case VRCAvatarDescriptor.AnimLayerType.Additive:
+                        case VRCAvatarDescriptor.AnimLayerType.Gesture:
+                        case VRCAvatarDescriptor.AnimLayerType.Action:
+                        case VRCAvatarDescriptor.AnimLayerType.FX:
+                            var fileOption = AssetManager.FileOptions.TempSave;
+                            var asset = baseAnimationLayer.animatorController;
+                            if (AssetDatabase.GetAssetPath(asset) == string.Empty)
+                            {
+                                asset.name = baseAnimationLayer.type.ToString();
+                                AssetManager.SaveAsset(asset, fileOption);
+                            }
+                            //Save(baseAnimationLayer.animatorController);
+                            break;
+                        case VRCAvatarDescriptor.AnimLayerType.Deprecated0:
+                        case VRCAvatarDescriptor.AnimLayerType.Sitting:
+                        case VRCAvatarDescriptor.AnimLayerType.TPose:
+                        case VRCAvatarDescriptor.AnimLayerType.IKPose:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            if (avatarDescriptor.customExpressions)
+            {
+                //Save(avatarDescriptor.expressionParameters);
+                //Save(avatarDescriptor.expressionsMenu);
+            }
+            /*
+            if ((action.value is Animator) || (action.value is RuntimeAnimatorController))
+            {
+                switch (action.target)
+                {
+                    case AutoDescriptor.Target.PlayableLayersBase:
+                    case AutoDescriptor.Target.PlayableLayersAddtive:
+                    case AutoDescriptor.Target.PlayableLayersGesture:
+                    case AutoDescriptor.Target.PlayableLayersAction:
+                    case AutoDescriptor.Target.PlayableLayersFX:
+                        break;
+                    default:
+                        var name = action.value.name.ToLower();
+                        action.target = AutoDescriptor.Target.PlayableLayersFX;
+                        if (name.Contains("base"))
+                        {
+                            action.target = AutoDescriptor.Target.PlayableLayersBase;
+                        }
+                        if (name.Contains("addtive"))
+                        {
+                            action.target = AutoDescriptor.Target.PlayableLayersAddtive;
+                        }
+                        if (name.Contains("gesture"))
+                        {
+                            action.target = AutoDescriptor.Target.PlayableLayersGesture;
+                        }
+                        if (name.Contains("action"))
+                        {
+                            action.target = AutoDescriptor.Target.PlayableLayersAction;
+                        }
+                        break;
+                }
+            }
+            if (action.value is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionParameters)
+            {
+                action.target = AutoDescriptor.Target.ExpressionsParameters;
+            }
+            if (action.value is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu)
+            {
+                action.target = AutoDescriptor.Target.ExpressionsMenu;
+            }
+            */
         }
 
         public static void Merge(GameObject avatarGameObject)

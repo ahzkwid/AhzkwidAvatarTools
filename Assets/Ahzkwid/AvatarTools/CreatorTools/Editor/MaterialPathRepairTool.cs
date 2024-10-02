@@ -13,14 +13,15 @@ using UnityEditor;
 class MaterialPathRepairTool : EditorWindow
 {
     public Object materialFolder;
-    public Object textureFolder;
+    public Object textureFolderFrom;
+    public Object textureFolderTo;
     public Object folder;
     public Object[] removefolders;
     //public bool createBackup = true;
 
     public enum Option
     {
-        Simple , DuelPath
+        Simple , DuelPath//, TripplePath
     }
     public Option option;
 
@@ -54,25 +55,33 @@ class MaterialPathRepairTool : EditorWindow
         }
         return assets;
     }
-    public static void ReplaceTextures(Object materialFolder, Object textureFolder, Object[] removefolders)
+    public static void ReplaceTextures(Object materialFolder, Object textureToFolder, Object[] removefolders)
+    {
+        ReplaceTextures(materialFolder, null,textureToFolder, removefolders);
+    }
+    public static void ReplaceTextures(Object materialFolder, Object textureFromFolder, Object textureToFolder, Object[] removefolders)
     {
         var removefolderPaths = System.Array.ConvertAll(removefolders, removefolder=>AssetDatabase.GetAssetPath(removefolder));
 
 
 
 
-        var materialFolderPath = AssetDatabase.GetAssetPath(materialFolder);
-        var textureFolderPath = AssetDatabase.GetAssetPath(textureFolder);
+        //var materialFolderPath = AssetDatabase.GetAssetPath(materialFolder);
+        //var textureFolderFromPath = AssetDatabase.GetAssetPath(textureFromFolder);
+        var textureFolderToPath = AssetDatabase.GetAssetPath(textureToFolder);
         var materials = GetFolderToMaterials(materialFolder);
         Debug.Log($"materials.Length:{materials.Length}");
 
 
-        var textures = GetFolderToTextures(textureFolder);
-        Debug.Log($"textures.Length:{textures.Length}");
+        //var texturesFrom = GetFolderToTextures(textureFromFolder);
+        //Debug.Log($"textures.Length:{texturesFrom.Length}");
+
+        var texturesTo = GetFolderToTextures(textureToFolder);
+        Debug.Log($"textures.Length:{texturesTo.Length}");
 
 
-        var paths = System.Array.ConvertAll(textures, texture => AssetDatabase.GetAssetPath(texture));
-         paths = System.Array.ConvertAll(paths, path => path.Substring(textureFolderPath.Length, path.Length- textureFolderPath.Length));
+        var paths = System.Array.ConvertAll(texturesTo, texture => AssetDatabase.GetAssetPath(texture));
+         paths = System.Array.ConvertAll(paths, path => path.Substring(textureFolderToPath.Length, path.Length- textureFolderToPath.Length));
 
 
         foreach (var material in materials)
@@ -86,14 +95,21 @@ class MaterialPathRepairTool : EditorWindow
             foreach (var property in properties)
             {
                 var path = AssetDatabase.GetAssetPath(property.textureValue);
-                if (path.Length >= textureFolderPath.Length)
+                /*
+                if (path.Length >= textureFolderToPath.Length)
                 {
-                    if (path.Substring(0, textureFolderPath.Length) == textureFolderPath)
+                    if (path.Substring(0, textureFolderToPath.Length) == textureFolderToPath)
                     {
                         //Debug.Log($"{path}->정상");
                         continue;
                     }
                 }
+                */
+                if (path.StartsWith(textureFolderToPath+"/"))
+                {
+                    continue;
+                }
+
 
                 var textureIndex = System.Array.FindIndex(paths, x =>
                 {
@@ -103,15 +119,14 @@ class MaterialPathRepairTool : EditorWindow
                     }
                     return path.Substring(path.Length - x.Length) == x;
                 });
+
                 if (textureIndex >= 0)
                 {
-                    var texture = textures[textureIndex];
+                    var texture = texturesTo[textureIndex];
                     var texturePath = AssetDatabase.GetAssetPath(texture);
                     Debug.Log($"{path}->{texturePath}");
                     property.textureValue = texture;
                 }
-
-
 
 
                 path = AssetDatabase.GetAssetPath(property.textureValue);
@@ -159,28 +174,41 @@ class MaterialPathRepairTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(option)));
             EditorGUILayout.Space();
-            if (option == Option.Simple)
+            switch (option)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(folder)));
-                materialFolder = folder;
-                if (folder == null)
-                {
-                    allReady = false;
-                }
-            }
-            else
-            {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolder)));
-                folder = materialFolder;
-                if (materialFolder == null)
-                {
-                    allReady = false;
-                }
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(textureFolder)));
-                if (textureFolder == null)
-                {
-                    allReady = false;
-                }
+                case Option.Simple:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(folder)));
+                    materialFolder = folder;
+                    if (folder == null)
+                    {
+                        allReady = false;
+                    }
+                    break;
+                case Option.DuelPath:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolder)));
+                    folder = materialFolder;
+                    if (materialFolder == null)
+                    {
+                        allReady = false;
+                    }
+                    //if (option==Option.TripplePath)
+                    //{
+                    //    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(textureFolderFrom)));
+                    //    if (textureFolderFrom == null)
+                    //    {
+                    //        allReady = false;
+                    //    }
+                    //}
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(textureFolderTo)));
+                    if (textureFolderTo == null)
+                    {
+                        allReady = false;
+                    }
+                    break;
+                //case Option.TripplePath:
+                //    break;
+                default:
+                    break;
             }
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(removefolders)));
@@ -200,13 +228,19 @@ class MaterialPathRepairTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("수리"))
         {
-            if (option==Option.Simple)
+            switch (option)
             {
-                ReplaceTextures(folder, folder, removefolders);
-            }
-            else
-            {
-                ReplaceTextures(materialFolder, textureFolder, removefolders);
+                case Option.Simple:
+                    ReplaceTextures(folder, folder, removefolders);
+                    break;
+                case Option.DuelPath:
+                    ReplaceTextures(materialFolder, textureFolderTo, removefolders);
+                    break;
+                //case Option.TripplePath:
+                    //ReplaceTextures(materialFolder, textureFolderFrom,textureFolderTo, removefolders);
+                    //break;
+                default:
+                    break;
             }
             /*
             if (createBackup)
