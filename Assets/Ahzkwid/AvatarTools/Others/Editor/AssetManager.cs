@@ -4,8 +4,6 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using System.IO;
-using UnityEngine.EventSystems;
-using static UnityEditor.Experimental.GraphView.GraphView;
 namespace Ahzkwid.AvatarTool
 {
     public class AssetManager
@@ -62,9 +60,27 @@ namespace Ahzkwid.AvatarTool
         {
             return $"{(System.DateTime.Now.Ticks - new System.DateTime(2024, 1, 1).Ticks)}";
         }
+
         public static void SaveAsset(Object asset, string folderPath, bool refresh = true)
         {
 
+            void AddObjectToAsset(Object asset, string path)
+            {
+                if (AssetDatabase.GetAssetPath(asset) == string.Empty)
+                {
+                    if (asset is AnimatorState)
+                    {
+                        asset.hideFlags = HideFlags.HideInHierarchy;
+                    }
+                    if (asset is AnimatorStateMachine)
+                    {
+                        asset.hideFlags = HideFlags.HideInHierarchy;
+                    }
+                    AssetDatabase.AddObjectToAsset(asset, path);
+                }
+                EditorUtility.SetDirty(asset);
+                AssetDatabase.SaveAssetIfDirty(asset);
+            }
             if (asset == null)
             {
                 return;
@@ -160,9 +176,6 @@ namespace Ahzkwid.AvatarTool
             {
                 AssetDatabase.CreateAsset(asset, path);
             }
-            EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssetIfDirty(asset);
-
             if (asset is RuntimeAnimatorController runtimeAnimatorController)
             {
                 var controller = runtimeAnimatorController as AnimatorController;
@@ -175,8 +188,9 @@ namespace Ahzkwid.AvatarTool
 
                     if (AssetDatabase.GetAssetPath(layer.stateMachine) == string.Empty)
                     {
-                        SaveAsset(layer.stateMachine, $"{folderPath}/StateMachine",false);
+                        //SaveAsset(layer.stateMachine, $"{folderPath}/StateMachine",false);
                     }
+                    AddObjectToAsset(layer.stateMachine, path);
 
                     foreach (var state in layer.stateMachine.states)
                     {
@@ -184,13 +198,17 @@ namespace Ahzkwid.AvatarTool
                         {
                             continue;
                         }
+
                         /*
                         if (AssetDatabase.GetAssetPath(state.state) == string.Empty)
                         {
-                            SaveAsset(state.state, $"{folderPath}/State");
+                            //SaveAsset(state.state, $"{folderPath}/State");
+                            AssetDatabase.AddObjectToAsset(state.state, path);
                         }
-
+                        EditorUtility.SetDirty(state.state);
+                        AssetDatabase.SaveAssetIfDirty(state.state);
                         */
+                        AddObjectToAsset(state.state, path);
 
                         var motion = state.state.motion;
                         if (motion != null)
@@ -210,14 +228,23 @@ namespace Ahzkwid.AvatarTool
                             }
                             //EditorUtility.SetDirty(behaviour);
                             //AssetDatabase.SaveAssetIfDirty(behaviour);
+
+                            AddObjectToAsset(behaviour, path);
+                            /*
                             if (AssetDatabase.GetAssetPath(behaviour) == string.Empty)
                             {
                                 SaveAsset(behaviour, $"{folderPath}/Behaviour", false);
                             }
+                            */
                         }
                     }
                 }
+
+                AssetDatabase.SaveAssets();
             }
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+
             /*
 
 #if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
