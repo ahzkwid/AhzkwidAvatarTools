@@ -68,18 +68,19 @@ namespace Ahzkwid.AvatarTool
             {
                 if (AssetDatabase.GetAssetPath(asset) == string.Empty)
                 {
-                    if (asset is AnimatorState)
-                    {
-                        asset.hideFlags = HideFlags.HideInHierarchy;
-                    }
-                    if (asset is AnimatorStateMachine)
+                    if ((asset is AnimatorState)
+                        || (asset is AnimatorStateMachine)
+                        || (asset is StateMachineBehaviour)
+                        )
+                        
                     {
                         asset.hideFlags = HideFlags.HideInHierarchy;
                     }
                     AssetDatabase.AddObjectToAsset(asset, path);
+                    EditorUtility.SetDirty(asset);
+                    AssetDatabase.SaveAssetIfDirty(asset);
                 }
-                EditorUtility.SetDirty(asset);
-                AssetDatabase.SaveAssetIfDirty(asset);
+                //AssetDatabase.Refresh();
             }
             if (asset == null)
             {
@@ -240,7 +241,6 @@ namespace Ahzkwid.AvatarTool
                     }
                 }
 
-                AssetDatabase.SaveAssets();
             }
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);

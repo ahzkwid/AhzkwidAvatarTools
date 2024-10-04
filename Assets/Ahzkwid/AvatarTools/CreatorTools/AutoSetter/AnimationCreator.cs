@@ -93,7 +93,7 @@ public class AnimationCreator : MonoBehaviour
 
 
 
-            var root = ObjectPath.GetVRCRoot(transform, ObjectPath.VRCRootSearchOption.VRCRootOnly);
+            var root = ObjectPath.GetVRCRoot(transform, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
             //var text = "";
             //text = binding.path;
             if (root != null)

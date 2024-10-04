@@ -183,6 +183,10 @@ class AvatarPoseCopyTool : EditorWindow
                 continue;
             }
             characterTransform.localRotation = poseTransform.localRotation;
+            if (humanBodyBone >= HumanBodyBones.Hips)
+            {
+                characterTransform.localPosition = poseTransform.localPosition;
+            }
         }
     }
 }

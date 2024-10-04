@@ -8,6 +8,7 @@
 using UnityEngine;
 
 using UnityEditor;
+using System.Linq;
 /*
 
 [CustomPropertyDrawer(typeof(AnimationRepairToolActionAttribute))]
@@ -184,6 +185,8 @@ class AnimationRepairTool : EditorWindow
         public string path = "";
         public string propertyName = "";
         public string type = "";
+        public Object keyframe = null;
+        
     }
     [System.Serializable]
     public class Value
@@ -455,16 +458,43 @@ class AnimationRepairTool : EditorWindow
                     animationDatas = null;
                 }
                 else
-                {
+                { 
                     var bindings = AnimationUtility.GetCurveBindings(animationClip);
+                    var bindingsObject = AnimationUtility.GetObjectReferenceCurveBindings(animationClip);
+                    bindings = bindings.Concat(bindingsObject).ToArray();
+
                     animationDatas = System.Array.ConvertAll(bindings, x =>
                     {
                         var animationData = new AnimationData();
                         animationData.path = x.path;
                         animationData.propertyName = x.propertyName;
                         animationData.type = $"{x.type}, {x.type.Namespace}";
+
+
+
+                        if ((x.type == typeof(SkinnedMeshRenderer)) || (x.type == typeof(MeshRenderer)))
+                        {
+                            var keyframes = AnimationUtility.GetObjectReferenceCurve(animationClip, x);
+                            foreach (var keyframe in keyframes)
+                            {
+                                if (keyframe.value == null)
+                                {
+                                    continue;
+                                }
+                                if (keyframe.value.Equals(null))
+                                {
+                                    continue;
+                                }
+                                if (keyframe.value is Material material)
+                                {
+                                    animationData.keyframe = material;
+                                    break;
+                                }
+                            }
+                        }
                         return animationData;
                     });
+
                 }
             }
             //EditorGUI.BeginChangeCheck();

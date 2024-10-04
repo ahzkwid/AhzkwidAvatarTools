@@ -237,7 +237,7 @@ class AssetsCloningTool : EditorWindow
             var type = AssetDatabase.GetMainAssetTypeAtPath(path);
             if (type == typeof(AnimationClip))
             {
-                return false;
+                //return false;
             }
             if (type == typeof(AudioClip))
             {

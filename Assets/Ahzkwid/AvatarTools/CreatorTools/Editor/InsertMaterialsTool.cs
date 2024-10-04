@@ -18,9 +18,10 @@ class InsertMaterialsTool : EditorWindow
         Materials, MaterialFolder
     }
     public MaterialSelectMode materialSelectMode;
-    public Object materialFolder;
+    public DefaultAsset[] materialFolders;
     public Material[] materials;
     public GameObject root;
+    public GameObject[] roots;
 
 
     public bool repairMode=false;
@@ -44,8 +45,38 @@ class InsertMaterialsTool : EditorWindow
         }
         return assets;
     }
+    void InsertMaterials()
+    {
+        if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+        {
+            for (int i = 0; i < roots.Length; i++)
+            {
+                var root = roots[i];
+                var materialFolder = materialFolders[i % roots.Length];
+                InsertMaterials(root, materialFolder);
+            }
+        }
+        else
+        {
+            InsertMaterials(root, materials);
+        }
+    }
+    void InsertMaterials(GameObject root, DefaultAsset materialFolder)
+    {
+        materials = GetFolderToMaterials(materialFolder);
+        if (nameMerge)
+        {
+            root.name += $" {materialFolder.name}";
+        }
+        InsertMaterials(root, materials);
+    }
     public void InsertMaterials(GameObject root, Material[] materials)
     {
+        if (materials == null)
+        {
+            Debug.LogWarning("materials == null");
+            return;
+        }
         if (materials.Length == 0)
         {
             Debug.LogWarning("materials.Length == 0");
@@ -176,22 +207,29 @@ class InsertMaterialsTool : EditorWindow
                 GUI.enabled = allReady;
                 if (GUILayout.Button("ResetMaterials"))
                 {
-                    materialFolder = null;
+                    materialFolders = null;
                     materials = null;
                 }
                 GUI.enabled = true;
             }
             else
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolder)));
-                if (materialFolder == null)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolders)));
+                if ((materialFolders == null)||(System.Array.FindAll(materialFolders,x=>x!=null).Length==0))
                 {
                     allReady = false;
                 }
             }
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
+            if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
+            }
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(repairMode)));
@@ -201,9 +239,19 @@ class InsertMaterialsTool : EditorWindow
             }
             EditorGUILayout.Space();
 
-            if (root == null)
+            if (materialSelectMode == MaterialSelectMode.MaterialFolder)
             {
-                allReady = false;
+                if ((roots == null) || (System.Array.FindAll(roots, x => x != null).Length == 0))
+                {
+                    allReady = false;
+                }
+            }
+            else
+            {
+                if (root == null)
+                {
+                    allReady = false;
+                }
             }
             //if (textureFolder == null)
             {
@@ -220,18 +268,7 @@ class InsertMaterialsTool : EditorWindow
         GUI.enabled = allReady;
         if (GUILayout.Button("Insert"))
         {
-            if (materialSelectMode==MaterialSelectMode.MaterialFolder)
-            {
-                materials = GetFolderToMaterials(materialFolder);
-                if (nameMerge)
-                {
-                    root.name += $" {materialFolder.name}";
-                }
-            }
-            if ((materials != null)&& (materials.Length > 0))
-            {
-                InsertMaterials(root, materials);
-            }
+            InsertMaterials();
         }
         GUI.enabled = true;
     }

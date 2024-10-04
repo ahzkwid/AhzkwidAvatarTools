@@ -92,13 +92,13 @@ namespace Ahzkwid
 
 
 
-
+        /*
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarPoseCopyTool))]
         public static void AvatarPoseCopyToolInit()
         {
             AvatarPoseCopyTool.Init();
         }
-
+        */
 
 
 
