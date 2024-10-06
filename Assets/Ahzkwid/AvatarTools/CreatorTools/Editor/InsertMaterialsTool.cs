@@ -9,6 +9,7 @@ using UnityEngine;
 //텍스처 폴더 경로를 지정한 폴더 하위경로로 수정함
 using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
 
 [InitializeOnLoad]
 class InsertMaterialsTool : EditorWindow
@@ -49,11 +50,23 @@ class InsertMaterialsTool : EditorWindow
     {
         if (materialSelectMode == MaterialSelectMode.MaterialFolder)
         {
-            for (int i = 0; i < roots.Length; i++)
+            if (roots.Length==1)
             {
-                var root = roots[i];
-                var materialFolder = materialFolders[i % roots.Length];
-                InsertMaterials(root, materialFolder);
+                for (int i = 0; i < materialFolders.Length; i++)
+                {
+                    var root = roots.First();
+                    var materialFolder = materialFolders[i];
+                    InsertMaterials(root, materialFolder);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < roots.Length; i++)
+                {
+                    var root = roots[i];
+                    var materialFolder = materialFolders[i % roots.Length];
+                    InsertMaterials(root, materialFolder);
+                }
             }
         }
         else

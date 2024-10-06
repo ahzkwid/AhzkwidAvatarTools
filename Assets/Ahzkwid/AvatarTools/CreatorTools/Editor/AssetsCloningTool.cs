@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using static AnimationRepairTool;
 using System.Security.Cryptography;
 
 [InitializeOnLoad]

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Ahzkwid.AvatarTool;
-using UnityEditor.VersionControl;
 public class AnimatorCombiner : MonoBehaviour
 { 
     public static RuntimeAnimatorController CombineAnimators(RuntimeAnimatorController runtimeControllerA, RuntimeAnimatorController runtimeControllerB, AssetManager.FileOptions fileOptions, Transform rootParent = null, Transform rootChild=null)

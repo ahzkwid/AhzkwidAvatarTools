@@ -66,19 +66,25 @@ namespace Ahzkwid.AvatarTool
 
             void AddObjectToAsset(Object asset, string path)
             {
-                if (AssetDatabase.GetAssetPath(asset) == string.Empty)
+                var subpath = AssetDatabase.GetAssetPath(asset);
+                if (string.IsNullOrEmpty(subpath))
                 {
-                    if ((asset is AnimatorState)
+                    if ((asset is StateMachineBehaviour)
                         || (asset is AnimatorStateMachine)
-                        || (asset is StateMachineBehaviour)
+                        || (asset is AnimatorState)
                         )
                         
                     {
                         asset.hideFlags = HideFlags.HideInHierarchy;
                     }
+                    if (string.IsNullOrEmpty(asset.name))
+                    {
+                        asset.name = GetUniqueFileName();
+                    }
                     AssetDatabase.AddObjectToAsset(asset, path);
                     EditorUtility.SetDirty(asset);
                     AssetDatabase.SaveAssetIfDirty(asset);
+                    //AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(asset));
                 }
                 //AssetDatabase.Refresh();
             }
@@ -187,7 +193,7 @@ namespace Ahzkwid.AvatarTool
                         continue;
                     }
 
-                    if (AssetDatabase.GetAssetPath(layer.stateMachine) == string.Empty)
+                    //if (AssetDatabase.GetAssetPath(layer.stateMachine) == string.Empty)
                     {
                         //SaveAsset(layer.stateMachine, $"{folderPath}/StateMachine",false);
                     }
@@ -200,6 +206,10 @@ namespace Ahzkwid.AvatarTool
                             continue;
                         }
 
+                        //if (AssetDatabase.GetAssetPath(state.state) == string.Empty)
+                        //{
+                        //    SaveAsset(state.state, $"{folderPath}/State");
+                        //}
                         /*
                         if (AssetDatabase.GetAssetPath(state.state) == string.Empty)
                         {

@@ -526,10 +526,6 @@ namespace Ahzkwid
                                                     var subMenus = controls.FindAll(x => x.type == typeSubMenu);
                                                     control = subMenus.Find(x => x.name == item.name);
 
-                                                    if (control != null)
-                                                    {
-                                                        control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
-                                                    }
                                                 }
                                                 else
                                                 {
@@ -564,6 +560,13 @@ namespace Ahzkwid
                                                     case Option.Replace:
                                                         break;
                                                     case Option.Merge:
+                                                        if (item.type == typeSubMenu)
+                                                        {
+                                                            if (control != null)
+                                                            {
+                                                                control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
+                                                            }
+                                                        }
                                                         if (control != null)
                                                         {
                                                             var icons = System.Array.FindAll(new Texture2D[] { control.icon, clone.icon }, x => x != null);
@@ -575,27 +578,35 @@ namespace Ahzkwid
                                                         }
                                                         break;
                                                     case Option.Remove:
-                                                        if (item.type == typeSubMenu)
+                                                        if (control != null)
                                                         {
-                                                        }
-                                                        else
-                                                        {
-                                                            if (control != null)
+                                                            if (item.type == typeSubMenu)
+                                                            {
+                                                                if (item.subMenu == null)
+                                                                {
+                                                                    menu.controls.Remove(control);
+                                                                }
+                                                                else
+                                                                {
+                                                                    control.subMenu = MergeMenu(control.subMenu, clone.subMenu);
+                                                                }
+                                                            }
+                                                            else
                                                             {
                                                                 menu.controls.Remove(control);
-                                                            }
 
-                                                            /*
-                                                            var controlIndex = controls.FindIndex(x => (x.parameter.name == item.parameter.name) && (x.type != typeSubMenu));
-                                                            if (controlIndex >= 0)
-                                                            {
-                                                                menu.controls.RemoveAt(controlIndex);
+                                                                /*
+                                                                var controlIndex = controls.FindIndex(x => (x.parameter.name == item.parameter.name) && (x.type != typeSubMenu));
+                                                                if (controlIndex >= 0)
+                                                                {
+                                                                    menu.controls.RemoveAt(controlIndex);
+                                                                }
+                                                                if (control != null)
+                                                                {
+                                                                    menu.controls.Remove(control);
+                                                                }
+                                                                */
                                                             }
-                                                            if (control != null)
-                                                            {
-                                                                menu.controls.Remove(control);
-                                                            }
-                                                            */
                                                         }
                                                         break;
                                                     default:
@@ -770,8 +781,9 @@ namespace Ahzkwid
         [System.Serializable]
         public class ActionTrigger
         {
-            public TriggersOperator triggersOperator;
-            public Trigger[] triggers;
+            public string memo="";
+            TriggersOperator triggersOperator=TriggersOperator.AND;
+             Trigger[] triggers=new Trigger[] { };
             public Action[] actions;
 
              bool Check(VRCAvatarDescriptor avatarDescriptor)

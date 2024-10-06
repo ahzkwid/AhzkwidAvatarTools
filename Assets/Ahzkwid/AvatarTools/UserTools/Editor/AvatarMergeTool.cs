@@ -494,6 +494,12 @@ namespace Ahzkwid
                             {
                                 cloth.transform.parent = null;
                             }
+                            var components = cloth.GetComponentsInChildren<Component>(true);
+                            if (System.Array.FindIndex(components,x=>x.name=="AutoMerge")>=0)
+                            {
+                                cloth.transform.parent = character.transform;
+                            }
+                            else
                             {
                                 Merge(character, cloth, mergeType);
                             }
