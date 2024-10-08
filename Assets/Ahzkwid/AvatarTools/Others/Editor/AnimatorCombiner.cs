@@ -478,7 +478,6 @@ public class AnimatorCombiner : MonoBehaviour
 
 
 
-
         foreach (var state in source.states)
         {
             if (state.state == null)
@@ -521,6 +520,36 @@ public class AnimatorCombiner : MonoBehaviour
                 //낡은 트랜지션 제거
             }
         }
+
+
+        foreach (var transition in source.anyStateTransitions)
+        {
+            AnimatorState newDestinationState = null;
+            AnimatorStateMachine newDestinationStateMachine = null;
+
+
+            if (transition.destinationState != null)
+            {
+                newDestinationState = stateMap[transition.destinationState];
+            }
+            if (transition.destinationStateMachine != null)
+            {
+                newDestinationStateMachine = stateMachineMap[transition.destinationStateMachine];
+            }
+            var newTransition = destination.AddAnyStateTransition(newDestinationState);
+
+            //EditorUtility.CopySerialized(transition, newTransition);
+            CopyClass(transition, newTransition);
+
+            newTransition.destinationStateMachine = newDestinationStateMachine;
+            newTransition.destinationState = newDestinationState;
+        }
+
+
+
+
+
+
 
 
         foreach (var state in source.states)
