@@ -56,12 +56,12 @@ MonoBehaviour:
   - name: Kemono
     valueType: 2
     saved: 1
-    defaultValue: 0
+    defaultValue: 1
     networkSynced: 1
   - name: kemonoTail
     valueType: 2
     saved: 1
-    defaultValue: 0
+    defaultValue: 1
     networkSynced: 1
   - name: apron
     valueType: 2

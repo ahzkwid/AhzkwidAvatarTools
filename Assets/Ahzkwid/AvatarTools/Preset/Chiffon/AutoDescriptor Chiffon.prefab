@@ -44,10 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9636b454a1af39640900dd1d32879493, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isAwake: 1
   mergeTrigger: 1
   actionTriggers:
-  - triggersOperator: 0
-    triggers: []
+  - memo: 
     actions:
     - target: 5
       option: 1
@@ -70,3 +70,6 @@ MonoBehaviour:
     - target: 6
       option: 1
       value: {fileID: 11400000, guid: 9b7b0cccf78e662469df9115b2cac361, type: 2}
+    - target: 5
+      option: 1
+      value: {fileID: 11400000, guid: bd5d689866a907542b098873a1cc338f, type: 2}

@@ -43,6 +43,10 @@ namespace Ahzkwid
             {
                 VRCBuildProcessor.MergeAll();
             }
+            else
+            {
+                VRCBuildProcessor.MergeAllFirst();
+            }
             return true;
         }
         /*
@@ -163,6 +167,28 @@ namespace Ahzkwid
             }
 
         }
+
+        public static void MergeAllFirst()
+        {
+            var roots = ObjectPath.GetRoots();
+            foreach (var root in roots)
+            {
+                var avatarGameObject = root.gameObject;
+                var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
+                foreach (var item in objects)
+                {
+                    if (item.isAwake == false)
+                    {
+                        continue;
+                    }
+                    item.Run();
+                }
+            }
+
+        }
+
+
+
 
         public static void SaveAll(GameObject avatarGameObject)
         {

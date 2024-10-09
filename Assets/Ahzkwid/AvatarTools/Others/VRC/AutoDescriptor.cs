@@ -92,7 +92,8 @@ namespace Ahzkwid
     public class AutoDescriptor : MonoBehaviour
     {
 
-         bool debugMode=false;
+        bool debugMode = false;
+        public bool isAwake = false;
         public enum Target
         {
             PlayableLayersBase,
