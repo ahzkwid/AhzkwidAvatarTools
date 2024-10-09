@@ -45,7 +45,7 @@ namespace Ahzkwid
             }
             else
             {
-                VRCBuildProcessor.MergeAllFirst();
+                VRCBuildProcessor.MergeFirst(avatarGameObject);
             }
             return true;
         }
@@ -168,23 +168,25 @@ namespace Ahzkwid
 
         }
 
-        public static void MergeAllFirst()
+        public static void MergeFirst(GameObject avatarGameObject)
         {
-            var roots = ObjectPath.GetRoots();
-            foreach (var root in roots)
+            var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
+            foreach (var item in objects)
             {
-                var avatarGameObject = root.gameObject;
-                var objects = avatarGameObject.GetComponentsInChildren<AutoDescriptor>(true);
-                foreach (var item in objects)
+                if (item.isAwake == false)
                 {
-                    if (item.isAwake == false)
-                    {
-                        continue;
-                    }
-                    item.Run();
+                    continue;
                 }
+                item.Run();
             }
-
+            foreach (var item in objects)
+            {
+                if (item.isAwake == false)
+                {
+                    continue;
+                }
+                Object.DestroyImmediate(item);
+            }
         }
 
 
@@ -192,6 +194,7 @@ namespace Ahzkwid
 
         public static void SaveAll(GameObject avatarGameObject)
         {
+            /*
             void Save(Object asset)
             {
                 var fileOption = AssetManager.FileOptions.TempSave;
@@ -200,6 +203,7 @@ namespace Ahzkwid
                     AssetManager.SaveAsset(asset, fileOption);
                 }
             }
+            */
             var avatarDescriptor = avatarGameObject.GetComponentInChildren<VRCAvatarDescriptor>(true);
 
             if (avatarDescriptor.customizeAnimationLayers)

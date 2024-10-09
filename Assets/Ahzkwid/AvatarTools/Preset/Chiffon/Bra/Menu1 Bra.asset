@@ -21,6 +21,6 @@ MonoBehaviour:
       name: chiffonBra
     value: 1
     style: 0
-    subMenu: {fileID: 11400000, guid: a1dff84a858cf084d8aace27f96869f7, type: 2}
+    subMenu: {fileID: 0}
     subParameters: []
     labels: []

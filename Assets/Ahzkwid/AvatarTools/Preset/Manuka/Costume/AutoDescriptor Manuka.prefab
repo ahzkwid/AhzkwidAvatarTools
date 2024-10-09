@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9636b454a1af39640900dd1d32879493, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isAwake: 1
   mergeTrigger: 1
   actionTriggers:
   - memo: MANUKA_costume
