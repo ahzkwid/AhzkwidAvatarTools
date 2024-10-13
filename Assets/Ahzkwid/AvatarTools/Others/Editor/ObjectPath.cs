@@ -213,7 +213,7 @@ namespace Ahzkwid
                 gameObjects = gameObjects.FindAll(x => x.activeInHierarchy);
                 targetTransforms = gameObjects.ConvertAll(x => x.transform);
                 targetTransforms = targetTransforms.FindAll(x => GetVRCRoot(x, vrcRootSearchOption));
-                gameObjects = gameObjects.FindAll(x => x != null);
+                targetTransforms = targetTransforms.FindAll(x => x != null);
             }
             return targetTransforms;
         }
@@ -231,8 +231,8 @@ namespace Ahzkwid
             }
             {
                 //var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
-                //var components = root.GetComponentsInChildren<Component>(true);
-                var components = transform.GetComponentsInParent<Component>(true);
+                var components = root.GetComponentsInChildren<Component>(true);
+                //var components = transform.GetComponentsInParent<Component>(true);
                 var avatarDescriptor = System.Array.Find(components, x =>
                 {
                     if (x == null)

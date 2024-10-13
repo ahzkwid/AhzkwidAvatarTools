@@ -6,6 +6,7 @@ using UnityEngine;
 
 using UnityEditor;
 using System.Linq;
+using UnityEditor.SceneManagement;
 namespace Ahzkwid
 {
 
@@ -323,7 +324,7 @@ namespace Ahzkwid
         //public Transform clothRoot;
         //public GameObject clothRoot;
 
-        public int parentIndex = 1;
+        //public int parentIndex = 1;
 
 
         public Transform GetParent(int index)
@@ -346,7 +347,7 @@ namespace Ahzkwid
         public Transform[] GetClothRootTransforms()
         {
             var rootTransforms = clothRoots.ConvertAll(root => GetClothRootTransform(root));
-            rootTransforms = rootTransforms.FindAll(root => root != null);
+            rootTransforms = rootTransforms.FindAll(x => x != null);
             return rootTransforms.ToArray();
         }
         public Transform GetClothRootTransform(ClothRoot clothRoot)
@@ -372,7 +373,7 @@ namespace Ahzkwid
                     }
                     break;
                 case ClothRoot.Option.Parent:
-                    target = GetParent(parentIndex);
+                    target = GetParent(clothRoot.parentIndex);
                     break;
                 default:
                     break;
@@ -568,12 +569,17 @@ namespace Ahzkwid
         }
         public void SetParent()
         {
-            var clothRootTransforms = GetClothRootTransforms();
             var targetTransform = GetTargetTransform();
+
+
+            transform.root.parent = targetTransform;
+            /*
+            var clothRootTransforms = GetClothRootTransforms();
             foreach (var clothRootTransform in clothRootTransforms)
             {
                 clothRootTransform.parent = targetTransform;
             }
+            */
         }
 
 
@@ -654,6 +660,20 @@ namespace Ahzkwid
 
         bool SnapCheck()
         {
+
+            if (PrefabStageUtility.GetCurrentPrefabStage()!=null) //프리팹 수정모드라면 중단
+            {
+                return false;
+            }
+
+
+            var root = ObjectPath.GetVRCRoot(transform,ObjectPath.VRCRootSearchOption.VRCRootOnly);
+            if (root==null)
+            {
+                return true;
+            }
+            return false;
+            /*
             var clothRootTransforms = GetClothRootTransforms();
             if (clothRootTransforms.Length==0)
             {
@@ -670,6 +690,7 @@ namespace Ahzkwid
                 }
             }
             return snap;
+            */
         }
 
         void Snap()

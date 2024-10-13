@@ -9,6 +9,7 @@ namespace Ahzkwid
 
 
     using UnityEditor;
+    using UnityEditor.SceneManagement;
     using UnityEngine.Animations;
 
     //using VRC.SDK3.Avatars.Components;
@@ -323,6 +324,10 @@ namespace Ahzkwid
         public void Run()
         {
 
+            if (PrefabStageUtility.GetCurrentPrefabStage() != null) //프리팹 수정모드라면 중단
+            {
+                return ;
+            }
             //foreach (var AutoPosition in FindObjectsOfType<AutoPosition>())
             {
                 var AutoPosition = this;

@@ -95,6 +95,7 @@ public class AnimatorCombiner : MonoBehaviour
             CopyClass(layer, newLayer);
 
             newLayer.stateMachine = new AnimatorStateMachine();
+            newLayer.name = layer.name;
 
             if (i == 0)
             {

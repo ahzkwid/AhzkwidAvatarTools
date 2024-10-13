@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -340790334, guid: 67cc4cb7839cd3741b63733d5adf0442, type: 3}
+  m_Name: Menu2 Main
+  m_EditorClassIdentifier: 
+  Parameters: {fileID: 11400000, guid: e8f48f3b76411d54db1f721644c5d3f5, type: 2}
+  controls:
+  - name: Cap
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Cap
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Bag
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Bag
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Vest
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Vest
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Shirts
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Shirts
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Shorts
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Shorts
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Boots
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Boots
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  - name: Socks
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: Outfit_Socks
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []

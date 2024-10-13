@@ -66,6 +66,10 @@ namespace Ahzkwid.AvatarTool
 
             void AddObjectToAsset(Object asset, string path)
             {
+                if (asset==null)
+                {
+                    return;
+                }
                 var subpath = AssetDatabase.GetAssetPath(asset);
                 if (string.IsNullOrEmpty(subpath))
                 {
@@ -76,6 +80,21 @@ namespace Ahzkwid.AvatarTool
                         
                     {
                         asset.hideFlags = HideFlags.HideInHierarchy;
+                    }
+                    if (asset is BlendTree blendTree)
+                    {
+                        foreach (var childMotion in blendTree.children)
+                        {
+                            var motion = childMotion.motion;
+                            if (motion is BlendTree)
+                            {
+                                AddObjectToAsset(motion, path);
+                            }
+                            else
+                            {
+                                SaveAsset(motion, $"{folderPath}/Motion", false);
+                            }
+                        }
                     }
                     if (string.IsNullOrEmpty(asset.name))
                     {
@@ -226,7 +245,14 @@ namespace Ahzkwid.AvatarTool
                         {
                             if (AssetDatabase.GetAssetPath(motion) == string.Empty)
                             {
-                                SaveAsset(motion, $"{folderPath}/Motion", false);
+                                if (motion is BlendTree)
+                                {
+                                    AddObjectToAsset(motion, path);
+                                }
+                                else
+                                {
+                                    SaveAsset(motion, $"{folderPath}/Motion", false);
+                                }
                             }
                         }
 

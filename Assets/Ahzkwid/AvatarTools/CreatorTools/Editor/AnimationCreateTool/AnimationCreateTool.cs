@@ -120,6 +120,7 @@ class AnimationCreateTool : EditorWindow
                     {
                         var data = new AnimationCreator.ToggleData();
                         data.parameter = header + target.name;
+                        data.parameter = data.parameter.Replace(" ","_");
                         data.targets = new Object[] { target };
                         return data;
                     });

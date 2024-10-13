@@ -1148,8 +1148,13 @@ namespace Ahzkwid
                 }
             }
 
-
-            cloth.transform.parent = character.transform;
+            {
+                var parents= cloth.transform.GetComponentsInParent<Transform>();
+                if (System.Array.FindIndex(parents,x=>x== character.transform) < 0)
+                {
+                    cloth.transform.parent = character.transform;
+                }
+            }
 
             var characterRenderer = character.GetComponentInChildren<SkinnedMeshRenderer>(true);
             var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>(true);

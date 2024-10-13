@@ -45,7 +45,7 @@ public class AnimationCreator : MonoBehaviour
             newState.timeParameter = parameter;
 
             newLayer.stateMachine.AddState(newState, Vector3.right * 300);
-
+            newLayer.stateMachine.name = parameter;
             newLayer.stateMachine.defaultState = newState;
 
             return newLayer;
@@ -113,7 +113,7 @@ public class AnimationCreator : MonoBehaviour
                 }
                 var curve = new AnimationCurve();
                 curve.AddKey(0f, 0f);
-                curve.AddKey(0.5f, 1f);
+                curve.AddKey(0.1f, 1f);
                 AnimationUtility.SetEditorCurve(newClip, newBinding, curve);
             }
 

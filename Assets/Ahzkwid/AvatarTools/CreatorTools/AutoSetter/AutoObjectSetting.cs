@@ -9,8 +9,8 @@ namespace Ahzkwid
 
 #if UNITY_EDITOR
     using UnityEditor;
+    using UnityEditor.SceneManagement;
     using UnityEditor.Search;
-    using VRC.SDK3.Avatars.Components;
 
     [CustomEditor(typeof(AutoObjectSetting))]
     public class AutoObjectSettingEditor : Editor
@@ -57,6 +57,14 @@ namespace Ahzkwid
 
 
             }
+
+            if (GUILayout.Button("Apply"))
+            {
+                var autoObjectSetting = target as AutoObjectSetting;
+                autoObjectSetting.Apply();
+            }
+
+
             {
                 GUI.enabled = false;
                 {
@@ -82,6 +90,12 @@ namespace Ahzkwid
                 }
 
             }
+
+
+
+
+
+
             serializedObject.ApplyModifiedProperties();
         }
     }
@@ -203,13 +217,181 @@ namespace Ahzkwid
             }
             Update();
         }
+        public bool Apply()
+        {
+
+
+
+
+            var autoObjectSetting = this;
+
+            //Animation
+            {
+                var root = ObjectPath.GetVRCRoot(autoObjectSetting.transform, ObjectPath.VRCRootSearchOption.VRCRootOnly);
+                /*
+                var root = GetRoot(autoObjectSetting.transform);
+                if (root == null)
+                {
+                    return;
+                }
+                var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
+                if (avatarDescriptor == null)
+                {
+                    return;
+                }
+                root = avatarDescriptor.transform;
+                */
+
+                if (root == null)
+                {
+                    return false;
+                }
+
+                //AnimationMode.SampleAnimationClip(root.gameObject, clip, currentTime);
+
+                //Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply Animation");
+
+
+                {
+                    Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
+                    var animator = root.GetComponent<Animator>();
+                    Avatar originalAvatar = null;
+                    RuntimeAnimatorController originalController = null;
+                    if (animator)
+                    {
+                        originalAvatar = animator.avatar;
+                        originalController = animator.runtimeAnimatorController;
+                        animator.avatar = null;
+                        animator.runtimeAnimatorController = null;
+                    }
+                    foreach (var clip in clips)
+                    {
+                        clip.SampleAnimation(root.gameObject, clip.length);
+                    }
+                    //EditorUtility.SetDirty(root.gameObject);
+
+                    if (animator)
+                    {
+                        animator.avatar = originalAvatar;
+                        animator.runtimeAnimatorController = originalController;
+                        //animator.avatar = null;
+                    }
+                    EditorUtility.SetDirty(root.gameObject);
+                }
+
+
+
+
+
+
+
+
+                //ObjectSettingDatas
+                {
+                    var childrens = root.GetComponentsInChildren<Transform>(true);
+                    foreach (var objectActiveData in autoObjectSetting.objectSettingDatas)
+                    {
+                        if (string.IsNullOrEmpty(objectActiveData.path))
+                        {
+                            continue;
+                        }
+                        var target = System.Array.Find(childrens, x => objectActiveData.path == GetPath(x.gameObject, root.gameObject));
+                        if (target == null)
+                        {
+                            continue;
+                        }
+                        /*
+                        switch (objectActiveData.objEnabled)
+                        {
+                            case Enabled.Enable:
+                                target.gameObject.SetActive(true);
+                                break;
+                            case Enabled.Disable:
+                                target.gameObject.SetActive(false);
+                                break;
+                        }
+                        switch (objectActiveData.rendererEnabled)
+                        {
+                            case Enabled.Enable:
+                            case Enabled.Disable:
+                                var renderer = target.GetComponent<Renderer>();
+                                if (renderer == null)
+                                {
+                                    break;
+                                }
+                                switch (objectActiveData.rendererEnabled)
+                                {
+                                    case Enabled.Enable:
+                                        renderer.enabled = true;
+                                        break;
+                                    case Enabled.Disable:
+                                        renderer.enabled = false;
+                                        break;
+                                }
+                                break;
+                        }
+                        switch (objectActiveData.physboneEnabled)
+                        {
+                            case Enabled.Enable:
+                            case Enabled.Disable:
+                                var components = target.GetComponents<Component>();
+                                foreach (var component in components)
+                                {
+                                    if (component == null)
+                                    {
+                                        continue;
+                                    }
+                                    if (component.GetType().Name.ToLower().Contains("physbone") == false)
+                                    {
+                                        continue;
+                                    }
+                                    switch (objectActiveData.physboneEnabled)
+                                    {
+                                        case Enabled.Enable:
+                                            ((Behaviour)component).enabled = true;
+                                            break;
+                                        case Enabled.Disable:
+                                            ((Behaviour)component).enabled = false;
+                                            break;
+                                    }
+                                }
+                                break;
+                        }
+                        if (objectActiveData.changeScale)
+                        {
+                            target.transform.localScale = objectActiveData.localScale;
+                        }
+                        */
+                        switch (objectActiveData.tag)
+                        {
+                            case Tag.None:
+                                break;
+                            default:
+                                var tagString = objectActiveData.tag.ToString();
+                                if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags, x => x == tagString) != null)
+                                {
+
+                                    target.tag = tagString;
+                                }
+                                break;
+                        }
+                    }
+                }
+
+
+
+
+            }
+            return true;
+
+        }
 
         public void Run()
         {
             //foreach (var autoObjectSetting in FindObjectsOfType<AutoObjectSetting>())
             {
-                var autoObjectSetting = this;
-                if (autoObjectSetting.success)
+
+                if (PrefabStageUtility.GetCurrentPrefabStage() != null) //프리팹 수정모드라면 중단
                 {
                     return;
                 }
@@ -221,184 +403,41 @@ namespace Ahzkwid
 
 
 
-                //Animation
+
+
+
+                var autoObjectSetting = this;
+                if (autoObjectSetting.success)
                 {
-                    var root = ObjectPath.GetVRCRoot(autoObjectSetting.transform,ObjectPath.VRCRootSearchOption.VRCRootOnly);
-                    /*
-                    var root = GetRoot(autoObjectSetting.transform);
-                    if (root == null)
+                    return;
+                }
+
+
+
+                if (Apply()==false)
+                {
+                    return;
+                }
+                /*
+
+                switch (dataType)
+                {
+                    case DataType.Animation:
+
+                        break;
+                    case DataType.ObjectSettingDatas:
+                        break;
+                    default:
+                        break;
+                }
+                */
+
+                autoObjectSetting.success = true;
+                //if (success)
+                {
+                    //if (autoObjectSetting.autoDestroy)
                     {
-                        return;
-                    }
-                    var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
-                    if (avatarDescriptor == null)
-                    {
-                        return;
-                    }
-                    root = avatarDescriptor.transform;
-                    */
-                    
-                    if (root == null)
-                    {
-                        return;
-                    }
-
-                    //AnimationMode.SampleAnimationClip(root.gameObject, clip, currentTime);
-
-                    //Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply Animation");
-
-
-                    {
-                        Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
-                        var animator = root.GetComponent<Animator>();
-                        Avatar originalAvatar = null;
-                        RuntimeAnimatorController originalController = null;
-                        if (animator)
-                        {
-                            originalAvatar = animator.avatar;
-                            originalController = animator.runtimeAnimatorController;
-                            animator.avatar = null;
-                            animator.runtimeAnimatorController = null;
-                        }
-                        foreach (var clip in clips)
-                        {
-                            clip.SampleAnimation(root.gameObject, clip.length);
-                        }
-                        //EditorUtility.SetDirty(root.gameObject);
-
-                        if (animator)
-                        {
-                            animator.avatar = originalAvatar;
-                            animator.runtimeAnimatorController = originalController;
-                            //animator.avatar = null;
-                        }
-                        EditorUtility.SetDirty(root.gameObject);
-                    }
-
-
-
-
-
-
-
-
-                    //ObjectSettingDatas
-                    {
-                        var childrens = root.GetComponentsInChildren<Transform>(true);
-                        foreach (var objectActiveData in autoObjectSetting.objectSettingDatas)
-                        {
-                            if (string.IsNullOrEmpty(objectActiveData.path))
-                            {
-                                continue;
-                            }
-                            var target = System.Array.Find(childrens, x => objectActiveData.path == GetPath(x.gameObject, root.gameObject));
-                            if (target == null)
-                            {
-                                continue;
-                            }
-                            /*
-                            switch (objectActiveData.objEnabled)
-                            {
-                                case Enabled.Enable:
-                                    target.gameObject.SetActive(true);
-                                    break;
-                                case Enabled.Disable:
-                                    target.gameObject.SetActive(false);
-                                    break;
-                            }
-                            switch (objectActiveData.rendererEnabled)
-                            {
-                                case Enabled.Enable:
-                                case Enabled.Disable:
-                                    var renderer = target.GetComponent<Renderer>();
-                                    if (renderer == null)
-                                    {
-                                        break;
-                                    }
-                                    switch (objectActiveData.rendererEnabled)
-                                    {
-                                        case Enabled.Enable:
-                                            renderer.enabled = true;
-                                            break;
-                                        case Enabled.Disable:
-                                            renderer.enabled = false;
-                                            break;
-                                    }
-                                    break;
-                            }
-                            switch (objectActiveData.physboneEnabled)
-                            {
-                                case Enabled.Enable:
-                                case Enabled.Disable:
-                                    var components = target.GetComponents<Component>();
-                                    foreach (var component in components)
-                                    {
-                                        if (component == null)
-                                        {
-                                            continue;
-                                        }
-                                        if (component.GetType().Name.ToLower().Contains("physbone") == false)
-                                        {
-                                            continue;
-                                        }
-                                        switch (objectActiveData.physboneEnabled)
-                                        {
-                                            case Enabled.Enable:
-                                                ((Behaviour)component).enabled = true;
-                                                break;
-                                            case Enabled.Disable:
-                                                ((Behaviour)component).enabled = false;
-                                                break;
-                                        }
-                                    }
-                                    break;
-                            }
-                            if (objectActiveData.changeScale)
-                            {
-                                target.transform.localScale = objectActiveData.localScale;
-                            }
-                            */
-                            switch (objectActiveData.tag)
-                            {
-                                case Tag.None:
-                                    break;
-                                default:
-                                    var tagString = objectActiveData.tag.ToString();
-                                    if (System.Array.Find(UnityEditorInternal.InternalEditorUtility.tags, x => x == tagString) != null)
-                                    {
-
-                                        target.tag = tagString;
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-
-
-
-
-
-                    /*
-
-                    switch (dataType)
-                    {
-                        case DataType.Animation:
-
-                            break;
-                        case DataType.ObjectSettingDatas:
-                            break;
-                        default:
-                            break;
-                    }
-                    */
-
-                    autoObjectSetting.success = true;
-                    //if (success)
-                    {
-                        //if (autoObjectSetting.autoDestroy)
-                        {
-                            DestroyImmediate(autoObjectSetting);
-                        }
+                        DestroyImmediate(autoObjectSetting);
                     }
                 }
             }
