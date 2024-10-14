@@ -63,6 +63,10 @@ class InsertMaterialsTool : EditorWindow
             {
                 for (int i = 0; i < roots.Length; i++)
                 {
+                    if (i> materialFolders.Length)
+                    {
+                        continue;
+                    }
                     var root = roots[i];
                     var materialFolder = materialFolders[i % roots.Length];
                     InsertMaterials(root, materialFolder);

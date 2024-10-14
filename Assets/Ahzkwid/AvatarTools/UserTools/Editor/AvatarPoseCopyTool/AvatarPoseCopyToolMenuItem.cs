@@ -9,9 +9,9 @@ namespace Ahzkwid
     class AvatarPoseCopyToolMenuItem
     {
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/UserTools/" + nameof(AvatarPoseCopyTool))]
-        public static void AnimationCreateToolInit()
+        public static void AvatarPoseCopyToolInit()
         {
-            AnimationCreateTool.Init();
+            AvatarPoseCopyTool.Init();
         }
 
         

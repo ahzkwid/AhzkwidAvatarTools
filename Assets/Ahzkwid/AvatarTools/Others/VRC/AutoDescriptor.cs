@@ -186,7 +186,7 @@ namespace Ahzkwid
                 , Remove
             }
             public Target target;
-            public Option option;
+            public Option option= Option.Merge;
             public Object value;
 
             void SaveAsset(Object asset, AutoDescriptor autoDescriptor)
