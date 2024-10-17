@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: -1506855854, guid: 67cc4cb7839cd3741b63733d5adf0442, type: 3}
   m_Name: Chiffon_EXParameters Custom
   m_EditorClassIdentifier: 
+  isEmpty: 0
   parameters:
   - name: Kemono_ear
     valueType: 2
@@ -51,12 +52,12 @@ MonoBehaviour:
   - name: BreastsBig
     valueType: 1
     saved: 1
-    defaultValue: 0.25
+    defaultValue: 0
     networkSynced: 1
   - name: BreastsSmall
     valueType: 1
     saved: 1
-    defaultValue: 0
+    defaultValue: 1
     networkSynced: 1
   - name: VRCEmote
     valueType: 0

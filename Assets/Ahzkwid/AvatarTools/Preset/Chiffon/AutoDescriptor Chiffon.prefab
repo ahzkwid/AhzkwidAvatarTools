@@ -47,7 +47,7 @@ MonoBehaviour:
   isAwake: 1
   mergeTrigger: 1
   actionTriggers:
-  - memo: 
+  - memo: Costume Override
     actions:
     - target: 5
       option: 1
@@ -55,15 +55,8 @@ MonoBehaviour:
     - target: 6
       option: 1
       value: {fileID: 11400000, guid: 0608abee0a3620540a9673342b90095f, type: 2}
-    - target: 5
-      option: 2
-      value: {fileID: 11400000, guid: e1927940995a1ed4f85d1298e2e0c1b8, type: 2}
-    - target: 4
-      option: 1
-      value: {fileID: 9100000, guid: 4522e25940f7c144fab9416f17c1de41, type: 2}
-    - target: 6
-      option: 1
-      value: {fileID: 11400000, guid: e27dbaa5d2306c54c92afafdabdaa967, type: 2}
+  - memo: Bra
+    actions:
     - target: 4
       option: 1
       value: {fileID: 9100000, guid: 0fb7dd8fc1dc31045b1ec7dc9147b563, type: 2}
