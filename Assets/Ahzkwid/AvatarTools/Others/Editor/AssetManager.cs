@@ -278,6 +278,29 @@ namespace Ahzkwid.AvatarTool
                 }
 
             }
+
+            /*
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+            if (asset is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu)
+            {
+                foreach (var control in menu.controls)
+                {
+                    control.subMenu
+                }
+            }
+
+#endif
+#endif
+            */
+
+
+
+
+
+
+
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
 

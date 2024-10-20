@@ -62,7 +62,7 @@ class MaterialPropertyTool : EditorWindow
 
     public static readonly string[] propertyNamesLight = new string[]
     {
-        "_MonochromeLigting",
+        "_MonochromeLighting",
         "_LightMinLimit", "_VertexLightStrength"
     };
     public static readonly string[] propertyNamesShadow = new string[]
@@ -284,60 +284,89 @@ class MaterialPropertyTool : EditorWindow
 
         foreach (var folder in to)
         {
-            var materials = GetFolderToMaterials(folder);
-            Debug.Log($"materials.Length:{materials.Length}");
-
-            foreach (var material in materials)
+            if (folder is GameObject gameObject)
             {
-                var materialProperties = MaterialEditor.GetMaterialProperties(new Material[] { material });
-                foreach (var property in materialProperties)
+                var renderers= gameObject.GetComponentsInChildren<Renderer>(true);
+
+                foreach (var renderer in renderers)
                 {
-                    if (System.Array.FindIndex(properties,x=> x == property.name) < 0)
-                    {
-                        continue;
-                    }
+                    var materials = renderer.sharedMaterials;
+                    //Debug.Log($"materials.Length:{materials.Length}");
 
 
-                    switch (property.type)
-                    {
-                        case MaterialProperty.PropType.Color:
-                            {
-                                var value = from.GetColor(property.name);
-                                Debug.Log($"{material.name}.{property.name}:{property.colorValue}->{value}");
-                                property.colorValue = value;
-                            }
-                            break;
-                        case MaterialProperty.PropType.Vector:
-                            break;
-                        case MaterialProperty.PropType.Texture:
-                            {
-
-                                var value = from.GetTexture(property.name);
-                                Debug.Log($"{material.name}.{property.name}:{property.textureValue}->{value}");
-                                property.textureValue = value;
-                            }
-                            break;
-                        case MaterialProperty.PropType.Int:
-                            {
-
-                                var value = from.GetInt(property.name);
-                                Debug.Log($"{material.name}.{property.name}:{property.intValue}->{value}");
-                                property.intValue = value;
-                            }
-                            break;
-                        case MaterialProperty.PropType.Float:
-                        case MaterialProperty.PropType.Range:
-                        default:
-                            {
-
-                                var value = from.GetFloat(property.name);
-                                Debug.Log($"{material.name}.{property.name}:{property.floatValue}->{value}");
-                                property.floatValue = value;
-                            }
-                            break;
-                    }
-
+                    CopyPasteProperties(from, materials, properties);
                 }
+                continue;
+            }
+            else
+            {
+
+                var materials = GetFolderToMaterials(folder);
+                //Debug.Log($"materials.Length:{materials.Length}");
+
+
+                CopyPasteProperties(from, materials, properties);
+            }
+        }
+
+    }
+    public static void CopyPasteProperties(Material from, Material[] toMaterials, string[] properties)
+    {
+
+        var propertiesFrom = MaterialEditor.GetMaterialProperties(new Material[] { from });
+
+        Debug.Log($"materials.Length:{toMaterials.Length}");
+
+        foreach (var material in toMaterials)
+        {
+            var materialProperties = MaterialEditor.GetMaterialProperties(new Material[] { material });
+            foreach (var property in materialProperties)
+            {
+                if (System.Array.FindIndex(properties, x => x == property.name) < 0)
+                {
+                    continue;
+                }
+
+
+                switch (property.type)
+                {
+                    case MaterialProperty.PropType.Color:
+                        {
+                            var value = from.GetColor(property.name);
+                            Debug.Log($"{material.name}.{property.name}:{property.colorValue}->{value}");
+                            property.colorValue = value;
+                        }
+                        break;
+                    case MaterialProperty.PropType.Vector:
+                        break;
+                    case MaterialProperty.PropType.Texture:
+                        {
+
+                            var value = from.GetTexture(property.name);
+                            Debug.Log($"{material.name}.{property.name}:{property.textureValue}->{value}");
+                            property.textureValue = value;
+                        }
+                        break;
+                    case MaterialProperty.PropType.Int:
+                        {
+
+                            var value = from.GetInt(property.name);
+                            Debug.Log($"{material.name}.{property.name}:{property.intValue}->{value}");
+                            property.intValue = value;
+                        }
+                        break;
+                    case MaterialProperty.PropType.Float:
+                    case MaterialProperty.PropType.Range:
+                    default:
+                        {
+
+                            var value = from.GetFloat(property.name);
+                            Debug.Log($"{material.name}.{property.name}:{property.floatValue}->{value}");
+                            property.floatValue = value;
+                        }
+                        break;
+                }
+
             }
         }
 
