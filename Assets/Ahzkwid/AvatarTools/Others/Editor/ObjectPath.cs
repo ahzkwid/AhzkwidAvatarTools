@@ -3,12 +3,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
-using static AnimationRepairTool;
 
 namespace Ahzkwid
 {
@@ -423,12 +421,49 @@ namespace Ahzkwid
                 var value = property.GetValue(from);
                 property.SetValue(to, value);
             }
-            if (from is RotationConstraint rotationConstraintFrom)
+            /*
             {
-                var rotationConstraintTo= to as RotationConstraint;
-                var sources = new List<ConstraintSource>();
-                rotationConstraintFrom.GetSources(sources);
-                rotationConstraintTo.SetSources(sources);
+                if (from is RotationConstraint constraintFrom)
+                {
+                    var constraintTo = to as RotationConstraint;
+                    var sources = new List<ConstraintSource>();
+                    constraintFrom.GetSources(sources);
+                    constraintTo.SetSources(sources);
+                }
+            }
+            {
+                if (from is ParentConstraint constraintFrom)
+                {
+                    var constraintTo = to as ParentConstraint;
+                    var sources = new List<ConstraintSource>();
+                    constraintFrom.GetSources(sources);
+                    constraintTo.SetSources(sources);
+                }
+            }
+            */
+            /*
+            ConstraintCopy<RotationConstraint>();
+            ConstraintCopy<PositionConstraint>();
+            ConstraintCopy<ParentConstraint>(); 
+            void ConstraintCopy<T>() where T : class, IConstraint
+            {
+                if (from is T constraintFrom)
+                {
+                    var constraintTo = to as T;
+                    var sources = new List<ConstraintSource>();
+                    constraintFrom.GetSources(sources);
+                    constraintTo.SetSources(sources);
+                }
+            }
+            */
+            {
+                if (from is IConstraint constraintFrom)
+                {
+                    var constraintTo = to as IConstraint;
+                    var sources = new List<ConstraintSource>();
+                    constraintFrom.GetSources(sources);
+                    constraintTo.SetSources(sources);
+                }
             }
         }
         public static void ComponentMoveFields(Component from, Component to, object target)
@@ -717,6 +752,14 @@ namespace Ahzkwid
         }
         public static Transform EqualTransform(Transform from, Transform to, Transform transform)
         {
+            if (transform == null)
+            {
+                return null;
+            }
+            if (transform.Equals(null))
+            {
+                return null;
+            }
             var relativePath = GetPath(transform, from);
             if (relativePath==null)
             {
@@ -860,6 +903,12 @@ namespace Ahzkwid
                         Debug.Log($"RepathFields.property.IsNotArray : {target}.{property.Name} \n{component} -> {equalComponent}");
                         property.SetValue(target, equalComponent);
                     }
+                    /*
+                    else if (IsClass(value.GetType()))
+                    {
+                        RepathFields(from, to, value, value.GetType());
+                    }
+                    */
                 }
                 /*
                 if (value is Transform[])
@@ -929,7 +978,6 @@ namespace Ahzkwid
                             Debug.Log($"RepathFields.IsArray.IsClass {ilist[i]}");
                             //var subFields = ilist[i].GetType().GetFields();
                             RepathFields(from, to, ilist[i], ilist[i].GetType());
-
                         }
                         //else
                         //{
@@ -1028,9 +1076,82 @@ namespace Ahzkwid
                         field.SetValue(target, equalComponent);
                         //Debug.Log($"{target}.{field.Name}.{value}\n{SearchUtils.GetHierarchyPath(component?.gameObject, false)}->{SearchUtils.GetHierarchyPath(equalComponent?.gameObject, false)}");
                     }
+
+                    /*
+                    else if (IsClass(value.GetType()))
+                    {
+                        RepathFields(from, to, value, value.GetType());
+                    }
+                    */
                 }
 
             }
+
+            {
+                if (target is IConstraint constraint)
+                {
+
+                    var sources = new List<ConstraintSource>();
+                    constraint.GetSources(sources);
+                    for (int i = 0; i < sources.Count; i++)
+                    {
+                        var source = sources[i];
+
+                        var equalTransform = EqualTransform(from, to, source.sourceTransform);
+                        if (equalTransform == null)
+                        {
+                            continue;
+                        }
+                        if (equalTransform.Equals(null))
+                        {
+                            continue;
+                        }
+                        if (equalTransform == to)
+                        {
+                            continue;
+                        }
+                        source.sourceTransform = equalTransform;
+
+                        sources[i] = source;
+
+                    }
+                    constraint.SetSources(sources);
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
     }
 }
