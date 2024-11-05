@@ -856,6 +856,14 @@ namespace Ahzkwid
                     for (int i = 0; i < ilist.Count; i++)
                     {
                         var item = ilist[i];
+                        if (item == null)
+                        {
+                            continue;
+                        }
+                        if (item.Equals(null))
+                        {
+                            continue;
+                        }
                         if (ilist[i] is Component component)
                         {
                             Debug.Log($"RepathFields.IsArray.IsComponent {ilist[i]}");

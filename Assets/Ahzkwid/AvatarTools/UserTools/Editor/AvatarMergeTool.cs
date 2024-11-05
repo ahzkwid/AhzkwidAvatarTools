@@ -22,7 +22,7 @@ namespace Ahzkwid
     using System.Collections;
 
     [InitializeOnLoad]
-    class AvatarMergeTool : EditorWindow
+    public class AvatarMergeTool : EditorWindow
     {
 
         Hashtable reorderableListTable = new Hashtable();
@@ -229,6 +229,23 @@ namespace Ahzkwid
         }
         void OnGUI()
         {
+            void UpdateHumanoid(GameObject cloth)
+            {
+                cloths = new GameObject[] { cloth };
+
+                if (humanoid == null)
+                {
+                    humanoid = new AhzkwidHumanoid();
+                }
+                if ((cloths != null) && (cloths.Length > 0))
+                {
+                    humanoid.Update(cloths.First());
+                }
+                else
+                {
+                    humanoid.Clear();
+                }
+            }
             if (serializedObject == null)
             {
                 serializedObject = new SerializedObject(this);
@@ -239,7 +256,21 @@ namespace Ahzkwid
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeType)));
+                EditorGUI.BeginChangeCheck();
+                {
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeType)));
+                }
+            }
+            serializedObject.ApplyModifiedProperties();
+
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                UpdateHumanoid(cloths.FirstOrDefault());
+            }
+            serializedObject.Update();
+            {
+
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
                 //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
@@ -255,26 +286,11 @@ namespace Ahzkwid
                     GameObject fieldReturn = null;
                     EditorGUI.BeginChangeCheck();
                     {
-                        fieldReturn = (GameObject)EditorGUILayout.ObjectField("Cloth", cloths.FirstOrDefault(), typeof(GameObject), true);
+                        fieldReturn = EditorGUILayout.ObjectField("Cloth", cloths.FirstOrDefault(), typeof(GameObject), true) as GameObject;
                     }
-
                     if (EditorGUI.EndChangeCheck())
                     {
-                        cloths = new GameObject[] { fieldReturn };
-
-                        if (humanoid == null)
-                        {
-                            humanoid = new AhzkwidHumanoid();
-                        }
-                        if ((cloths != null) && (cloths.Length > 0))
-                        {
-                            humanoid.Update(cloths.First());
-                        }
-                        else
-                        {
-                            humanoid.Clear();
-                        }
-
+                        UpdateHumanoid(fieldReturn);
                     }
                     GUI.enabled = false;
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(humanoid)));
@@ -501,7 +517,14 @@ namespace Ahzkwid
                             }
                             else
                             {
-                                Merge(character, cloth, mergeType);
+                                if (mergeType == MergeType.ForceMerge)
+                                {
+                                    AddAutoMerge(character, cloth, mergeType);
+                                }
+                                else
+                                {
+                                    Merge(character, cloth, mergeType);
+                                }
                             }
                             if (mergeType == MergeType.ForceMerge)
                             {
@@ -912,6 +935,8 @@ namespace Ahzkwid
             switch (mergeType)
             {
                 case MergeType.ForceMerge:
+
+                    /*
                     var characterCopy = Instantiate(character);
                     characterCopy.SetActive(true);
                     character.SetActive(false);
@@ -922,12 +947,30 @@ namespace Ahzkwid
 
 
                     ForceMerge(characterCopy, clothCopy);
+                    */
+                    ForceMerge(character, cloth);
                     break;
                 case MergeType.Default:
                 default:
                     MergeDefault(character, cloth);
                     break;
             }
+        }
+
+        public static void AddAutoMerge(GameObject character, GameObject cloth, MergeType mergeType = MergeType.Default)
+        {
+
+            cloth.transform.parent = character.transform;
+            var gameObject = new GameObject("AutoMerge");
+            gameObject.tag = "EditorOnly";
+            gameObject.transform.parent = cloth.transform;
+            var autoMerge= gameObject.AddComponent<AutoMerge>();
+            autoMerge.mergeType = mergeType;
+
+            var clothRoot = new AutoMerge.ClothRoot();
+            clothRoot.option = AutoMerge.ClothRoot.Option.GameObject;
+            clothRoot.gameObject = cloth;
+            autoMerge.clothRoots.Add(clothRoot);
         }
 
         public static void Fit(GameObject character, GameObject cloth)

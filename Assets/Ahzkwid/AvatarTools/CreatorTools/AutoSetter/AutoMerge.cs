@@ -292,6 +292,8 @@ namespace Ahzkwid
 
 
 
+        public AvatarMergeTool.MergeType mergeType = AvatarMergeTool.MergeType.Default;
+
 
         public enum MergeTrigger
         {
@@ -730,7 +732,7 @@ namespace Ahzkwid
                 var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
                 if (targetTransform != clothRoot)
                 {
-                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject);
+                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject,mergeType);
                     DestroyImmediate(this);
                 }
             }
@@ -863,7 +865,10 @@ namespace Ahzkwid
             switch (category)
             {
                 case Category.Cloth:
-                    FollowBones();
+                    if (mergeType != AvatarMergeTool.MergeType.ForceMerge)
+                    {
+                        FollowBones();
+                    }
                     break;
                 case Category.Item:
                     return;
