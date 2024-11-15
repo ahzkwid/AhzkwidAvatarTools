@@ -16,6 +16,8 @@ public class AnimationCreator : MonoBehaviour
     {
         public string parameter;
         public Object[] targets;
+        public bool floatParameter = true;
+        public bool inverse = false;
         /*
         public AnimationClip CreateAnimationClip(AssetManager.FileOptions fileOption)
         {
@@ -26,30 +28,190 @@ public class AnimationCreator : MonoBehaviour
             return AnimationCreateTool.CreateAnimationClip(targets, forder);
         }
         */
+        /*
         public AnimationClip CreateAnimationClip()
         {
-            return AnimationCreator.CreateAnimationClip(targets);
+            if (floatParameter)
+            {
+                return AnimationCreator.CreateAnimationClip(targets,ClipValue.Double);
+            }
+            return AnimationCreator.CreateAnimationClip(targets, ClipValue.Zero);
         }
+        */
         public AnimatorControllerLayer CreateLayer()
         {
 
             var newLayer = new AnimatorControllerLayer();
             newLayer.name = parameter;
             newLayer.defaultWeight = 1;
-            newLayer.stateMachine = new AnimatorStateMachine();
-            var newState = new AnimatorState();
-            newState.motion = CreateAnimationClip();
-            newState.name = parameter;
-            //controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
-            newState.timeParameterActive = true;
-            newState.timeParameter = parameter;
 
-            newLayer.stateMachine.AddState(newState, Vector3.right * 300);
-            newLayer.stateMachine.name = parameter;
-            newLayer.stateMachine.defaultState = newState;
+            newLayer.stateMachine = new AnimatorStateMachine();
+
+
+            if (floatParameter)
+            {
+                var newState = new AnimatorState();
+                newState.motion = CreateAnimationClip( ClipValue.Double);
+                newState.name = parameter;
+                //controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
+                newState.timeParameterActive = true;
+                newState.timeParameter = parameter;
+
+                newLayer.stateMachine.AddState(newState, Vector3.right * 300);
+                newLayer.stateMachine.name = parameter;
+                newLayer.stateMachine.defaultState = newState;
+            }
+            else
+            {
+                var newStates = new List<AnimatorState>();
+                for (int i = 0; i < 2; i++)
+                {
+                    var name = parameter;
+                    if (i > 0)
+                    {
+                        name += " On";
+                    }
+                    else
+                    {
+                        name += " Off";
+                    }
+
+                    var newState = new AnimatorState();
+                    newState.motion = CreateAnimationClip( (ClipValue)i);
+                    newState.name = name;
+
+                    newLayer.stateMachine.AddState(newState, Vector3.right * 300 + Vector3.up * 100 * i);
+                    newLayer.stateMachine.name = name;
+                    newLayer.stateMachine.defaultState = newState;
+
+                    newStates.Add(newState);
+                }
+                for (int i = 0; i < 2; i++)
+                {
+                    var newTransition = newStates[i].AddTransition(newStates[1-i]);
+                    newTransition.exitTime = 0;
+                    newTransition.duration = 0;
+
+
+                    var mode = AnimatorConditionMode.If;
+                    if (i > 0)
+                    {
+                        mode=AnimatorConditionMode.IfNot;
+                    }
+                    if (inverse)
+                    {
+                        if (mode==AnimatorConditionMode.If)
+                        {
+                            mode = AnimatorConditionMode.IfNot;
+                        }
+                        else
+                        {
+                            mode = AnimatorConditionMode.If;
+                        }
+                    }
+                    newTransition.AddCondition(mode, 0f, parameter);
+                }
+            }
 
             return newLayer;
         }
+        public AnimationClip CreateAnimationClip(ClipValue clipValue)
+        {
+
+            targets = System.Array.FindAll(targets, target => target != null);
+            if (targets.Length == 0)
+            {
+                return null;
+            }
+            var newClip = new AnimationClip();
+            newClip.name = targets.First().name;
+
+            switch (clipValue)
+            {
+                case ClipValue.Zero:
+                    newClip.name += " Off";
+                    break;
+                case ClipValue.One:
+                    newClip.name += " On";
+                    break;
+                case ClipValue.Double:
+                    break;
+                default:
+                    break;
+            }
+
+
+
+
+            foreach (var target in targets)
+            {
+                var transform = target as Transform;
+                if (transform == null)
+                {
+                    var property = target.GetType().GetProperty("transform");
+                    if (property == null)
+                    {
+                        continue;
+                    }
+                    transform = property.GetValue(target) as Transform;
+                }
+                if (transform == null)
+                {
+                    continue;
+                }
+
+
+
+                var root = ObjectPath.GetVRCRoot(transform, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
+                //var text = "";
+                //text = binding.path;
+                if (root != null)
+                {
+                    var newBinding = new EditorCurveBinding();
+                    //newBinding.type = typeof(Behaviour);
+                    newBinding.type = target.GetType();
+                    newBinding.path = ObjectPath.GetPath(transform, root);
+                    newBinding.propertyName = "m_IsActive";
+                    if (target is Component)
+                    {
+                        newBinding.propertyName = "m_Enabled";
+                    }
+                    if (target is RotationConstraint)
+                    {
+                        //newBinding.propertyName = "m_Weight";
+                    }
+                    var curve = new AnimationCurve();
+                    switch (clipValue)
+                    {
+                        case ClipValue.Zero:
+                            curve.AddKey(0f, 0f);
+                            break;
+                        case ClipValue.One:
+                            curve.AddKey(0f, 1f);
+                            break;
+                        case ClipValue.Double:
+                            if (inverse)
+                            {
+                                curve.AddKey(0f, 1f);
+                                curve.AddKey(1f / 60f, 0f);
+                            }
+                            else
+                            {
+                                curve.AddKey(0f, 0f);
+                                curve.AddKey(1f / 60f, 1f);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    AnimationUtility.SetEditorCurve(newClip, newBinding, curve);
+                }
+
+
+            }
+            return newClip;
+        }
+
     }
     public ToggleData[] toggleDatas;
 
@@ -59,69 +221,10 @@ public class AnimationCreator : MonoBehaviour
 
 
 
-
-    public static AnimationClip CreateAnimationClip(Object[] targets)
+    public enum ClipValue
     {
-
-        targets = System.Array.FindAll(targets, target=> target!=null);
-        if (targets.Length == 0)
-        {
-            return null;
-        }
-        var newClip = new AnimationClip();
-        newClip.name = targets.First().name;
-
-
-
-
-        foreach (var target in targets)
-        {
-            var transform = target as Transform;
-            if (transform == null)
-            {
-                var property = target.GetType().GetProperty("transform");
-                if (property == null)
-                {
-                    continue;
-                }
-                transform = property.GetValue(target) as Transform;
-            }
-            if (transform == null)
-            {
-                continue;
-            }
-
-
-
-            var root = ObjectPath.GetVRCRoot(transform, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
-            //var text = "";
-            //text = binding.path;
-            if (root != null)
-            {
-                var newBinding = new EditorCurveBinding();
-                //newBinding.type = typeof(Behaviour);
-                newBinding.type = target.GetType();
-                newBinding.path = ObjectPath.GetPath(transform, root);
-                newBinding.propertyName = "m_IsActive";
-                if (target is Component)
-                {
-                    newBinding.propertyName = "m_Enabled";
-                }
-                if (target is RotationConstraint)
-                {
-                    //newBinding.propertyName = "m_Weight";
-                }
-                var curve = new AnimationCurve();
-                curve.AddKey(0f, 0f);
-                curve.AddKey(0.1f, 1f);
-                AnimationUtility.SetEditorCurve(newClip, newBinding, curve);
-            }
-
-
-        }
-        return newClip;
+        Zero, One, Double
     }
-
 
 
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationCreateTool))]
@@ -141,45 +244,45 @@ public class AnimationCreator : MonoBehaviour
         return newClip;
     }
     */
-    public static AnimatorControllerLayer[] CreateLayers(ToggleData[] toggleDatas, AssetManager.FileOptions fileOption)
-    {
+    //public static AnimatorControllerLayer[] CreateLayers(ToggleData[] toggleDatas, AssetManager.FileOptions fileOption)
+    //{
 
-        var layers = new List<AnimatorControllerLayer>();
+    //    var layers = new List<AnimatorControllerLayer>();
 
-        foreach (var toggleData in toggleDatas)
-        {
-            /*
-            var newLayer = new AnimatorControllerLayer();
-            newLayer.name = toggleData.parameter;
-            newLayer.defaultWeight = 1;
-            newLayer.stateMachine = new AnimatorStateMachine();
-            var newState = new AnimatorState();
-            newState.motion = toggleData.CreateAnimationClip(fileOption);
-            newState.name = toggleData.parameter;
-            //controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
-            newState.timeParameterActive = true;
-            newState.timeParameter = toggleData.parameter;
+    //    foreach (var toggleData in toggleDatas)
+    //    {
+    //        /*
+    //        var newLayer = new AnimatorControllerLayer();
+    //        newLayer.name = toggleData.parameter;
+    //        newLayer.defaultWeight = 1;
+    //        newLayer.stateMachine = new AnimatorStateMachine();
+    //        var newState = new AnimatorState();
+    //        newState.motion = toggleData.CreateAnimationClip(fileOption);
+    //        newState.name = toggleData.parameter;
+    //        //controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
+    //        newState.timeParameterActive = true;
+    //        newState.timeParameter = toggleData.parameter;
 
-            newLayer.stateMachine.AddState(newState, Vector3.right * 100);
+    //        newLayer.stateMachine.AddState(newState, Vector3.right * 100);
 
-            newLayer.stateMachine.defaultState = newState;
-            layers.Add(newLayer);
-            */
-            var layer = toggleData.CreateLayer();
-            /*
-            foreach (var state in layer.stateMachine.states)
-            {
-                AssetManager.SaveAsset(state.state.motion, fileOption);
-            }
-            */
+    //        newLayer.stateMachine.defaultState = newState;
+    //        layers.Add(newLayer);
+    //        */
+    //        var layer = toggleData.CreateLayer();
+    //        /*
+    //        foreach (var state in layer.stateMachine.states)
+    //        {
+    //            AssetManager.SaveAsset(state.state.motion, fileOption);
+    //        }
+    //        */
 
-            layers.Add(layer);
-        }
+    //        layers.Add(layer);
+    //    }
 
-        return layers.ToArray();
+    //    return layers.ToArray();
 
 
-    }
+    //}
     public static AnimatorControllerLayer[] CreateLayers(ToggleData[] toggleDatas)
     {
         var layers = new List<AnimatorControllerLayer>();
@@ -210,7 +313,14 @@ public class AnimationCreator : MonoBehaviour
 
         foreach (var toggleData in toggleDatas)
         {
-            controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
+            if (toggleData.floatParameter)
+            {
+                controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
+            }
+            else
+            {
+                controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Bool);
+            }
         }
 
         var layers = new List<AnimatorControllerLayer>();

@@ -315,10 +315,19 @@ public class AnimatorCombiner : MonoBehaviour
 
 
 
+        var layersNotNull = layers.FindAll(x => x != null);
 
+        for (int i = 0; i < newLayers.Count; i++)
+        {
+            if (layersNotNull.FindIndex(x =>  x.name == newLayers[i].name) < 0 )
+            {
+                continue;
+            }
 
+            var names = layersNotNull.Select(x => x.name).ToArray();
 
-
+            newLayers[i].name = ObjectNames.GetUniqueName(names, newLayers[i].name);
+        }
 
         layers.AddRange(newLayers);
 

@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using System.IO;
+using UnityEngine.EventSystems;
 namespace Ahzkwid.AvatarTool
 {
     public class AssetManager
@@ -96,9 +97,16 @@ namespace Ahzkwid.AvatarTool
                             }
                         }
                     }
-                    if (string.IsNullOrEmpty(asset.name))
+                    if (asset is AnimatorStateTransition)
                     {
-                        asset.name = GetUniqueFileName();
+
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(asset.name))
+                        {
+                            asset.name = GetUniqueFileName();
+                        }
                     }
                     AssetDatabase.AddObjectToAsset(asset, path);
                     EditorUtility.SetDirty(asset);
@@ -274,7 +282,25 @@ namespace Ahzkwid.AvatarTool
                             }
                             */
                         }
+                        foreach (var transition in state.state.transitions)
+                        {
+                            if (transition == null)
+                            {
+                                continue;
+                            }
+                            AddObjectToAsset(transition, path);
+                        }
                     }
+
+
+
+
+
+
+
+
+
+
                 }
 
             }

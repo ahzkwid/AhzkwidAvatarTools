@@ -31,6 +31,8 @@ class AnimationCreateTool : EditorWindow
 
     //public bool createVRCParameters = false;
     public bool createVRCMenus = true;
+    public bool floatParameter = true;
+    public bool inverse = false;
 
 
     public DefaultAsset exportForder;
@@ -92,6 +94,8 @@ class AnimationCreateTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createVRCMenus)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(floatParameter)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(inverse)));
             EditorGUILayout.Space();
             //EditorGUILayout.Space();
             //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(createVRCParameters)));
@@ -122,9 +126,10 @@ class AnimationCreateTool : EditorWindow
                         data.parameter = header + target.name;
                         data.parameter = data.parameter.Replace(" ","_");
                         data.targets = new Object[] { target };
+                        data.floatParameter = floatParameter;
+                        data.inverse = inverse;
                         return data;
                     });
-
                     break;
                 case Option.Extension:
                     break;
