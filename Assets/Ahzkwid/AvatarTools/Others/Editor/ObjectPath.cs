@@ -157,6 +157,16 @@ namespace Ahzkwid
                     }
                 }
             }
+            {
+                for (int i = 0; i < gameObject.transform.childCount; i++)
+                {
+                    var child = gameObject.transform.GetChild(i);
+                    if (child.name.ToLower().Contains("armature"))
+                    {
+                        return child;
+                    }
+                }
+            }
             return null;
         }
 
