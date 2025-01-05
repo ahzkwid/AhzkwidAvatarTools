@@ -66,3 +66,25 @@ MonoBehaviour:
     - target: 5
       option: 1
       value: {fileID: 11400000, guid: c5e4f3b4ceeda1d468a1706112e28cba, type: 2}
+  - memo: Ribbon
+    actions:
+    - target: 4
+      option: 1
+      value: {fileID: 9100000, guid: d45a44feb33bfa04faf9d3174c12250a, type: 2}
+    - target: 6
+      option: 1
+      value: {fileID: 11400000, guid: 1dd8608151d4e934c9f7fdcf8a92aa5d, type: 2}
+    - target: 5
+      option: 1
+      value: {fileID: 11400000, guid: 13ff49016d5992948b9077523317a854, type: 2}
+  - memo: Kemono
+    actions:
+    - target: 4
+      option: 1
+      value: {fileID: 9100000, guid: 4028af5717fa46247a201945837f8718, type: 2}
+    - target: 6
+      option: 1
+      value: {fileID: 11400000, guid: 1dd8608151d4e934c9f7fdcf8a92aa5d, type: 2}
+    - target: 5
+      option: 1
+      value: {fileID: 11400000, guid: dfb12171c423f0a40b06e5fc05392c0e, type: 2}
