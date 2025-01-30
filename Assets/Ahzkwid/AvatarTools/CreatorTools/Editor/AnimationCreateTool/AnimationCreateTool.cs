@@ -123,8 +123,8 @@ class AnimationCreateTool : EditorWindow
                     datas = System.Array.ConvertAll(targets, target =>
                     {
                         var data = new AnimationCreator.ToggleData();
-                        data.parameter = header + target.name;
-                        data.parameter = data.parameter.Replace(" ","_");
+                        data.Parameter = header + target.name;
+                        data.Parameter = data.Parameter.Replace(" ","_");
                         data.targets = new Object[] { target };
                         data.floatParameter = floatParameter;
                         data.inverse = inverse;
@@ -136,13 +136,19 @@ class AnimationCreateTool : EditorWindow
                 default:
                     break;
             }
-            var animatorController= AnimationCreator.CreateAnimator(datas);
+            var animatorController= AnimationCreator.CreateAnimator(datas,null,null,null);
             if (exportForder!=null)
             {
                 animatorController.name = exportForder.name;
             }
             SaveAsset(animatorController);
 
+            var expressionsMenu = AnimationCreator.CreateMenu(datas);
+            var expressionParameters = expressionsMenu.Parameters;
+            expressionParameters.name = "Parameters " + animatorController.name;
+            expressionsMenu.name = "Menu " + animatorController.name;
+            SaveAsset(expressionsMenu);
+            /*
 #if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
 #if UDON
 #else
@@ -235,6 +241,7 @@ class AnimationCreateTool : EditorWindow
 
 #endif
 #endif
+            */
 
         }
         GUI.enabled = true;

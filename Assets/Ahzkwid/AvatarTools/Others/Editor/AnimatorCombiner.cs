@@ -589,18 +589,37 @@ public class AnimatorCombiner : MonoBehaviour
 
     private static void ReplaceAnimations(AnimatorState state, Transform rootParent, Transform rootChild, string folderPath)
     {
-        if (state.motion is BlendTree blendTree)
+        var motion= ReplaceAnimations(state.motion, rootParent, rootChild);
+        if (motion!=null)
         {
-            Debug.Log("blendTree.name: " + state.motion.name);
-            state.motion = ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild,  folderPath);
-        }
-        else if (state.motion is AnimationClip)
-        {
-            state.motion = ReplaceAnimationClipPaths((AnimationClip)state.motion, rootParent, rootChild,  folderPath);
+            state.motion = motion;
         }
     }
 
-    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild, string folderPath)
+     static Motion ReplaceAnimations(Motion motion, Transform rootChild)
+    {
+        return ReplaceAnimations(motion, null, rootChild);
+    }
+    //private static void ReplaceAnimations(Motion motion, Transform rootParent, Transform rootChild, string folderPath)
+    public static Motion ReplaceAnimations(Motion motion, Transform rootParent, Transform rootChild)
+    {
+        if (motion is BlendTree blendTree)
+        {
+            Debug.Log("blendTree.name: " + motion.name);
+            //motion = ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild, folderPath);
+            return ReplaceAnimationsInBlendTree(blendTree, rootParent, rootChild);
+        }
+        else if (motion is AnimationClip)
+        {
+            //motion = ReplaceAnimationClipPaths((AnimationClip)motion, rootParent, rootChild, folderPath);
+            return ReplaceAnimationClipPaths((AnimationClip)motion, rootParent, rootChild);
+        }
+        return null;
+    }
+
+
+    //private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild, string folderPath)
+    private static BlendTree ReplaceAnimationsInBlendTree(BlendTree blendTree, Transform rootParent, Transform rootChild)
     {
         var newBlendTree = new BlendTree();
         //var newBlendTree = Instantiate(blendTree);
@@ -617,11 +636,13 @@ public class AnimatorCombiner : MonoBehaviour
 
             if (motion is BlendTree childBlendTree)
             {
-                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild,  folderPath);
+                //childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild, folderPath);
+                childrens[i].motion = ReplaceAnimationsInBlendTree(childBlendTree, rootParent, rootChild);
             }
             else if (motion is AnimationClip)
             {
-                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild,  folderPath);
+                //var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild, folderPath);
+                var newAnim = ReplaceAnimationClipPaths((AnimationClip)childrens[i].motion, rootParent, rootChild);
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}->{newAnim}");
                 childrens[i].motion = newAnim;
                 Debug.Log($"newBlendTree: {newBlendTree.name},{i}:{childrens[i].motion}");
@@ -633,7 +654,8 @@ public class AnimatorCombiner : MonoBehaviour
         return newBlendTree;
     }
 
-    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild, string folderPath)
+    //private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild, string folderPath)
+    private static AnimationClip ReplaceAnimationClipPaths(AnimationClip clip, Transform rootParent, Transform rootChild)
     {
         var newClip = new AnimationClip();
         EditorUtility.CopySerialized(clip, newClip);

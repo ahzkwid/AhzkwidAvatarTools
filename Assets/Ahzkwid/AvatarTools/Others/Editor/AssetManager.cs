@@ -322,6 +322,28 @@ namespace Ahzkwid.AvatarTool
             */
 
 
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+            if (asset is VRC.SDK3.Avatars.ScriptableObjects.VRCExpressionsMenu menu)
+            {
+                var parameters = menu.Parameters;
+                if (AssetDatabase.GetAssetPath(parameters) == string.Empty)
+                {
+                    SaveAsset(parameters, path);
+                }
+                foreach (var control in menu.controls)
+                {
+                    var subMenu = control.subMenu;
+                    if (AssetDatabase.GetAssetPath(subMenu) == string.Empty)
+                    {
+                        SaveAsset(subMenu, path);
+                    }
+                }
+            }
+
+#endif
+#endif
 
 
 

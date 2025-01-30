@@ -26,11 +26,17 @@ namespace Ahzkwid
                     {
                         var gameObject= action.value as GameObject;
                         action.value = gameObject.GetComponent<Animator>();
+                        if (action.value==null)
+                        {
+                            action.value = gameObject.GetComponent<AnimationCreator>();
+                        }
                     }
 
 
 
-                    if ((action.value is Animator) || (action.value is RuntimeAnimatorController))
+                    if ((action.value is Animator)
+                        || (action.value is RuntimeAnimatorController)
+                        || (action.value is AnimationCreator))
                     {
                         switch (action.target)
                         {
