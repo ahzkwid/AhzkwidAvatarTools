@@ -161,6 +161,9 @@ public class AnimationCreator : MonoBehaviour
         public string[] parameters = null;
         public Object[] targets;
         public AnimationClip clip;
+        public Shirink shirink;
+
+        /*
         public AnimationClip clipShrink;
 #if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
 #if UDON
@@ -168,9 +171,26 @@ public class AnimationCreator : MonoBehaviour
         public VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer shrinkLayer = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
 #endif
 #endif
+        */
+
         public bool floatParameter = true;
         public bool motionTime = false;
         public bool inverse = false;
+
+
+        [System.Serializable]
+        public class Shirink
+        {
+            public AnimationClip clip;
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+            public VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer blendableLayer = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
+#endif
+#endif
+        }
+
+
         /*
         public AnimationClip CreateAnimationClip(AssetManager.FileOptions fileOption)
         {
@@ -213,7 +233,7 @@ public class AnimationCreator : MonoBehaviour
         }
         public AnimatorControllerLayer CreateLayer(AnimationClip clip, Transform rootParent, Transform rootChild, int layerIndex, All all)
         {
-
+            targets = System.Array.FindAll(targets, x => x != null);
             float GetThreshold(bool isAllParameter)
             {
                 var threshold = 0f;
@@ -325,7 +345,7 @@ public class AnimationCreator : MonoBehaviour
             var useMosionTime = motionTime;
             if (clip != null)
             {
-                if (clip == clipShrink)
+                if (clip == shirink.clip)
                 {
                     useMosionTime = false;
                 }
@@ -398,7 +418,7 @@ public class AnimationCreator : MonoBehaviour
                         if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl layerControl)
                         {
                             layerControl.layer = layerIndex;
-                            layerControl.playable = shrinkLayer;
+                            layerControl.playable = shirink.blendableLayer;
                             layerControl.goalWeight = i;
                         }
                     }
@@ -738,9 +758,9 @@ public class AnimationCreator : MonoBehaviour
                         }
                         break;
                     case 2:
-                        if (toggleData.clipShrink != null)
+                        if (toggleData.shirink.clip != null)
                         {
-                            layer = toggleData.CreateLayer(toggleData.clipShrink, null, null, layers.Count, all);
+                            layer = toggleData.CreateLayer(toggleData.shirink.clip, null, null, layers.Count, all);
                             layer.name += " clipShrink";
                         }
                         break;
@@ -982,6 +1002,7 @@ public class AnimationCreator : MonoBehaviour
         var controller = new AnimatorController();
 
 
+
         foreach (var toggleData in toggleDatas)
         {
             var parameters = toggleData.parameters;
@@ -1002,19 +1023,26 @@ public class AnimationCreator : MonoBehaviour
             }
             foreach (var parameter in parameters)
             {
+                if (controller.parameters.Any(p => p.name == parameter))
+                {
+                    continue; //이미 존재하면 스킵
+                }
                 if (toggleData.floatParameter)
                 {
-                    controller.AddParameter(toggleData.Parameter, AnimatorControllerParameterType.Float);
+                    controller.AddParameter(parameter, AnimatorControllerParameterType.Float);
                 }
                 else
                 {
-                    controller.AddParameter(toggleData.Parameter, AnimatorControllerParameterType.Bool);
+                    controller.AddParameter(parameter, AnimatorControllerParameterType.Bool);
                 }
             }
         }
         if (string.IsNullOrWhiteSpace(all.parameter) == false)
         {
-            controller.AddParameter(all.parameter, AnimatorControllerParameterType.Bool);
+            if (controller.parameters.Any(p => p.name == all.parameter)==false)
+            {
+                controller.AddParameter(all.parameter, AnimatorControllerParameterType.Bool);
+            }
         }
 
         var layers = new List<AnimatorControllerLayer>();
