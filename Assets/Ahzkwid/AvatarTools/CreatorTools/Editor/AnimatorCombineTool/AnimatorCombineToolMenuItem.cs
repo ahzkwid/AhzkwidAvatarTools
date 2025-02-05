@@ -8,7 +8,7 @@ namespace Ahzkwid
     [InitializeOnLoad]
     class AnimatorCombineMenuItem
     {
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimatorCombineTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AnimTool/" + nameof(AnimatorCombineTool))]
         public static void AnimatorCombineToolInit()
         {
             AnimatorCombineTool.Init();

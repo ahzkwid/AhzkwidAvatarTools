@@ -475,20 +475,23 @@ class AnimationRepairTool : EditorWindow
                         if ((x.type == typeof(SkinnedMeshRenderer)) || (x.type == typeof(MeshRenderer)))
                         {
                             var keyframes = AnimationUtility.GetObjectReferenceCurve(animationClip, x);
-                            foreach (var keyframe in keyframes)
+                            if (keyframes != null)
                             {
-                                if (keyframe.value == null)
+                                foreach (var keyframe in keyframes)
                                 {
-                                    continue;
-                                }
-                                if (keyframe.value.Equals(null))
-                                {
-                                    continue;
-                                }
-                                if (keyframe.value is Material material)
-                                {
-                                    animationData.keyframe = material;
-                                    break;
+                                    if (keyframe.value == null)
+                                    {
+                                        continue;
+                                    }
+                                    if (keyframe.value.Equals(null))
+                                    {
+                                        continue;
+                                    }
+                                    if (keyframe.value is Material material)
+                                    {
+                                        animationData.keyframe = material;
+                                        break;
+                                    }
                                 }
                             }
                         }

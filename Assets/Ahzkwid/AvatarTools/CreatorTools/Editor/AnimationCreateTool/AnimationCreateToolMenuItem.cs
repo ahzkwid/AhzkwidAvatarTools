@@ -8,7 +8,7 @@ namespace Ahzkwid
     [InitializeOnLoad]
     class AnimationCreateToolMenuItem
     {
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationCreateTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AnimTool/" + nameof(AnimationCreateTool))]
         public static void AnimationCreateToolInit()
         {
             AnimationCreateTool.Init();

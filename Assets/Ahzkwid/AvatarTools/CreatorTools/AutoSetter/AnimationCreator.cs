@@ -182,12 +182,14 @@ public class AnimationCreator : MonoBehaviour
         public class Shirink
         {
             public AnimationClip clip;
+            /*
 #if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
 #if UDON
 #else
             public VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer blendableLayer = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
 #endif
 #endif
+            */
         }
 
 
@@ -343,12 +345,19 @@ public class AnimationCreator : MonoBehaviour
 
 
             var useMosionTime = motionTime;
+
+
+            bool isShirink = false;
             if (clip != null)
             {
                 if (clip == shirink.clip)
                 {
-                    useMosionTime = false;
+                    isShirink = true;
                 }
+            }
+            if (isShirink)
+            {
+                useMosionTime = false;
             }
             if (useMosionTime)
             {
@@ -397,7 +406,7 @@ public class AnimationCreator : MonoBehaviour
                         newState.motion = AnimatorCombiner.ReplaceAnimations(clip, rootParent, rootChild);
                         if (i==0)
                         {
-                            newState.motion = InverseAnimationClip(newState.motion as AnimationClip);
+                            newState.motion = InverseAnimationClip(newState.motion as AnimationClip, isShirink);
                             
                         }
                     }
@@ -418,7 +427,8 @@ public class AnimationCreator : MonoBehaviour
                         if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl layerControl)
                         {
                             layerControl.layer = layerIndex;
-                            layerControl.playable = shirink.blendableLayer;
+                            //layerControl.playable = shirink.blendableLayer;
+                            layerControl.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
                             layerControl.goalWeight = i;
                         }
                     }
@@ -525,7 +535,7 @@ public class AnimationCreator : MonoBehaviour
 
             return newLayer;
         }
-        public AnimationClip InverseAnimationClip(AnimationClip clip)
+        public AnimationClip InverseAnimationClip(AnimationClip clip,bool isShrink=false)
         {
 
             if (clip == null)
@@ -556,6 +566,16 @@ public class AnimationCreator : MonoBehaviour
                     if (lastKey.value==0f)
                     {
                         value = 100f;
+                        if (isShrink)
+                        {
+                            if (binding.propertyName.Contains("blendShape"))
+                            {
+                                if (binding.type==typeof(SkinnedMeshRenderer))
+                                {
+                                    value = 0;
+                                }
+                            }
+                        }
                     }
                     newCurve.AddKey(new Keyframe(0f, value, 0f, 0f));
                 }

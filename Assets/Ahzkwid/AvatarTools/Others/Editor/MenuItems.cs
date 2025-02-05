@@ -8,7 +8,7 @@ namespace Ahzkwid
     [InitializeOnLoad]
     class MenuItems
     {
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(MaterialPropertyTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/MaterialTool/" + nameof(MaterialPropertyTool))]
         public static void OutlineRepairToolInit()
         {
             MaterialPropertyTool.Init();
@@ -16,7 +16,7 @@ namespace Ahzkwid
 
 
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(MaterialPathRepairTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/MaterialTool/" + nameof(MaterialPathRepairTool))]
         public static void MaterialPathRepairToolInit()
         {
             MaterialPathRepairTool.Init();
@@ -50,7 +50,7 @@ namespace Ahzkwid
             AssetsCloningTool.Init();
         }
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialsTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/MaterialTool/" + nameof(InsertMaterialsTool))]
         public static void InsertMaterialsToolInit()
         {
             InsertMaterialsTool.Init();
@@ -62,7 +62,7 @@ namespace Ahzkwid
             NamesReplaceTool.Init();
         }
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AnimationRepairTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AnimTool/" + nameof(AnimationRepairTool))]
         public static void AnimationRepairToolInit()
         {
             AnimationRepairTool.Init();

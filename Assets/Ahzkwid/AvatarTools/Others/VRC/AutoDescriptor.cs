@@ -8,6 +8,8 @@ using VRC.SDK3.Avatars.Components;
 namespace Ahzkwid
 {
     using UnityEditor;
+    using UnityEditor.Animations;
+    using VRC.SDKBase;
 
     [CustomEditor(typeof(AutoDescriptor))]
     public class AutoDescriptorEditor : Editor
@@ -270,6 +272,43 @@ namespace Ahzkwid
                                         {
                                             //animatorController = animationCreator.CreateAnimator(autoDescriptor.GetFileOptions());
                                             animatorController = animationCreator.CreateAnimator();
+
+#if !YOUR_VRCSDK3_AVATARS && !YOUR_VRCSDK3_WORLDS && VRC_SDK_VRCSDK3
+#if UDON
+#else
+                                            if (animatorController is AnimatorController controller)
+                                            {
+                                                foreach (var layer in controller.layers)
+                                                {
+                                                    foreach (var state in layer.stateMachine.states)
+                                                    {
+                                                        foreach (var behaviour in state.state.behaviours)
+                                                        {
+                                                            if (behaviour is VRCAnimatorLayerControl layerControl)
+                                                            {
+                                                                switch (target)
+                                                                {
+                                                                    case Target.PlayableLayersAddtive:
+                                                                        layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.Additive;
+                                                                        break;
+                                                                    case Target.PlayableLayersGesture:
+                                                                        layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.Gesture;
+                                                                        break;
+                                                                    case Target.PlayableLayersAction:
+                                                                        layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.Action;
+                                                                        break;
+                                                                    case Target.PlayableLayersBase:
+                                                                    case Target.PlayableLayersFX:
+                                                                        layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.FX;
+                                                                        break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+#endif
+#endif
                                         }
                                         if (value is Animator)
                                         {
