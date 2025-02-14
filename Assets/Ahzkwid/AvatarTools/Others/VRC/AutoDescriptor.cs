@@ -288,6 +288,9 @@ namespace Ahzkwid
                                                             {
                                                                 switch (target)
                                                                 {
+                                                                    case Target.PlayableLayersBase:
+                                                                        layerControl.layer = -1;
+                                                                        break;
                                                                     case Target.PlayableLayersAddtive:
                                                                         layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.Additive;
                                                                         break;
@@ -297,7 +300,6 @@ namespace Ahzkwid
                                                                     case Target.PlayableLayersAction:
                                                                         layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.Action;
                                                                         break;
-                                                                    case Target.PlayableLayersBase:
                                                                     case Target.PlayableLayersFX:
                                                                         layerControl.playable = VRC_AnimatorLayerControl.BlendableLayer.FX;
                                                                         break;

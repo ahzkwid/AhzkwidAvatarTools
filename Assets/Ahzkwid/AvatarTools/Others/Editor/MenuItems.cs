@@ -37,14 +37,14 @@ namespace Ahzkwid
         }
 
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(TexturesCompressionTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AssetsTool/" + nameof(TexturesCompressionTool))]
         public static void TexturesCompressionToolInit()
         {
             TexturesCompressionTool.Init();
         }
 
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AssetsCloningTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AssetsTool/" + nameof(AssetsCloningTool))]
         public static void AssetsCloningToolInit()
         {
             AssetsCloningTool.Init();
@@ -56,7 +56,7 @@ namespace Ahzkwid
             InsertMaterialsTool.Init();
         }
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(NamesReplaceTool))]
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AssetsTool/" + nameof(NamesReplaceTool))]
         public static void NamesReplaceToolInit()
         {
             NamesReplaceTool.Init();

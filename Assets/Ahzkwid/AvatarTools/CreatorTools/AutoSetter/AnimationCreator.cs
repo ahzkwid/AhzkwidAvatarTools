@@ -565,12 +565,16 @@ public class AnimationCreator : MonoBehaviour
                     var value = 0f;
                     if (lastKey.value==0f)
                     {
+                        if (binding.type == typeof(Animator))
+                        {
+                            continue;
+                        }
                         value = 100f;
                         if (isShrink)
                         {
                             if (binding.propertyName.Contains("blendShape"))
                             {
-                                if (binding.type==typeof(SkinnedMeshRenderer))
+                                if (binding.type == typeof(SkinnedMeshRenderer))
                                 {
                                     value = 0;
                                 }
