@@ -17,7 +17,6 @@ namespace Ahzkwid
 
 
     using UnityEditor;
-    using UnityEditor.Search;
     using System.Linq;
     using System.Collections;
 
@@ -28,6 +27,7 @@ namespace Ahzkwid
         Hashtable reorderableListTable = new Hashtable();
         public void DrawArray(string propertyPath)
         {
+
             var reorderableListProperty = serializedObject.FindProperty(propertyPath);
 
             if (reorderableListTable[propertyPath] == null)
@@ -273,8 +273,8 @@ namespace Ahzkwid
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
-                //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
-                DrawArray(nameof(characters));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
+                //DrawArray(nameof(characters));
 
                 EditorGUILayout.Space();
                 //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(cloth)));

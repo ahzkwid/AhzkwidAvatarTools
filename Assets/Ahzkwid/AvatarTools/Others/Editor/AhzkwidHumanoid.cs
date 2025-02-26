@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -34,6 +35,39 @@ namespace Ahzkwid
         public Transform rightUpperArm;
         public Transform rightLowerArm;
         public Transform rightHand;
+#if USE_FINGER
+        public Transform LeftThumbProximal;
+        public Transform LeftThumbIntermediate;
+        public Transform LeftThumbDistal;
+        public Transform LeftIndexProximal;
+        public Transform LeftIndexIntermediate;
+        public Transform LeftIndexDistal;
+        public Transform LeftMiddleProximal;
+        public Transform LeftMiddleIntermediate;
+        public Transform LeftMiddleDistal;
+        public Transform LeftRingProximal;
+        public Transform LeftRingIntermediate;
+        public Transform LeftRingDistal;
+        public Transform LeftLittleProximal;
+        public Transform LeftLittleIntermediate;
+        public Transform LeftLittleDistal;
+
+        public Transform RightThumbProximal;
+        public Transform RightThumbIntermediate;
+        public Transform RightThumbDistal;
+        public Transform RightIndexProximal;
+        public Transform RightIndexIntermediate;
+        public Transform RightIndexDistal;
+        public Transform RightMiddleProximal;
+        public Transform RightMiddleIntermediate;
+        public Transform RightMiddleDistal;
+        public Transform RightRingProximal;
+        public Transform RightRingIntermediate;
+        public Transform RightRingDistal;
+        public Transform RightLittleProximal;
+        public Transform RightLittleIntermediate;
+        public Transform RightLittleDistal;
+#endif
 
         public Transform GetSymmetricalTransform(Transform input)
         {
@@ -61,6 +95,167 @@ namespace Ahzkwid
             return null;
         }
 
+        /*
+        public string GetHumanoidProperty(string transformName)
+        {
+            if (transformName.Contains("head"))
+            {
+                return "head";
+            }
+            head = FindBone(transforms, "head");
+            neck = FindBone(transforms, "neck");
+            chest = FindBone(transforms, "chest");
+            spine = FindBone(transforms, "spine");
+            if (spine == null)
+            {
+                spine = FindBone(transforms, "ribs");
+            }
+
+            hips = FindBone(transforms, "hips");
+            if (hips == null)
+            {
+                hips = FindBone(transforms, "pelvis");
+            }
+            if (hips == null)
+            {
+                hips = FindBone(transforms, "hip");
+            }
+
+
+            foreach (HumanBodyBones humanBodyBone in System.Enum.GetValues(typeof(HumanBodyBones)))
+            {
+                if (humanBodyBone.ToString() == transformName)
+                {
+                    return transformName;
+                }
+            }
+            return null;
+        }
+        */
+
+
+        /*
+        public HumanBodyBones GetHumanBodyBones(string transformName)
+        {
+
+
+            switch (transformName)
+            {
+                case "Spine Front-Back":
+                case "Spine Left-Right":
+                case "Spine Twist Left-Right":
+                    return HumanBodyBones.Spine;
+                case "Chest Front-Back":
+                case "Chest Left-Right":
+                case "Chest Twist Left-Right":
+                    return HumanBodyBones.Chest;
+                case "UpperChest Front-Back":
+                case "UpperChest Left-Right":
+                case "UpperChest Twist Left-Right":
+                    return HumanBodyBones.UpperChest;
+                case "Neck Nod Down-Up":
+                case "Neck Tilt Left-Right":
+                case "Neck Turn Left-Right":
+                    return HumanBodyBones.Neck;
+                case "Head Nod Down-Up":
+                case "Head Tilt Left-Right":
+                case "Head Turn Left-Right":
+                    return HumanBodyBones.Head;
+                case "Left Eye Down-Up":
+                case "Left Eye In-Out":
+                    return HumanBodyBones.LeftEye;
+                case "Right Eye Down-Up":
+                case "Right Eye In-Out":
+                    return HumanBodyBones.RightEye;
+                case "Jaw Close":
+                case "Jaw Left-Right":
+                    return HumanBodyBones.Jaw;
+                case "Left Upper Leg Front-Back":
+                case "Left Upper Leg In-Out":
+                case "Left Upper Leg Twist In-Out":
+                    return HumanBodyBones.LeftUpperLeg;
+                case "Left Lower Leg Stretch":
+                case "Left Lower Leg Twist In-Out":
+                    return HumanBodyBones.LeftLowerLeg;
+                case "Left Foot Up-Down":
+                case "Left Foot Twist In-Out":
+                    return HumanBodyBones.LeftFoot;
+                case "Left Toes Up-Down":
+                    return HumanBodyBones.LeftToes;
+                case "Right Upper Leg Front-Back":
+                case "Right Upper Leg In-Out":
+                case "Right Upper Leg Twist In-Out":
+                    return HumanBodyBones.RightUpperLeg;
+                case "Right Lower Leg Stretch":
+                case "Right Lower Leg Twist In-Out":
+                    return HumanBodyBones.RightLowerLeg;
+                case "Right Foot Up-Down":
+                case "Right Foot Twist In-Out":
+                    return HumanBodyBones.RightFoot;
+                case "Right Toes Up-Down":
+                    return HumanBodyBones.RightToes;
+                case "Left Shoulder Down-Up":
+                case "Left Shoulder Front-Back":
+                    return HumanBodyBones.LeftShoulder;
+                case "Left Arm Down-Up":
+                case "Left Arm Front-Back":
+                case "Left Arm Twist In-Out":
+                    return HumanBodyBones.LeftUpperArm;
+                case "Left Forearm Stretch":
+                case "Left Forearm Twist In-Out":
+                    return HumanBodyBones.LeftLowerArm;
+                case "Left Hand Down-Up":
+                case "Left Hand In-Out":
+                    return HumanBodyBones.LeftHand;
+                case "Right Shoulder Down-Up":
+                case "Right Shoulder Front-Back":
+                    return HumanBodyBones.RightShoulder;
+                case "Right Arm Down-Up":
+                case "Right Arm Front-Back":
+                case "Right Arm Twist In-Out":
+                    return HumanBodyBones.RightUpperArm;
+                case "Right Forearm Stretch":
+                case "Right Forearm Twist In-Out":
+                    return HumanBodyBones.RightLowerArm;
+                case "Right Hand Down-Up":
+                case "Right Hand In-Out":
+                    return HumanBodyBones.RightHand;
+            }
+
+            foreach (HumanBodyBones humanBodyBone in System.Enum.GetValues(typeof(HumanBodyBones)))
+            {
+                if (humanBodyBone.ToString() == transformName)
+                {
+                    return humanBodyBone;
+                }
+            }
+
+
+            var name = transformName;
+            if (FindBone(transformName, "head"))
+            {
+                return HumanBodyBones.Head;
+            }
+            if (FindBone(transformName, "neck"))
+            {
+                return HumanBodyBones.Neck;
+            }
+            if (FindBone(transformName, "chest"))
+            {
+                return HumanBodyBones.Chest;
+            }
+            if (FindBone(transformName, spineKeywords))
+            {
+                return HumanBodyBones.Spine;
+            }
+            if (FindBone(transformName, hipsKeywords))
+            {
+                return HumanBodyBones.Hips;
+            }
+
+            return (HumanBodyBones)(-1);
+        }
+        */
         public void Clear()
         {
             var fields = GetType().GetFields();
@@ -89,6 +284,11 @@ namespace Ahzkwid
         {
             return new AhzkwidHumanoid(gameObject).GetBoneTransform(humanBodyBone);
         }
+
+
+
+
+
         public Transform GetBoneTransform(HumanBodyBones humanBodyBone)
         {
             var fields = GetType().GetFields();
@@ -135,12 +335,130 @@ namespace Ahzkwid
             }
         }
 
+        Transform FindBone(Transform[] targetTransforms, string[] transformNames)
+        {
+            Transform transform = null;
+            foreach (var transformName in transformNames)
+            {
+                if (transform == null)
+                {
+                    transform = FindBone(targetTransforms, transformName);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return transform;
+        }
+        Transform[] FindBones(Transform[] targetTransforms, string[] kerwords)
+        {
+            var bones = new Transform[] { };
+            foreach (var kerword in kerwords)
+            {
+                if (bones.Length == 0)
+                {
+                    bones = System.Array.FindAll(targetTransforms, transform => transform.name.ToLower().Contains(kerword));
+                }
+            }
+            return bones;
+
+        }
+        Transform FindBone(Transform[] targetTransforms, string transformName)
+        {
+            var filteredTransform = System.Array.Find(targetTransforms, transform => transform.name.ToLower() == transformName);
+            if (filteredTransform != null)
+            {
+                return filteredTransform;
+            }
+            var filteredTransforms = System.Array.FindAll(targetTransforms, transform => transform.name.ToLower().Contains(transformName));
+            return filteredTransforms.FirstOrDefault();
+        }
+        bool FindBone(string boneName, string[] kerwords)
+        {
+            foreach (var kerword in kerwords)
+            {
+                if (FindBone(boneName, kerword))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        bool FindBone(string boneName, string kerword)
+        {
+            var lowerName = boneName.ToLower();
+            if (lowerName == kerword)
+            {
+                return true;
+            }
+            if (lowerName.Contains(kerword))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        static readonly string[] spineKeywords = new [] { "spine", "ribs" };
+        static readonly string[] hipsKeywords = new [] { "hips", "pelvis", "hip" };
+        static readonly string[] shoulderKeywords = new [] { "shoulder", "clavicle" };
+        static readonly string[] handKeywords = new [] { "hand", "wrist" };
+        static readonly string[] footKeywords = new [] { "foot", "ankle" };
+
+        static readonly string[] upperLegKeywords = new [] { "thigh", "upleg" };
+        static readonly string[] lowerLegKeywords = new [] { "knee", "calf" };
+        static readonly string[] upperArmKeywords = new string[] { };
+        static readonly string[] lowerArmKeywords = new [] { "elbow", "forearm" };
 
 
-        readonly string[] upperLegKeywords = new string[] { "thigh", "upleg" };
-        readonly string[] lowerLegKeywords = new string[] { "knee", "calf" };
-        readonly string[] upperArmKeywords = new string[] { };
-        readonly string[] lowerArmKeywords = new string[] { "elbow", "forearm" };
+        public static readonly string[] fingerMuscleKeywords = new [] { "Stretched", "Spread" };
+
+        static readonly Dictionary<string, string> toHumanoidMapping = new()
+        {
+            { "Left ", "LeftHand." },
+            { "Right ", "RightHand." },
+            { "Thumb ", "Thumb." },
+            { "Index ", "Index." },
+            { "Middle ", "Middle." },
+            { "Ring ", "Ring." },
+            { "Little ", "Little." }
+        };
+        public static string HumanoidToMuscle(string humanoidPropertyName)
+        {
+
+            var name = humanoidPropertyName;
+            if (fingerMuscleKeywords.Any(type => name.Contains(type)))
+            {
+                foreach (var kvp in toHumanoidMapping)
+                {
+                    name = name.Replace(kvp.Value, kvp.Key);
+                }
+                name = name.Replace(" Hand.", "");
+            }
+            return name;
+        }
+        public static string MuscleToHumanoid(string muscleName)
+        {
+            var name = muscleName;
+            if (fingerMuscleKeywords.Any(type => name.Contains(type)))
+            {
+                /*
+                name = name.Replace("Left ", "LeftHand.");
+                name = name.Replace("Right ", "RightHand.");
+                name = name.Replace("Thumb ", "Thumb.");
+                name = name.Replace("Index ", "Index.");
+                name = name.Replace("Middle ", "Middle.");
+                name = name.Replace("Ring ", "Ring.");
+                name = name.Replace("Little ", "Little.");
+                */
+
+                foreach (var kvp in toHumanoidMapping)
+                {
+                    name = name.Replace(kvp.Key, kvp.Value);
+                }
+            }
+            return name;
+        }
         public void NameSearch(Transform[] transforms)
         {
 
@@ -149,12 +467,19 @@ namespace Ahzkwid
             head = FindBone(transforms, "head");
             neck = FindBone(transforms, "neck");
             chest = FindBone(transforms, "chest");
+
+            /*
             spine = FindBone(transforms, "spine");
             if (spine == null)
             {
                 spine = FindBone(transforms, "ribs");
             }
+            */
+            spine = FindBone(transforms, spineKeywords);
+            hips = FindBone(transforms, hipsKeywords);
 
+
+            /*
             hips = FindBone(transforms, "hips");
             if (hips == null)
             {
@@ -164,6 +489,10 @@ namespace Ahzkwid
             {
                 hips = FindBone(transforms, "hip");
             }
+            */
+
+
+
             /*
 
             Transform[] headTransforms;
@@ -243,14 +572,12 @@ namespace Ahzkwid
 
 
 
+            /*
             var shoulders = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("shoulder"));
             if (shoulders.Length == 0)
             {
                 shoulders = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("clavicle"));
             }
-
-
-
 
             var handTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("hand"));
             if (handTransforms.Length == 0)
@@ -263,6 +590,16 @@ namespace Ahzkwid
             {
                 footTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("ankle"));
             }
+
+            */
+            var shoulders = FindBones(transforms,shoulderKeywords);
+            var handTransforms = FindBones(transforms, handKeywords);
+            var footTransforms = FindBones(transforms, footKeywords);
+
+
+
+
+
 
 
             leftShoulder = GetLefts(shoulders).FirstOrDefault();
@@ -277,6 +614,30 @@ namespace Ahzkwid
             leftHand = GetLefts(handTransforms).FirstOrDefault();
             rightHand = GetRights(handTransforms).FirstOrDefault();
 
+
+#if USE_FINGER
+            if (leftHand != null)
+            {
+                var fingerTransforms = leftHand.GetComponentsInChildren<Transform>(true);
+
+                SetFingers(fingerTransforms, ref LeftThumbProximal, ref LeftThumbIntermediate, ref LeftThumbDistal, "thumb");
+                SetFingers(fingerTransforms, ref LeftIndexProximal, ref LeftIndexIntermediate, ref LeftIndexDistal, "index");
+                SetFingers(fingerTransforms, ref LeftMiddleProximal, ref LeftMiddleIntermediate, ref LeftMiddleDistal, "middle");
+                SetFingers(fingerTransforms, ref LeftRingProximal, ref LeftRingIntermediate, ref LeftRingDistal, "ring");
+                SetFingers(fingerTransforms, ref LeftLittleProximal, ref LeftLittleIntermediate, ref LeftLittleDistal, "little");
+            }
+
+            if (rightHand != null)
+            {
+                var fingerTransforms = rightHand.GetComponentsInChildren<Transform>(true);
+
+                SetFingers(fingerTransforms, ref RightThumbProximal, ref RightThumbIntermediate, ref RightThumbDistal, "thumb");
+                SetFingers(fingerTransforms, ref RightIndexProximal, ref RightIndexIntermediate, ref RightIndexDistal, "index");
+                SetFingers(fingerTransforms, ref RightMiddleProximal, ref RightMiddleIntermediate, ref RightMiddleDistal, "middle");
+                SetFingers(fingerTransforms, ref RightRingProximal, ref RightRingIntermediate, ref RightRingDistal, "ring");
+                SetFingers(fingerTransforms, ref RightLittleProximal, ref RightLittleIntermediate, ref RightLittleDistal, "little");
+            }
+#endif
 
 
             //¼Ò°Å¹ý
@@ -606,7 +967,29 @@ namespace Ahzkwid
                 return matchingTransforms;
             }
 
+            static void SetFingers(Transform[] fingerTransfoms,ref Transform proximal, ref Transform intermediate, ref Transform distal, string fingerName)
+            {
+                var transforms = System.Array.FindAll(fingerTransfoms, transform => transform.name.ToLower().Contains(fingerName));
+                proximal = GetProximals(transforms).FirstOrDefault();
+                intermediate = GetIntermediates(transforms).FirstOrDefault();
+                distal = GetDistals(transforms).FirstOrDefault();
+            }
 
+            static Transform[] GetProximals(Transform[] transforms)
+            {
+                var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("proximal"));
+                return matchingTransforms;
+            }
+            static Transform[] GetIntermediates(Transform[] transforms)
+            {
+                var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("intermediate"));
+                return matchingTransforms;
+            }
+            static Transform[] GetDistals(Transform[] transforms)
+            {
+                var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("distal"));
+                return matchingTransforms;
+            }
             Transform[] GetLefts(Transform[] transforms)
             {
                 var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("left"));
@@ -643,16 +1026,6 @@ namespace Ahzkwid
                 return matchingTransforms;
             }
 
-            Transform FindBone(Transform[] targetTransforms, string transformName)
-            {
-                var filteredTransform = System.Array.Find(targetTransforms, transform => transform.name.ToLower() == transformName);
-                if (filteredTransform != null)
-                {
-                    return filteredTransform;
-                }
-                var filteredTransforms = System.Array.FindAll(targetTransforms, transform => transform.name.ToLower().Contains(transformName));
-                return filteredTransforms.FirstOrDefault();
-            }
             (Transform[], Transform) FindLast(Transform[] targetTransforms, string transformName)
             {
                 var filteredTransforms = System.Array.FindAll(targetTransforms, transform => transform.name.ToLower().Contains(transformName));

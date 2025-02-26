@@ -12,9 +12,6 @@ using Ahzkwid.AvatarTool;
 
 
 using UnityEditor;
-using System.Linq;
-using System.Collections.Generic;
-
 [InitializeOnLoad]
 class AnimationCreateTool : EditorWindow
 {

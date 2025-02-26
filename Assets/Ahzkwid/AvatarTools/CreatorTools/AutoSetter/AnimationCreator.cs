@@ -11,12 +11,7 @@ using UnityEditor;
 using UnityEngine.Animations;
 
 
-
-using UnityEditor;
 using VRC.SDK3.Avatars.Components;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using System.Data.SqlClient;
-
 
 [CustomEditor(typeof(AnimationCreator))]
 public class AutoDescriptorEditor : Editor

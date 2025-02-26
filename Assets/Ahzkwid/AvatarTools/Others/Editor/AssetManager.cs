@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using System.IO;
-using UnityEngine.EventSystems;
 namespace Ahzkwid.AvatarTool
 {
     public class AssetManager
