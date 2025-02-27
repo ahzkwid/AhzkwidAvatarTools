@@ -81,6 +81,7 @@ namespace Ahzkwid
         public bool createBackup = true;
         public bool nameMerge = false;
         public bool editMode = false;
+        public bool ignoreHierarchy = false;
         public MergeType mergeType = MergeType.Default;
 
 
@@ -116,7 +117,7 @@ namespace Ahzkwid
             }
             if (editMode)
             {
-                humanoid.DrawGizmo();
+                humanoid.DrawGizmo(ignoreHierarchy);
             }
             /*
 
@@ -319,6 +320,11 @@ namespace Ahzkwid
                     GUI.enabled = true;
 
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(editMode)));
+                    EditorGUI.indentLevel++;
+                    {
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(ignoreHierarchy)));
+                    }
+                    EditorGUI.indentLevel--;
                 }
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(nameMerge)));
             }

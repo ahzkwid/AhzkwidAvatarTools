@@ -1078,9 +1078,31 @@ namespace Ahzkwid
             }
         }
 
-        public void DrawGizmo()
+        public void DrawGizmo(bool ignoreHierarchy)
         {
 #if UNITY_EDITOR
+
+            List<Transform> GetChilds(params Transform[] transforms)
+            {
+                var childs = new List<Transform>();
+                foreach (var transform in transforms)
+                {
+                    if (transform==null)
+                    {
+                        continue;
+                    }
+                    for (int i = 0; i < transform.childCount; i++)
+                    {
+                        childs.Add(transform.GetChild(i));
+                    }
+                }
+                return childs;
+            }
+            List<Transform> childs = null;
+            List<Vector3> childPositions = null;
+            List<Quaternion> childRotations = null;
+            List<Vector3> childScales = null;
+            
             var fields = GetType().GetFields();
 
             foreach (var field in fields)
@@ -1110,6 +1132,17 @@ namespace Ahzkwid
 
                         if (newPosition != transform.position)
                         {
+                            if (ignoreHierarchy)
+                            {
+                                childs = GetChilds(transform, symmetricalTransform);
+                                childPositions = childs.ConvertAll(x => x.position);
+
+                                foreach (var child in childs)
+                                {
+                                    UnityEditor.Undo.RecordObject(child, "Preserve Child Transform");
+                                }
+                            }
+
                             UnityEditor.Undo.RecordObject(transform, "Move Transform");
                             transform.position = newPosition;
 
@@ -1120,6 +1153,14 @@ namespace Ahzkwid
                                 localPosition.x = -localPosition.x;
                                 symmetricalTransform.position = root.TransformPoint(localPosition);
                             }
+
+                            if (ignoreHierarchy)
+                            {
+                                for (int i = 0; i < childs.Count; i++)
+                                {
+                                    childs[i].position = childPositions[i];
+                                }
+                            }
                         }
                         break;
                     case Tool.Rotate:
@@ -1127,6 +1168,20 @@ namespace Ahzkwid
 
                         if (newRotation != transform.rotation)
                         {
+                            if (ignoreHierarchy)
+                            {
+                                childs = GetChilds(transform, symmetricalTransform);
+                                childPositions = childs.ConvertAll(x => x.position);
+                                childRotations = childs.ConvertAll(x => x.rotation);
+
+                                foreach (var child in childs)
+                                {
+                                    UnityEditor.Undo.RecordObject(child, "Preserve Child Transform");
+                                }
+                            }
+
+
+
                             UnityEditor.Undo.RecordObject(transform, "Rotate Transform");
                             transform.rotation = newRotation;
 
@@ -1137,6 +1192,20 @@ namespace Ahzkwid
                                 localRotation = new Quaternion(-localRotation.x, localRotation.y, localRotation.z, localRotation.w); // 대칭 회전 처리
                                 symmetricalTransform.rotation = root.rotation * localRotation;
                             }
+
+
+                            if (ignoreHierarchy)
+                            {
+                                for (int i = 0; i < childs.Count; i++)
+                                {
+                                    childs[i].position = childPositions[i];
+                                    childs[i].rotation = childRotations[i];
+                                }
+                            }
+
+
+
+
                         }
                         break;
                     case Tool.Scale:
@@ -1144,6 +1213,20 @@ namespace Ahzkwid
 
                         if (newScale != transform.localScale)
                         {
+                            if (ignoreHierarchy)
+                            {
+                                childs = GetChilds(transform, symmetricalTransform);
+                                childPositions = childs.ConvertAll(x => x.position);
+                                childScales = childs.ConvertAll(x => x.lossyScale);
+
+                                foreach (var child in childs)
+                                {
+                                    UnityEditor.Undo.RecordObject(child, "Preserve Child Transform");
+                                }
+                            }
+
+
+
                             UnityEditor.Undo.RecordObject(transform, "Scale Transform");
                             transform.localScale = newScale;
 
@@ -1153,6 +1236,23 @@ namespace Ahzkwid
                                 var localScale = new Vector3(newScale.x, newScale.y, newScale.z);
                                 symmetricalTransform.localScale = localScale;
                             }
+
+
+                            if (ignoreHierarchy)
+                            {
+                                for (int i = 0; i < childs.Count; i++)
+                                {
+                                    childs[i].position = childPositions[i];
+                                    
+                                    var ratio = new Vector3(
+                                        childScales[i].x / childs[i].lossyScale.x,
+                                        childScales[i].y / childs[i].lossyScale.y,
+                                        childScales[i].z / childs[i].lossyScale.z
+                                    );
+                                    //childs[i].localScale = Vector3.Scale(childs[i].localScale, ratio);
+                                }
+                            }
+
                         }
 
                         break;
