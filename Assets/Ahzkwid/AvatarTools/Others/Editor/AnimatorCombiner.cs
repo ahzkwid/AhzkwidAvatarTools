@@ -345,7 +345,9 @@ public class AnimatorCombiner : MonoBehaviour
         }
 
         var stateMap = new Dictionary<AnimatorState, AnimatorState>();
+        var sourceStates = new List<ChildAnimatorState>();
 
+        /*
         foreach (var state in source.states)
         {
             if (state.state == null)
@@ -357,37 +359,60 @@ public class AnimatorCombiner : MonoBehaviour
 
             //EditorUtility.CopySerialized(state.state, newState);
             CopyClass(state.state, newState);
-            /*
-            {
-                //Behaviours추가
+            
+            //{
+            //    //Behaviours추가
 
-                var newBehaviours = new List<StateMachineBehaviour>();
+            //    var newBehaviours = new List<StateMachineBehaviour>();
 
 
-                foreach (var behaviour in newState.behaviours)
-                {
-                    if (behaviour == null)
-                    {
-                        continue;
-                    }
-                    //if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
-                    {
-                        var newBehaviour = Instantiate(behaviour);
-                        newBehaviours.Add(newBehaviour);
-                    }
-                }
-                newState.behaviours = newBehaviours.ToArray();
-            }
-            */
+            //    foreach (var behaviour in newState.behaviours)
+            //    {
+            //        if (behaviour == null)
+            //        {
+            //            continue;
+            //        }
+            //        //if (behaviour is VRC.SDK3.Avatars.Components.VRCAnimatorLayerControl)
+            //        {
+            //            var newBehaviour = Instantiate(behaviour);
+            //            newBehaviours.Add(newBehaviour);
+            //        }
+            //    }
+            //    newState.behaviours = newBehaviours.ToArray();
+            //}
+            
 
             destination.AddState(newState, state.position);
 
             stateMap[state.state] = newState;
         }
+         */
+        AddStateMap(source, destination);
 
+        void AddStateMap(AnimatorStateMachine source, AnimatorStateMachine destination)
+        {
+            if (source.states == null)
+            {
+                return;
+            }
+            foreach (var state in source.states)
+            {
+                if (state.state == null)
+                {
+                    continue;
+                }
+                var newState = new AnimatorState();
+                //var newState = destination.AddState(state.state.name);
 
+                //EditorUtility.CopySerialized(state.state, newState);
+                CopyClass(state.state, newState);
 
+                destination.AddState(newState, state.position);
 
+                stateMap[state.state] = newState;
+                sourceStates.Add(state);
+            }
+        }
 
 
 
@@ -454,15 +479,27 @@ public class AnimatorCombiner : MonoBehaviour
             {
                 continue;
             }
-            //var newStateMachine = new AnimatorStateMachine();
 
+
+            AnimatorStateMachine newStateMachine = null;
+            if (stateMachine.stateMachine.defaultState != null)
+            {
+                //서브스테이트일경우
+                Debug.Log("substate: "+ stateMachine.stateMachine.name);
+                newStateMachine = new AnimatorStateMachine();
+                //CopyClass(stateMachine.stateMachine, newStateMachine);
+                newStateMachine.name= stateMachine.stateMachine.name;
+                AddStateMap(stateMachine.stateMachine, newStateMachine);
+            }
+            else
+            {
+                newStateMachine = Instantiate(stateMachine.stateMachine);
+            }
 
             //var newStateMachine = destination.AddStateMachine(stateMachine.stateMachine.name);
-            var newStateMachine = Instantiate(stateMachine.stateMachine);
 
 
             //EditorUtility.CopySerialized(stateMachine.stateMachine, newStateMachine);
-            //CopyClass(stateMachine.stateMachine, newStateMachine);
 
             destination.AddStateMachine(newStateMachine, stateMachine.position);
 
@@ -487,8 +524,8 @@ public class AnimatorCombiner : MonoBehaviour
 
 
 
-
-        foreach (var state in source.states)
+        //foreach (var state in source.states)
+        foreach (var state in sourceStates)
         {
             if (state.state == null)
             {
@@ -500,9 +537,21 @@ public class AnimatorCombiner : MonoBehaviour
                 AnimatorStateMachine newDestinationStateMachine = null;
 
 
+
+                //이렇게 한 이유가 destinationState가 null인데
+                //destinationStateMachine은 null이 아닐수도 있어서 둘다 처리하기 위함
                 if (transition.destinationState != null)
                 {
                     newDestinationState = stateMap[transition.destinationState];
+
+                    //if (stateMap.ContainsKey(transition.destinationState))
+                    //{
+                    //    newDestinationState = stateMap[transition.destinationState];
+                    //}
+                    //else
+                    //{
+                    //    //없으면 서브스테이트 하위일 가능성 있음
+                    //}
                 }
                 if (transition.destinationStateMachine != null)
                 {
@@ -526,7 +575,7 @@ public class AnimatorCombiner : MonoBehaviour
 
 
                 var oldTransitions = state.state.transitions;
-                newState.transitions = System.Array.FindAll(newState.transitions,x=> oldTransitions.Contains(x) == false);
+                newState.transitions = System.Array.FindAll(newState.transitions, x => oldTransitions.Contains(x) == false);
                 //낡은 트랜지션 제거
             }
         }
