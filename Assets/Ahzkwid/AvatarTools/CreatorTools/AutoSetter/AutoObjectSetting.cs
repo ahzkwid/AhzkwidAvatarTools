@@ -202,6 +202,51 @@ namespace Ahzkwid
         //public bool autoDestroy = true;
         // List<BlendshapeTarget> blendshapeTargets = new List<BlendshapeTarget>();
         public List<ObjectSettingDatas> objectSettingDatas = new List<ObjectSettingDatas>();
+
+
+        void OnEnable()
+        {
+            SceneView.duringSceneGui += OnSceneGUI;
+            //EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
+        }
+
+        void OnDisable()
+        {
+            SceneView.duringSceneGui -= OnSceneGUI;
+            //EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
+        }
+        void OnSceneGUI(SceneView obj)
+        {
+            UpdateCustom(); 
+            //Update();
+            //HandleDragAndDropEvents();
+        }
+        /*
+        void OnHierarchyGUI(int instanceID, Rect selectionRect)
+        {
+            HandleDragAndDropEvents();
+        }
+        void HandleDragAndDropEvents()
+        {
+            if (Event.current.type == EventType.DragUpdated)
+            {
+                OnDragUpdated();
+            }
+            if (Event.current.type == EventType.DragPerform)
+            {
+                OnDragPerform();
+            }
+        }
+        void OnDragUpdated()
+        {
+            //Debug.Log("OnDragUpdated()");
+        }
+        void OnDragPerform()
+        {
+            //Debug.Log("OnDragPerform()");
+        }
+        */
+
         void OnDrawGizmos()
         {
             if (mergeTrigger != MergeTrigger.Runtime)
@@ -443,10 +488,8 @@ namespace Ahzkwid
             }
         }
 
-        // Start is called before the first frame update
 
-        // Update is called once per frame
-        void Update()
+        void UpdateCustom()
         {
             switch (mergeTrigger)
             {
@@ -464,6 +507,13 @@ namespace Ahzkwid
                 default:
                     break;
             }
+        }
+        // Start is called before the first frame update
+
+        // Update is called once per frame
+        void Update()
+        {
+            //UpdateCustom();
         }
     }
 #endif
