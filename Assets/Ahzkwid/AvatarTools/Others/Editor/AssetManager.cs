@@ -329,14 +329,14 @@ namespace Ahzkwid.AvatarTool
                 var parameters = menu.Parameters;
                 if (AssetDatabase.GetAssetPath(parameters) == string.Empty)
                 {
-                    SaveAsset(parameters, path);
+                    SaveAsset(parameters, folderPath);
                 }
                 foreach (var control in menu.controls)
                 {
                     var subMenu = control.subMenu;
                     if (AssetDatabase.GetAssetPath(subMenu) == string.Empty)
                     {
-                        SaveAsset(subMenu, path);
+                        SaveAsset(subMenu, folderPath);
                     }
                 }
             }

@@ -115,7 +115,7 @@ public class AnimationCreator : MonoBehaviour
     //public bool inverse = false;
 
     [System.Serializable]
-    public class All
+    public class All //전부 켜고 끄는 버튼
     {
         public string parameter = "";
         public bool inverse = false;
@@ -156,7 +156,7 @@ public class AnimationCreator : MonoBehaviour
         public string[] parameters = null;
         public Object[] targets;
         public AnimationClip clip;
-        public Shirink shirink;
+        public Shirink shirink=new Shirink();
 
         /*
         public AnimationClip clipShrink;
@@ -294,7 +294,7 @@ public class AnimationCreator : MonoBehaviour
                 return mode;
             }
             var parameters = this.parameters.ToArray();
-            if (string.IsNullOrWhiteSpace(all.parameter)==false)
+            if (string.IsNullOrWhiteSpace(all?.parameter)==false)
             {
                 parameters = parameters.Append(all.parameter).ToArray();
             }
@@ -503,7 +503,11 @@ public class AnimationCreator : MonoBehaviour
 
                             foreach (var parameter in parameters)
                             {
-                                var isAllParameter = parameter == all.parameter;
+                                var isAllParameter = false;
+                                if (string.IsNullOrWhiteSpace(all?.parameter) == false)
+                                {
+                                    isAllParameter = parameter == all.parameter;
+                                }
                                 var mode = GetMode(i, isAllParameter);
                                 var threshold = GetThreshold(isAllParameter);
                                 newTransition.AddCondition(mode, threshold, parameter);
@@ -518,7 +522,11 @@ public class AnimationCreator : MonoBehaviour
                                 newTransition.duration = 0;
 
 
-                                var isAllParameter = parameter == all.parameter;
+                                var isAllParameter = false;
+                                if (string.IsNullOrWhiteSpace(all?.parameter) == false)
+                                {
+                                    isAllParameter = parameter == all.parameter;
+                                }
                                 var mode = GetMode(i, isAllParameter);
                                 var threshold = GetThreshold(isAllParameter);
                                 newTransition.AddCondition(mode, threshold, parameter);
@@ -1056,7 +1064,7 @@ public class AnimationCreator : MonoBehaviour
                 }
             }
         }
-        if (string.IsNullOrWhiteSpace(all.parameter) == false)
+        if (string.IsNullOrWhiteSpace(all?.parameter) == false)
         {
             if (controller.parameters.Any(p => p.name == all.parameter)==false)
             {
