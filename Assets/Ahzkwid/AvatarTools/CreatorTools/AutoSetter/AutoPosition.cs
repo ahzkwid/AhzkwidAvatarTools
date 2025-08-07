@@ -44,7 +44,7 @@ namespace Ahzkwid
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
 
-            float propertyCount = 8.5f;
+            float propertyCount = 9f;
             {
                 var tracking = (AutoPosition.Tracking)property.FindPropertyRelative(nameof(AutoPosition.PositionData.tracking)).intValue;
                 switch (tracking)
@@ -69,6 +69,27 @@ namespace Ahzkwid
                         break;
                     default:
                         break;
+                }
+            }
+            {
+                var update = property.FindPropertyRelative(nameof(AutoPosition.PositionData.updatePosition)).boolValue;
+                if (update)
+                {
+                    propertyCount += 1;
+                }
+            }
+            {
+                var update = property.FindPropertyRelative(nameof(AutoPosition.PositionData.updateRotation)).boolValue;
+                if (update)
+                {
+                    propertyCount += 1;
+                }
+            }
+            {
+                var update = property.FindPropertyRelative(nameof(AutoPosition.PositionData.updateScale)).boolValue;
+                if (update)
+                {
+                    propertyCount += 1;
                 }
             }
             return EditorGUIUtility.singleLineHeight * propertyCount;
@@ -177,24 +198,70 @@ namespace Ahzkwid
                 }
             }
 
+            fieldRect.y += EditorGUIUtility.singleLineHeight * 0.5f;
+
 
             fieldRect.y += EditorGUIUtility.singleLineHeight;
             {
-                var path = nameof(AutoPosition.PositionData.position);
-                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
-            }
+                {
+                    var update = false;
+                    {
+                        var path = nameof(AutoPosition.PositionData.updatePosition);
+                        EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
 
-            fieldRect.y += EditorGUIUtility.singleLineHeight;
-            {
-                var path = nameof(AutoPosition.PositionData.rotation);
-                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
-            }
+                        update = property.FindPropertyRelative(path).boolValue;
+                    }
+                    if (update)
+                    {
 
-            fieldRect.y += EditorGUIUtility.singleLineHeight;
-            {
-                var path = nameof(AutoPosition.PositionData.scale);
-                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                        fieldRect.y += EditorGUIUtility.singleLineHeight;
+                        {
+                            var path = nameof(AutoPosition.PositionData.position);
+                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                        }
+                    }
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+                }
+                {
+                    var update = false;
+                    {
+                        var path = nameof(AutoPosition.PositionData.updateRotation);
+                        EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+
+                        update = property.FindPropertyRelative(path).boolValue;
+                    }
+                    if (update)
+                    {
+
+                        fieldRect.y += EditorGUIUtility.singleLineHeight;
+                        {
+                            var path = nameof(AutoPosition.PositionData.rotation);
+                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                        }
+                    }
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+                }
+                {
+                    var update = false;
+                    {
+                        var path = nameof(AutoPosition.PositionData.updateScale);
+                        EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+
+                        update = property.FindPropertyRelative(path).boolValue;
+                    }
+                    if (update)
+                    {
+
+                        fieldRect.y += EditorGUIUtility.singleLineHeight;
+                        {
+                            var path = nameof(AutoPosition.PositionData.scale);
+                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                        }
+                    }
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+                }
             }
+            
         }
     }
     public class PositionDataAttribute : PropertyAttribute
@@ -213,9 +280,9 @@ namespace Ahzkwid
     {
         public enum MergeTrigger
         {
-            Always, Runtime
+            OneShot, Runtime, Always
         }
-        public MergeTrigger mergeTrigger = MergeTrigger.Always;
+        public MergeTrigger mergeTrigger = MergeTrigger.OneShot;
         public enum Tracking
         {
             Path, Humanoid
@@ -237,8 +304,13 @@ namespace Ahzkwid
             public Target target;
             public int parentIndex = 1;
             public Object targetObject;
+
+
+            public bool updatePosition = true;
             public Vector3 position = Vector3.zero;
+            public bool updateRotation = true;
             public Vector3 rotation = Vector3.zero;
+            public bool updateScale = true;
             public Vector3 scale = Vector3.one;
 
 
@@ -296,6 +368,8 @@ namespace Ahzkwid
         */
         bool success = false;
 
+        [HideInInspector]
+        [System.Obsolete]
         public bool autoDestroy = true;
         void OnDrawGizmos()
         {
@@ -481,9 +555,21 @@ namespace Ahzkwid
                     */
 
 
-                    target.localPosition = positionData.position;
-                    target.localRotation = Quaternion.Euler(positionData.rotation);
-                    target.localScale = positionData.scale;
+
+                    if (positionData.updatePosition)
+                    {
+                        target.localPosition = positionData.position;
+                    }
+
+                    if (positionData.updateRotation)
+                    {
+                        target.localRotation = Quaternion.Euler(positionData.rotation);
+                    }
+
+                    if (positionData.updateScale)
+                    {
+                        target.localScale = positionData.scale;
+                    }
 
 
                 }
@@ -491,9 +577,20 @@ namespace Ahzkwid
                 AutoPosition.success = true;
                 //if (success)
                 {
-                    if (AutoPosition.autoDestroy)
+                    //if (AutoPosition.autoDestroy)
                     {
-                        DestroyImmediate(AutoPosition);
+                        switch (mergeTrigger)
+                        {
+                            case MergeTrigger.OneShot:
+                                DestroyImmediate(AutoPosition);
+                                break;
+                            case MergeTrigger.Runtime:
+                                break;
+                            case MergeTrigger.Always:
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
             }
@@ -526,7 +623,7 @@ namespace Ahzkwid
         }
 
 
-        // Update is called once per frame
+            // Update is called once per frame
         void Update()
         {
             switch (mergeTrigger)

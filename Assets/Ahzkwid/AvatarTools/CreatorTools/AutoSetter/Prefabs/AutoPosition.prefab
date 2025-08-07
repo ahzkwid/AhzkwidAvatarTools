@@ -44,11 +44,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1fae9c6ce21d114182ad233f11171d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mergeTrigger: 0
   PositionDatas:
-  - option: 0
+  - tracking: 0
+    bone: 10
+    path: 
+    pathTransform: {fileID: 0}
+    target: 0
     parentIndex: 1
-    gameObject: {fileID: 0}
+    targetObject: {fileID: 0}
+    updatePosition: 1
     position: {x: 0, y: 0, z: 0}
+    updateRotation: 1
     rotation: {x: 0, y: 0, z: 0}
+    updateScale: 1
     scale: {x: 1, y: 1, z: 1}
   autoDestroy: 1
