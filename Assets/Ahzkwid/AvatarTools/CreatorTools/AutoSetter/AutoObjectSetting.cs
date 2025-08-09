@@ -504,6 +504,7 @@ namespace Ahzkwid
                             return;
                         }
                         toRenderer.sharedMaterials = fromRenderer.sharedMaterials;
+                        EditorUtility.SetDirty(toRenderer);
                         break;
                     default:
                         break;
@@ -922,9 +923,21 @@ namespace Ahzkwid
 
 
                 var autoObjectSetting = this;
-                if (autoObjectSetting.success)
+
+
+                switch (mergeTrigger)
                 {
-                    return;
+                    case MergeTrigger.Always:
+                    case MergeTrigger.Runtime:
+                        break;
+                    case MergeTrigger.OneShot:
+                        if (autoObjectSetting.success)
+                        {
+                            return;
+                        }
+                        break;
+                    default:
+                        break;
                 }
 
 

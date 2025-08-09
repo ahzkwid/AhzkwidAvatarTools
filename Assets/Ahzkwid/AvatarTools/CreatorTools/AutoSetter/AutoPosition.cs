@@ -44,7 +44,7 @@ namespace Ahzkwid
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
 
-            float propertyCount = 9f;
+            float propertyCount = 12f;
             {
                 var tracking = (AutoPosition.Tracking)property.FindPropertyRelative(nameof(AutoPosition.PositionData.tracking)).intValue;
                 switch (tracking)
@@ -103,17 +103,141 @@ namespace Ahzkwid
 
 
 
+
             {
-                var path = nameof(AutoPosition.PositionData.tracking);
-                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+
+                var target = (AutoPosition.Target)property.FindPropertyRelative(nameof(AutoPosition.PositionData.target)).intValue;
+
+                {
+                    string header = "Target";
+
+
+                    var border = 2f;
+                    var height = EditorGUIUtility.singleLineHeight * 3;
+                    switch (target)
+                    {
+                        case AutoPosition.Target.Parent:
+                            break;
+                        case AutoPosition.Target.Object:
+                            height -= EditorGUIUtility.singleLineHeight;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    var helpBoxRect = new Rect(fieldRect.x - border, fieldRect.y, fieldRect.width + border * 2, height + EditorGUIUtility.singleLineHeight);
+                    EditorGUI.HelpBox(helpBoxRect, "", MessageType.None);
+
+
+                    {
+
+                        //Header
+
+                        var labelRect = new Rect(fieldRect.x, fieldRect.y, fieldRect.width, EditorGUIUtility.singleLineHeight);
+                        //EditorGUI.HelpBox(labelRect, "", MessageType.None);
+                        EditorGUI.LabelField(labelRect, header, EditorStyles.boldLabel);
+                        fieldRect.y += EditorGUIUtility.singleLineHeight;
+                    }
+                }
+
+
+
+
+
+
+                {
+                    var path = nameof(AutoPosition.PositionData.target);
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                }
+
+                fieldRect.y += EditorGUIUtility.singleLineHeight;
+                //fieldRect.width /= 2;
+                {
+                    switch (target)
+                    {
+                        case AutoPosition.Target.Object:
+                            {
+                                var path = nameof(AutoPosition.PositionData.targetObject);
+                                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                            }
+                            break;
+                        case AutoPosition.Target.Parent:
+                            var index = 0;
+                            {
+                                var path = nameof(AutoPosition.PositionData.parentIndex);
+                                index = property.FindPropertyRelative(path).intValue;
+                                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                            }
+                            fieldRect.y += EditorGUIUtility.singleLineHeight;
+                            {
+                                var targetObject = property.serializedObject.targetObject as AutoPosition;
+                                var parent = targetObject.GetParent(index);
+                                GUI.enabled = false;
+                                {
+                                    EditorGUI.ObjectField(fieldRect, parent.gameObject, typeof(GameObject), false);
+                                }
+                                GUI.enabled = true;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+
+                fieldRect.y += EditorGUIUtility.singleLineHeight;
             }
 
-            fieldRect.y += EditorGUIUtility.singleLineHeight;
+            fieldRect.y += EditorGUIUtility.singleLineHeight * 0.5f;
+
 
 
             {
 
                 var tracking = (AutoPosition.Tracking)property.FindPropertyRelative(nameof(AutoPosition.PositionData.tracking)).intValue;
+
+                {
+                    string header = "Parent";
+
+
+                    var border = 2f;
+                    var height = EditorGUIUtility.singleLineHeight * 3;
+
+                    switch (tracking)
+                    {
+                        case AutoPosition.Tracking.Path:
+                            break;
+                        case AutoPosition.Tracking.Humanoid:
+                            height -= EditorGUIUtility.singleLineHeight;
+                            break;
+                        default:
+                            break;
+                    }
+
+
+                    var helpBoxRect = new Rect(fieldRect.x - border, fieldRect.y, fieldRect.width + border * 2, height + EditorGUIUtility.singleLineHeight);
+                    EditorGUI.HelpBox(helpBoxRect, "", MessageType.None);
+
+
+                    {
+
+                        //Header
+
+                        var labelRect = new Rect(fieldRect.x, fieldRect.y, fieldRect.width, EditorGUIUtility.singleLineHeight);
+                        //EditorGUI.HelpBox(labelRect, "", MessageType.None);
+                        EditorGUI.LabelField(labelRect, header, EditorStyles.boldLabel);
+                        fieldRect.y += EditorGUIUtility.singleLineHeight;
+                    }
+                }
+
+                {
+                    var path = nameof(AutoPosition.PositionData.tracking);
+                    EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
+                }
+
+                fieldRect.y += EditorGUIUtility.singleLineHeight;
+
+
                 switch (tracking)
                 {
                     case AutoPosition.Tracking.Path:
@@ -155,54 +279,8 @@ namespace Ahzkwid
 
 
 
-
-
-
             {
-                var path = nameof(AutoPosition.PositionData.target);
-                EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
-            }
 
-            fieldRect.y += EditorGUIUtility.singleLineHeight;
-            //fieldRect.width /= 2;
-            {
-                var target = (AutoPosition.Target)property.FindPropertyRelative(nameof(AutoPosition.PositionData.target)).intValue;
-                switch (target)
-                {
-                    case AutoPosition.Target.Object:
-                        {
-                            var path = nameof(AutoPosition.PositionData.targetObject);
-                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
-                        }
-                        break;
-                    case AutoPosition.Target.Parent:
-                        var index = 0;
-                        {
-                            var path = nameof(AutoPosition.PositionData.parentIndex);
-                            index = property.FindPropertyRelative(path).intValue;
-                            EditorGUI.PropertyField(fieldRect, property.FindPropertyRelative(path), new GUIContent(path), true);
-                        }
-                        fieldRect.y += EditorGUIUtility.singleLineHeight;
-                        {
-                            var targetObject = property.serializedObject.targetObject as AutoPosition;
-                            var parent = targetObject.GetParent(index);
-                            GUI.enabled = false;
-                            {
-                                EditorGUI.ObjectField(fieldRect, parent.gameObject, typeof(GameObject), false);
-                            }
-                            GUI.enabled = true;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            fieldRect.y += EditorGUIUtility.singleLineHeight * 0.5f;
-
-
-            fieldRect.y += EditorGUIUtility.singleLineHeight;
-            {
                 {
                     var update = false;
                     {
@@ -260,8 +338,37 @@ namespace Ahzkwid
                     }
                     fieldRect.y += EditorGUIUtility.singleLineHeight;
                 }
+
+
+
+
+                {
+                    if (GUI.Button(fieldRect, "Set Current Transform"))
+                    {
+                        var target = property.serializedObject.targetObject ;
+                        var autoPosition = target as AutoPosition;
+                        var index = GetIndexFromPropertyPath(property.propertyPath);
+                        Debug.Log($"index: {index}");
+                        var positionData = autoPosition.PositionDatas[index];
+
+
+                        positionData.SetCurrentTransform(autoPosition);
+                        EditorUtility.SetDirty(autoPosition);
+                    }
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+                }
             }
-            
+
+
+            int GetIndexFromPropertyPath(string path)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(path, @"\[(\d+)\]");
+                if (match.Success && int.TryParse(match.Groups[1].Value, out var index))
+                    return index;
+                return -1;
+            }
+
+
         }
     }
     public class PositionDataAttribute : PropertyAttribute
@@ -335,6 +442,65 @@ namespace Ahzkwid
                 return null;
             }
 
+            public Transform GetTarget(AutoPosition autoPosition)
+            {
+                Transform target = null;
+                PositionData positionData = this;
+                switch (positionData.target)
+                {
+                    case Target.Object:
+                        if (positionData.targetObject == null)
+                        {
+                            target = autoPosition.transform;
+                        }
+                        else
+                        {
+                            if (positionData.targetObject is Component)
+                            {
+                                return null;
+                            }
+                            var gameObject = positionData.targetObject as GameObject;
+                            target = gameObject.transform;
+                        }
+                        break;
+                    case Target.Parent:
+                        target = autoPosition.GetParent(positionData.parentIndex);
+                        break;
+                    default:
+                        break;
+                }
+                return target;
+            }
+
+
+            public void SetCurrentTransform(AutoPosition autoPosition)
+            {
+                var target = GetTarget(autoPosition);
+                var parentTarget = GetParentTarget(autoPosition.GetRoot());
+                if (target == null)
+                {
+                    return;
+                }
+                if (parentTarget == null)
+                {
+                    return;
+                }
+
+                var localPos = parentTarget.InverseTransformPoint(target.position);
+                var localRot = Quaternion.Inverse(parentTarget.rotation) * target.rotation;
+                var lossyScale = target.lossyScale;
+                var parentScale = parentTarget.lossyScale;
+                var localScale = new Vector3(
+                    lossyScale.x / parentScale.x,
+                    lossyScale.y / parentScale.y,
+                    lossyScale.z / parentScale.z
+                );
+
+
+                position = localPos;
+                rotation = localRot.eulerAngles;
+                scale = localScale;
+            }
 
 
         }
@@ -375,6 +541,7 @@ namespace Ahzkwid
         {
             switch (mergeTrigger)
             {
+                case MergeTrigger.OneShot:
                 case MergeTrigger.Always:
                     if (success == false)
                     {
@@ -394,6 +561,11 @@ namespace Ahzkwid
         }
         // Start is called before the first frame update
 
+        public Transform GetRoot()
+        {
+            var autoPosition = this;
+            return ObjectPath.GetVRCRoot(autoPosition.transform, ObjectPath.VRCRootSearchOption.VRCRootOnly);
+        }
 
         public void Run()
         {
@@ -402,15 +574,25 @@ namespace Ahzkwid
             {
                 return ;
             }
-            //foreach (var AutoPosition in FindObjectsOfType<AutoPosition>())
+            //foreach (var autoPosition in FindObjectsOfType<autoPosition>())
             {
-                var AutoPosition = this;
-                if (AutoPosition.success)
+                var autoPosition = this;
+                switch (mergeTrigger)
                 {
-                    return;
+                    case MergeTrigger.Always:
+                    case MergeTrigger.Runtime:
+                        break;
+                    case MergeTrigger.OneShot:
+                        if (autoPosition.success)
+                        {
+                            return;
+                        }
+                        break;
+                    default:
+                        break;
                 }
                 /*
-                var root = GetRoot(AutoPosition.transform);
+                var root = GetRoot(autoPosition.transform);
                 if (root == null)
                 {
                     return;
@@ -426,13 +608,13 @@ namespace Ahzkwid
                     root = avatarDescriptor.transform;
                 }
                 */
-                var root = ObjectPath.GetVRCRoot(AutoPosition.transform, ObjectPath.VRCRootSearchOption.VRCRootOnly);
+                var root = GetRoot();
                 if (root == null)
                 {
                     return;
                 }
 
-                foreach (var positionData in AutoPosition.PositionDatas)
+                foreach (var positionData in autoPosition.PositionDatas)
                 {
                     //컴포넌트
                     Component component = null;
@@ -489,16 +671,19 @@ namespace Ahzkwid
                     }
 
                 }
-                foreach (var positionData in AutoPosition.PositionDatas)
+                foreach (var positionData in autoPosition.PositionDatas)
                 {
                     //게임오브젝트
                     Transform target = null;
+
+                    target = positionData.GetTarget(this);
+                    /*
                     switch (positionData.target)
                     {
                         case Target.Object:
                             if (positionData.targetObject == null)
                             {
-                                target = AutoPosition.transform;
+                                target = autoPosition.transform;
                             }
                             else
                             {
@@ -511,11 +696,12 @@ namespace Ahzkwid
                             }
                             break;
                         case Target.Parent:
-                            target = AutoPosition.GetParent(positionData.parentIndex);
+                            target = autoPosition.GetParent(positionData.parentIndex);
                             break;
                         default:
                             break;
                     }
+                    */
                     if (target == null)
                     {
                         continue;
@@ -574,17 +760,16 @@ namespace Ahzkwid
 
                 }
 
-                AutoPosition.success = true;
+                autoPosition.success = true;
                 //if (success)
                 {
-                    //if (AutoPosition.autoDestroy)
+                    //if (autoPosition.autoDestroy)
                     {
                         switch (mergeTrigger)
                         {
                             case MergeTrigger.OneShot:
-                                DestroyImmediate(AutoPosition);
-                                break;
                             case MergeTrigger.Runtime:
+                                DestroyImmediate(autoPosition);
                                 break;
                             case MergeTrigger.Always:
                                 break;
@@ -623,12 +808,14 @@ namespace Ahzkwid
         }
 
 
+
             // Update is called once per frame
         void Update()
         {
             switch (mergeTrigger)
             {
                 case MergeTrigger.Always:
+                case MergeTrigger.OneShot:
                     {
                         Run();
                     }

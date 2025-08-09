@@ -796,6 +796,11 @@ public class AnimationCreator : MonoBehaviour
                 }
                 if (layer != null)
                 {
+#if UNITY_EDITOR
+                    var names = layers.Select(l => l.name).ToArray();
+                    var uniqueName = ObjectNames.GetUniqueName(names, layer.name);
+                    layer.name = uniqueName;
+#endif
                     layers.Add(layer);
                 }
             }
