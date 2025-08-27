@@ -27,6 +27,7 @@ class InsertMaterialsTool : EditorWindow
 
     public bool repairMode=false;
     public bool nameMerge = false;
+    public bool onlyNameContains = false;
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(InsertMaterialTool))]
     public static void Init()
     {
@@ -80,6 +81,13 @@ class InsertMaterialsTool : EditorWindow
     }
     void InsertMaterials(GameObject root, DefaultAsset materialFolder)
     {
+        if (onlyNameContains)
+        {
+            if (root.name.Contains(materialFolder.name)==false)
+            {
+                return;
+            }
+        }
         materials = GetFolderToMaterials(materialFolder);
         if (nameMerge)
         {
@@ -103,7 +111,7 @@ class InsertMaterialsTool : EditorWindow
         if (string.IsNullOrEmpty(path))
         {
             Debug.Log($"NotAsset");
-            var renders = root.GetComponentsInChildren<Renderer>();
+            var renders = root.GetComponentsInChildren<Renderer>(true);
             foreach (var render in renders)
             {
                 if (repairMode)
@@ -253,6 +261,7 @@ class InsertMaterialsTool : EditorWindow
             if (materialSelectMode == MaterialSelectMode.MaterialFolder)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(nameMerge)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(onlyNameContains)));
             }
             EditorGUILayout.Space();
 

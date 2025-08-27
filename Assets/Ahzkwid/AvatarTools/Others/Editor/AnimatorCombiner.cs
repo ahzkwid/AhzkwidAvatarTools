@@ -645,7 +645,7 @@ public class AnimatorCombiner : MonoBehaviour
         }
     }
 
-     static Motion ReplaceAnimations(Motion motion, Transform rootChild)
+    static Motion ReplaceAnimations(Motion motion, Transform rootChild)
     {
         return ReplaceAnimations(motion, null, rootChild);
     }
@@ -756,9 +756,12 @@ public class AnimatorCombiner : MonoBehaviour
                 //text = binding.path;
                 if (rootChild != null)
                 {
-                    newBinding.path = Path.Join(rootChildPath, binding.path).Replace("\\", "/");
-                    //newBinding.path = rootChildPath + "/" + binding.path;
-                    Debug.Log($"{binding.path} -> {newBinding.path}");
+                    if (binding.path.ToLower().StartsWith("armature") == false)
+                    {
+                        newBinding.path = Path.Join(rootChildPath, binding.path).Replace("\\", "/");
+                        //newBinding.path = rootChildPath + "/" + binding.path;
+                        Debug.Log($"{binding.path} -> {newBinding.path}");
+                    }
                 }
                 //else
                 //{
