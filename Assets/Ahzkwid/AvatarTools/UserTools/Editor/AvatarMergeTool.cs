@@ -83,6 +83,7 @@ namespace Ahzkwid
         public bool editMode = false;
         public bool ignoreHierarchy = false;
         public MergeType mergeType = MergeType.Default;
+        public AutoMerge.MergeTrigger mergeTrigger = AutoMerge.MergeTrigger.Runtime;
 
 
         //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarMergeTool))]
@@ -259,6 +260,7 @@ namespace Ahzkwid
                 EditorGUILayout.Space();
                 EditorGUI.BeginChangeCheck();
                 {
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeTrigger)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mergeType)));
                 }
             }
@@ -459,7 +461,7 @@ namespace Ahzkwid
                         var cloth = cloths[i];
                         var character = characters[i % characters.Length];
 
-                        if (createBackup && (mergeType == MergeType.Default))
+                        if (createBackup && (mergeTrigger == AutoMerge.MergeTrigger.Always))
                         {
                             /*
                             var characterCopy = PrefabUtility.InstantiatePrefab(character, character.transform.parent) as GameObject;
@@ -499,7 +501,7 @@ namespace Ahzkwid
                                 //Merge(characterCopy, clothCopy, mergeType);
                                 Merge(clothCopy, clothCopy, mergeType);
 
-                                if (mergeType == MergeType.ForceMerge)
+                                //if (mergeType == MergeType.ForceMerge)
                                 {
                                     //if (boneTransforms.Count <= 0)
                                     {
@@ -523,16 +525,19 @@ namespace Ahzkwid
                             }
                             else
                             {
-                                if (mergeType == MergeType.ForceMerge)
+                                switch (mergeTrigger)
                                 {
-                                    AddAutoMerge(character, cloth, mergeType);
-                                }
-                                else
-                                {
-                                    Merge(character, cloth, mergeType);
+                                    case AutoMerge.MergeTrigger.Always:
+                                        Merge(character, cloth, mergeType);
+                                        break;
+                                    case AutoMerge.MergeTrigger.Runtime:
+                                        AddAutoMerge(character, cloth, mergeType);
+                                        break;
+                                    default:
+                                        break;
                                 }
                             }
-                            if (mergeType == MergeType.ForceMerge)
+                            //if (mergeType == MergeType.ForceMerge)
                             {
                                 //if (boneTransforms.Count <= 0)
                                 {

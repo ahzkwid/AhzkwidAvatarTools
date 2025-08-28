@@ -1189,7 +1189,17 @@ namespace Ahzkwid
                             {
                                 UnityEditor.Undo.RecordObject(symmetricalTransform, "Rotate Transform");
                                 var localRotation = Quaternion.Inverse(root.rotation) * newRotation;
-                                localRotation = new Quaternion(-localRotation.x, localRotation.y, localRotation.z, localRotation.w); // 대칭 회전 처리
+
+                                //localRotation = new Quaternion(-localRotation.x, localRotation.y, localRotation.z, localRotation.w); 
+                                {
+                                    // 대칭 회전 처리 (AI)
+                                    var R = Matrix4x4.Rotate(localRotation);
+                                    var S = Matrix4x4.Scale(new Vector3(-1f, 1f, 1f));
+                                    var mirroredLocal = (S * R * S).rotation;
+                                    localRotation = mirroredLocal;
+                                }
+
+
                                 symmetricalTransform.rotation = root.rotation * localRotation;
                             }
 
