@@ -739,23 +739,29 @@ namespace Ahzkwid
                             break;
                     }
                     */
-
-
-
-                    if (positionData.updatePosition)
+                    if ((positionData.tracking==Tracking.Humanoid)&& (parent == null))
                     {
-                        target.localPosition = positionData.position;
+                        //skip
+                    }
+                    else
+                    {
+                        if (positionData.updatePosition)
+                        {
+                            target.localPosition = positionData.position;
+                        }
+
+                        if (positionData.updateRotation)
+                        {
+                            target.localRotation = Quaternion.Euler(positionData.rotation);
+                        }
+
+                        if (positionData.updateScale)
+                        {
+                            target.localScale = positionData.scale;
+                        }
                     }
 
-                    if (positionData.updateRotation)
-                    {
-                        target.localRotation = Quaternion.Euler(positionData.rotation);
-                    }
 
-                    if (positionData.updateScale)
-                    {
-                        target.localScale = positionData.scale;
-                    }
 
 
                 }
