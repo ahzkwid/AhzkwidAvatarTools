@@ -19,6 +19,7 @@ namespace Ahzkwid
     using UnityEditor;
     using System.Linq;
     using System.Collections;
+    using static Ahzkwid.AvatarMergeTool;
 
     [InitializeOnLoad]
     public class AvatarMergeTool : EditorWindow
@@ -72,6 +73,11 @@ namespace Ahzkwid
             Default
             , ForceMerge
         }
+        public enum ForceMergeType
+        {
+            HumanBodyBones
+            , Path
+        }
 
 
         public GameObject[] characters;
@@ -82,7 +88,9 @@ namespace Ahzkwid
         public bool nameMerge = false;
         public bool editMode = false;
         public bool ignoreHierarchy = false;
+        
         public MergeType mergeType = MergeType.Default;
+        public ForceMergeType forceMergeType = ForceMergeType.HumanBodyBones;
         public AutoMerge.MergeTrigger mergeTrigger = AutoMerge.MergeTrigger.Runtime;
 
 
@@ -273,6 +281,12 @@ namespace Ahzkwid
             }
             serializedObject.Update();
             {
+
+
+                if (mergeType == MergeType.ForceMerge)
+                {
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(forceMergeType)));
+                }
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
@@ -499,7 +513,7 @@ namespace Ahzkwid
                                 cloth.SetActive(false);
                                 clothCopy.SetActive(true);
                                 //Merge(characterCopy, clothCopy, mergeType);
-                                Merge(clothCopy, clothCopy, mergeType);
+                                Merge(clothCopy, clothCopy, mergeType, forceMergeType);
 
                                 //if (mergeType == MergeType.ForceMerge)
                                 {
@@ -528,10 +542,10 @@ namespace Ahzkwid
                                 switch (mergeTrigger)
                                 {
                                     case AutoMerge.MergeTrigger.Always:
-                                        Merge(character, cloth, mergeType);
+                                        Merge(character, cloth, mergeType, forceMergeType);
                                         break;
                                     case AutoMerge.MergeTrigger.Runtime:
-                                        AddAutoMerge(character, cloth, mergeType);
+                                        AddAutoMerge(character, cloth, mergeType, forceMergeType);
                                         break;
                                     default:
                                         break;
@@ -940,7 +954,7 @@ namespace Ahzkwid
 
         }
         */
-        public static void Merge(GameObject character, GameObject cloth, MergeType mergeType = MergeType.Default)
+        public static void Merge(GameObject character, GameObject cloth, MergeType mergeType = MergeType.Default,ForceMergeType forceMergeType = ForceMergeType.HumanBodyBones)
         {
 
             switch (mergeType)
@@ -959,7 +973,7 @@ namespace Ahzkwid
 
                     ForceMerge(characterCopy, clothCopy);
                     */
-                    ForceMerge(character, cloth);
+                    ForceMerge(character, cloth, forceMergeType);
                     break;
                 case MergeType.Default:
                 default:
@@ -968,7 +982,7 @@ namespace Ahzkwid
             }
         }
 
-        public static void AddAutoMerge(GameObject character, GameObject cloth, MergeType mergeType = MergeType.Default)
+        public static void AddAutoMerge(GameObject character, GameObject cloth, MergeType mergeType = MergeType.Default, ForceMergeType forceMergeType=ForceMergeType.HumanBodyBones)
         {
 
             cloth.transform.parent = character.transform;
@@ -977,6 +991,7 @@ namespace Ahzkwid
             gameObject.transform.parent = cloth.transform;
             var autoMerge= gameObject.AddComponent<AutoMerge>();
             autoMerge.mergeType = mergeType;
+            autoMerge.forceMergeType = forceMergeType;
 
             var clothRoot = new AutoMerge.ClothRoot();
             clothRoot.option = AutoMerge.ClothRoot.Option.GameObject;
@@ -1045,7 +1060,7 @@ namespace Ahzkwid
                 }
             }
         }
-        public static void ForceMerge(GameObject character, GameObject cloth)
+        public static void ForceMerge(GameObject character, GameObject cloth, ForceMergeType forceMergeType)
         {
             //var characterAnimator = character.GetComponentInChildren<Animator>(true);
             //var clothAnimator = character.GetComponentInChildren<Animator>(true);
@@ -1054,44 +1069,109 @@ namespace Ahzkwid
 
 
 
-
-            var humanoid = new AhzkwidHumanoid(cloth);
-
-            foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+            switch (forceMergeType)
             {
+                case ForceMergeType.HumanBodyBones:
 
-                if (humanBodyBone < 0)
-                {
-                    continue;
-                }
-                if (humanBodyBone >= HumanBodyBones.LastBone)
-                {
-                    continue;
-                }
-                Transform characterTransform;
-                try
-                {
-                    characterTransform = characterAnimator.GetBoneTransform(humanBodyBone);
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError(ex);
-                    Debug.LogError(humanBodyBone);
-                    throw;
-                }
-                //var clothTransform = clothAnimator.GetBoneTransform(humanBodyBone);
-                var clothTransform = humanoid.GetBoneTransform(humanBodyBone);
-                //characterTransform.localPosition = poseTransform.localPosition;
-                if (characterTransform == null)
-                {
-                    continue;
-                }
-                if (clothTransform == null)
-                {
-                    continue;
-                }
-                //characterTransform.localRotation = clothTransform.localRotation;
-                clothTransform.parent = characterTransform;
+                    var humanoid = new AhzkwidHumanoid(cloth);
+
+                    foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+                    {
+
+                        if (humanBodyBone < 0)
+                        {
+                            continue;
+                        }
+                        if (humanBodyBone >= HumanBodyBones.LastBone)
+                        {
+                            continue;
+                        }
+                        Transform characterTransform;
+                        try
+                        {
+                            characterTransform = characterAnimator.GetBoneTransform(humanBodyBone);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogError(ex);
+                            Debug.LogError(humanBodyBone);
+                            throw;
+                        }
+                        //var clothTransform = clothAnimator.GetBoneTransform(humanBodyBone);
+                        var clothTransform = humanoid.GetBoneTransform(humanBodyBone);
+                        //characterTransform.localPosition = poseTransform.localPosition;
+                        if (characterTransform == null)
+                        {
+                            continue;
+                        }
+                        if (clothTransform == null)
+                        {
+                            continue;
+                        }
+                        //characterTransform.localRotation = clothTransform.localRotation;
+                        clothTransform.parent = characterTransform;
+                    }
+                    break;
+                case ForceMergeType.Path:
+
+                        {
+                            var armature = ObjectPath.GetArmature(cloth);
+                            if (armature != null)
+                            {
+                                armature.gameObject.SetActive(false);
+                            }
+                        }
+
+                        {
+                            var parents = cloth.transform.GetComponentsInParent<Transform>();
+                            if (System.Array.FindIndex(parents, x => x == character.transform) < 0)
+                            {
+                                cloth.transform.parent = character.transform;
+                            }
+                        }
+
+                        var characterRenderer = character.GetComponentInChildren<SkinnedMeshRenderer>(true);
+                        var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+
+
+                        var characterRendererBones = (Transform[])characterRenderer.bones.Clone();
+                        Debug.Log($"characterRenderer.bones.Length: {characterRenderer.bones.Length}");
+
+                        foreach (var characterBone in characterRendererBones)
+                        {
+                            var characterArmature = ObjectPath.GetArmature(character);
+                            var clothArmature = ObjectPath.GetArmature(cloth);
+
+                            if (characterArmature == null)
+                            {
+                                Debug.LogError("characterArmature == null");
+                            }
+                            if (characterArmature == null)
+                            {
+                                Debug.LogError("characterArmature == null");
+                            }
+                            var relativePathCharacter = ObjectPath.GetPath(characterBone, characterArmature);
+
+
+
+                            foreach (var clothRenderer in clothRenderers)
+                            {
+                                var clothRenderersBones = (Transform[])clothRenderer.bones.Clone();
+
+                                foreach (var clothBone in clothRenderersBones)
+                                {
+                                    var relativePathCloth = ObjectPath.GetPath(clothBone, clothArmature);
+                                    if (relativePathCharacter != relativePathCloth)
+                                    {
+                                        continue;
+                                    }
+                                    clothBone.parent = characterBone;
+                                }
+                            }
+                        }
+                        break;
+                default:
+                    break;
             }
 
 

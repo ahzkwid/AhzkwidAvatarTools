@@ -109,7 +109,7 @@ namespace Ahzkwid
                 var target = (AutoPosition.Target)property.FindPropertyRelative(nameof(AutoPosition.PositionData.target)).intValue;
 
                 {
-                    string header = "Target";
+                    string header = "From";
 
 
                     var border = 2f;
@@ -197,7 +197,7 @@ namespace Ahzkwid
                 var tracking = (AutoPosition.Tracking)property.FindPropertyRelative(nameof(AutoPosition.PositionData.tracking)).intValue;
 
                 {
-                    string header = "Parent";
+                    string header = "To";
 
 
                     var border = 2f;
@@ -413,13 +413,13 @@ namespace Ahzkwid
             public Object targetObject;
 
 
+
             public bool updatePosition = true;
             public Vector3 position = Vector3.zero;
             public bool updateRotation = true;
             public Vector3 rotation = Vector3.zero;
             public bool updateScale = true;
             public Vector3 scale = Vector3.one;
-
 
 
 

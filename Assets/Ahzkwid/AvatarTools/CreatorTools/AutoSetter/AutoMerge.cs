@@ -293,6 +293,8 @@ namespace Ahzkwid
 
 
         public AvatarMergeTool.MergeType mergeType = AvatarMergeTool.MergeType.Default;
+        public AvatarMergeTool.ForceMergeType forceMergeType = AvatarMergeTool.ForceMergeType.HumanBodyBones;
+        
 
 
         public enum MergeTrigger
@@ -732,7 +734,7 @@ namespace Ahzkwid
                 var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
                 if (targetTransform != clothRoot)
                 {
-                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject,mergeType);
+                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject,mergeType, forceMergeType);
                     DestroyImmediate(this);
                 }
             }

@@ -1,4 +1,4 @@
-
+#define USE_FINGER
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
