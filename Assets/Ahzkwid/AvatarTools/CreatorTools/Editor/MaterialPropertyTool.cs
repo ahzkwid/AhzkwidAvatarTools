@@ -63,7 +63,8 @@ class MaterialPropertyTool : EditorWindow
     public static readonly string[] propertyNamesLight = new string[]
     {
         "_MonochromeLighting",
-        "_LightMinLimit", "_VertexLightStrength"
+        "_LightMinLimit", "_VertexLightStrength",
+        "_ShadowEnvStrength",
     };
     public static readonly string[] propertyNamesShadow = new string[]
     {

@@ -90,6 +90,7 @@ namespace Ahzkwid
         public bool ignoreHierarchy = false;
         
         public MergeType mergeType = MergeType.Default;
+
         public ForceMergeType forceMergeType = ForceMergeType.HumanBodyBones;
         public AutoMerge.MergeTrigger mergeTrigger = AutoMerge.MergeTrigger.Runtime;
 
@@ -285,7 +286,7 @@ namespace Ahzkwid
 
                 if (mergeType == MergeType.ForceMerge)
                 {
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(forceMergeType)));
+                    //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(forceMergeType)));
                 }
 
                 EditorGUILayout.Space();

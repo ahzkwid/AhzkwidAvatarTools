@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8970980672809591622}
   - component: {fileID: 1410289716558852773}
   m_Layer: 0
-  m_Name: AutoDescriptor Shinano
+  m_Name: AutoDescriptor Shinano Cloth
   m_TagString: EditorOnly
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

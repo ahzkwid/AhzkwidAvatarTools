@@ -293,6 +293,7 @@ namespace Ahzkwid
 
 
         public AvatarMergeTool.MergeType mergeType = AvatarMergeTool.MergeType.Default;
+        [HideInInspector]
         public AvatarMergeTool.ForceMergeType forceMergeType = AvatarMergeTool.ForceMergeType.HumanBodyBones;
         
 
