@@ -10,16 +10,19 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using UnityEngine.WSA;
 
 [InitializeOnLoad]
 class InsertMaterialsTool : EditorWindow
 {
     public enum MaterialSelectMode
     {
-        Materials, MaterialFolder
+        Materials, MaterialFolder, CreateMaterialsVariant
     }
     public MaterialSelectMode materialSelectMode;
     public DefaultAsset[] materialFolders;
+    public DefaultAsset[] toFolders;
     public Material[] materials;
     public GameObject root;
     public GameObject[] roots;
@@ -36,7 +39,7 @@ class InsertMaterialsTool : EditorWindow
         //window.maxSize = window.minSize;
         window.Show();
     }
-    static Material[] GetFolderToMaterials(Object folder)
+    static Material[] GetFolderToMaterials(DefaultAsset folder)
     {
         var folderPath = AssetDatabase.GetAssetPath(folder);
         var filePaths = AssetDatabase.FindAssets($"t:{typeof(Material).Name}", new string[] { folderPath });
@@ -49,34 +52,92 @@ class InsertMaterialsTool : EditorWindow
     }
     void InsertMaterials()
     {
-        if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+        switch (materialSelectMode)
         {
-            if (roots.Length==1)
-            {
-                for (int i = 0; i < materialFolders.Length; i++)
+            case MaterialSelectMode.Materials:
+                InsertMaterials(root, materials);
+                break;
+            case MaterialSelectMode.MaterialFolder:
+                if (roots.Length == 1)
                 {
-                    var root = roots.First();
-                    var materialFolder = materialFolders[i];
-                    InsertMaterials(root, materialFolder);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < roots.Length; i++)
-                {
-                    if (i> materialFolders.Length)
+                    for (int i = 0; i < materialFolders.Length; i++)
                     {
-                        continue;
+                        var root = roots.First();
+                        var materialFolder = materialFolders[i];
+                        InsertMaterials(root, materialFolder);
                     }
-                    var root = roots[i];
-                    var materialFolder = materialFolders[i % roots.Length];
-                    InsertMaterials(root, materialFolder);
                 }
-            }
+                else
+                {
+                    for (int i = 0; i < roots.Length; i++)
+                    {
+                        if (i > materialFolders.Length)
+                        {
+                            continue;
+                        }
+                        var root = roots[i];
+                        var materialFolder = materialFolders[i % roots.Length];
+                        InsertMaterials(root, materialFolder);
+                    }
+                }
+                break;
+            case MaterialSelectMode.CreateMaterialsVariant:
+
+                if (materialFolders.Length == 1)
+                {
+                    var materialFolder = materialFolders.First();
+
+                    foreach (var toFolder in toFolders)
+                    {
+                        CreateMaterialsVariant(materialFolder, toFolder);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < materialFolders.Length; i++)
+                    {
+                        var materialFolder = materialFolders[i];
+                        var toFolder = toFolders.FirstOrDefault(x => x.name == materialFolder.name);
+
+                        if (toFolder == null)
+                        {
+                            continue;
+                        }
+                        CreateMaterialsVariant(materialFolder, toFolder);
+                    }
+                }
+                break;
+            default:
+                break;
         }
-        else
+    }
+    void CreateMaterialsVariant(DefaultAsset fromFolder, DefaultAsset toFolder)
+    {
+        var folderPathFrom = AssetDatabase.GetAssetPath(fromFolder);
+        var folderPathTo = AssetDatabase.GetAssetPath(toFolder);
+
+        var filePathsFrom = AssetDatabase.FindAssets($"t:{typeof(Material).Name}", new string[] { folderPathFrom });
+        var assetsFrom = new Material[filePathsFrom.Length];
+        for (int i = 0; i < assetsFrom.Length; i++)
         {
-            InsertMaterials(root, materials);
+            var fromMaterial = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(filePathsFrom[i]));
+
+
+
+            var toPath = Path.Combine(folderPathTo, fromMaterial.name)+ ".mat";
+
+
+            if (File.Exists(toPath))
+            {
+                Debug.Log($"File.Exists {toPath}");
+                continue;
+            }
+
+            var variant = new Material(fromMaterial);
+            variant.parent = fromMaterial;
+
+
+            AssetDatabase.CreateAsset(variant, toPath);
         }
     }
     void InsertMaterials(GameObject root, DefaultAsset materialFolder)
@@ -220,44 +281,64 @@ class InsertMaterialsTool : EditorWindow
             EditorGUILayout.Space();
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialSelectMode)));
             EditorGUILayout.Space();
-            if (materialSelectMode == MaterialSelectMode.Materials)
+            switch (materialSelectMode)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materials)));
-                if (materials == null)
-                {
-                    allReady = false;
-                }
+                case MaterialSelectMode.Materials:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materials)));
+                    if (materials == null)
+                    {
+                        allReady = false;
+                    }
 
-                EditorGUILayout.Space();
-                GUI.enabled = allReady;
-                if (GUILayout.Button("ResetMaterials"))
-                {
-                    materialFolders = null;
-                    materials = null;
-                }
-                GUI.enabled = true;
+                    EditorGUILayout.Space();
+                    GUI.enabled = allReady;
+                    if (GUILayout.Button("ResetMaterials"))
+                    {
+                        materialFolders = null;
+                        materials = null;
+                    }
+                    GUI.enabled = true;
+                    break;
+                case MaterialSelectMode.MaterialFolder:
+                case MaterialSelectMode.CreateMaterialsVariant:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolders)));
+                    if ((materialFolders == null) || (System.Array.FindAll(materialFolders, x => x != null).Length == 0))
+                    {
+                        allReady = false;
+                    }
+                    break;
+                default:
+                    break;
             }
-            else
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            switch (materialSelectMode)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolders)));
-                if ((materialFolders == null)||(System.Array.FindAll(materialFolders,x=>x!=null).Length==0))
-                {
-                    allReady = false;
-                }
+                case MaterialSelectMode.Materials:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
+                    break;
+                case MaterialSelectMode.MaterialFolder:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
+                    break;
+                case MaterialSelectMode.CreateMaterialsVariant:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toFolders)));
+                    break;
+                default:
+                    break;
             }
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+            switch (materialSelectMode)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
+                case MaterialSelectMode.Materials:
+                case MaterialSelectMode.MaterialFolder:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(repairMode)));
+                    break;
+                case MaterialSelectMode.CreateMaterialsVariant:
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(root)));
-            }
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(repairMode)));
             if (materialSelectMode == MaterialSelectMode.MaterialFolder)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(nameMerge)));
@@ -265,19 +346,24 @@ class InsertMaterialsTool : EditorWindow
             }
             EditorGUILayout.Space();
 
-            if (materialSelectMode == MaterialSelectMode.MaterialFolder)
+            switch (materialSelectMode)
             {
-                if ((roots == null) || (System.Array.FindAll(roots, x => x != null).Length == 0))
-                {
-                    allReady = false;
-                }
-            }
-            else
-            {
-                if (root == null)
-                {
-                    allReady = false;
-                }
+                case MaterialSelectMode.Materials:
+                    if (root == null)
+                    {
+                        allReady = false;
+                    }
+                    break;
+                case MaterialSelectMode.MaterialFolder:
+                    if ((roots == null) || (System.Array.FindAll(roots, x => x != null).Length == 0))
+                    {
+                        allReady = false;
+                    }
+                    break;
+                case MaterialSelectMode.CreateMaterialsVariant:
+                    break;
+                default:
+                    break;
             }
             //if (textureFolder == null)
             {

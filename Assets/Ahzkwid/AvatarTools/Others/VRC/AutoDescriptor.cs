@@ -332,7 +332,7 @@ namespace Ahzkwid
                                         avatarDescriptor.baseAnimationLayers[i].animatorController = null;
                                     }
                                     else
-                                    {
+                                     {
                                         if (option == Option.Merge)
                                         {
                                             /*
