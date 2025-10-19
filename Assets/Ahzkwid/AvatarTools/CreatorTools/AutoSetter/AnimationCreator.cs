@@ -170,6 +170,7 @@ public class AnimationCreator : MonoBehaviour
 
         public bool floatParameter = true;
         public bool motionTime = false;
+        public string motionTimeParameter = null;
         public bool inverse = false;
 
 
@@ -339,7 +340,7 @@ public class AnimationCreator : MonoBehaviour
 
 
 
-            var useMosionTime = motionTime;
+            var singleState = motionTime;
 
 
             bool isShirink = false;
@@ -352,11 +353,16 @@ public class AnimationCreator : MonoBehaviour
             }
             if (isShirink)
             {
-                useMosionTime = false;
+                singleState = false;
             }
-            if (useMosionTime)
+            if (singleState)
             {
-                var parameter = parameters.FirstOrDefault();
+                //State 한개 생성 (모션타임 전용)
+                var parameter = motionTimeParameter;
+                if (parameter == null)
+                {
+                    parameter = parameters.FirstOrDefault();
+                }
                 var newState = new AnimatorState();
                 if (clip == null)
                 {
@@ -368,20 +374,43 @@ public class AnimationCreator : MonoBehaviour
                 }
                 newState.name = parameter;
                 //controller.AddParameter(toggleData.parameter, AnimatorControllerParameterType.Float);
-                newState.timeParameterActive = true;
-                newState.timeParameter = parameter;
+
+
+                {
+                    //모션타임설정부분
+                    newState.timeParameterActive = true;
+                    newState.timeParameter = parameter;
+                }
+
+
 
                 newLayer.stateMachine.AddState(newState, Vector3.right * 300);
                 newLayer.stateMachine.name = parameter;
                 newLayer.stateMachine.defaultState = newState;
             }
-            else
+            else 
             {
+                //State 온오프 두개 생성
                 //var parameter = parameters.First();
                 var newStates = new List<AnimatorState>();
                 for (int i = 0; i < 2; i++)
                 {
-                    var name = parameters.First();
+                    var name ="";
+
+                    if (parameters.Length > 0)
+                    {
+                        name = parameters.First();
+                    }
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = motionTimeParameter;
+                    }
+
+
+
+
+
+                    //var name = parameter;
                     if (i > 0)
                     {
                         name += " On";
@@ -394,6 +423,7 @@ public class AnimationCreator : MonoBehaviour
                     var newState = new AnimatorState();
                     if (clip==null)
                     {
+                        //타겟 애니메이션 생성부분
                         newState.motion = CreateAnimationClip((ClipValue)i);
                     }
                     else
@@ -406,6 +436,26 @@ public class AnimationCreator : MonoBehaviour
                         }
                     }
                     newState.name = name;
+
+
+                    if (i > 0)
+                    {
+
+                        if (motionTime)
+                        {
+                            //모션타임설정부분
+                            //쉬링크만 진입 가능
+                            var parameter = motionTimeParameter;
+                            if (parameter==null)
+                            {
+                                parameter = parameters.FirstOrDefault();
+                            }
+                            newState.timeParameterActive = true;
+                            newState.timeParameter = parameter;
+                        }
+                    }
+
+
 
                     newLayer.stateMachine.AddState(newState, Vector3.right * 300 + Vector3.up * 100 * i);
                     newLayer.stateMachine.name = name;
@@ -435,6 +485,10 @@ public class AnimationCreator : MonoBehaviour
 
                     newStates.Add(newState);
                 }
+
+                //아래부턴 트랜지션 생성
+
+
                 for (int i = 0; i < 2; i++)
                 {
                     /*
