@@ -340,10 +340,11 @@ public class AnimationCreator : MonoBehaviour
 
 
 
-            var singleState = motionTime;
+            var singleState = false;
 
 
             bool isShirink = false;
+
             if (clip != null)
             {
                 if (clip == shirink.clip)
@@ -351,15 +352,30 @@ public class AnimationCreator : MonoBehaviour
                     isShirink = true;
                 }
             }
+
+
+
             if (isShirink)
             {
                 singleState = false;
             }
-            if (singleState)
+            else
+            {
+                if (motionTime)
+                {
+                    if (string.IsNullOrWhiteSpace(motionTimeParameter))
+                    {
+                        singleState = true;
+                    }
+                }
+                singleState = false;
+            }
+
+            if (singleState) //항상 false로 봉인
             {
                 //State 한개 생성 (모션타임 전용)
                 var parameter = motionTimeParameter;
-                if (parameter == null)
+                if (string.IsNullOrWhiteSpace(parameter))
                 {
                     parameter = parameters.FirstOrDefault();
                 }
@@ -444,9 +460,8 @@ public class AnimationCreator : MonoBehaviour
                         if (motionTime)
                         {
                             //모션타임설정부분
-                            //쉬링크만 진입 가능
                             var parameter = motionTimeParameter;
-                            if (parameter==null)
+                            if (string.IsNullOrWhiteSpace(parameter))
                             {
                                 parameter = parameters.FirstOrDefault();
                             }
@@ -1109,6 +1124,22 @@ public class AnimationCreator : MonoBehaviour
             }
             foreach (var parameter in parameters)
             {
+                if (controller.parameters.Any(p => p.name == parameter))
+                {
+                    continue; //이미 존재하면 스킵
+                }
+                if (toggleData.floatParameter)
+                {
+                    controller.AddParameter(parameter, AnimatorControllerParameterType.Float);
+                }
+                else
+                {
+                    controller.AddParameter(parameter, AnimatorControllerParameterType.Bool);
+                }
+            }
+            
+            {
+                var parameter= toggleData.motionTimeParameter;
                 if (controller.parameters.Any(p => p.name == parameter))
                 {
                     continue; //이미 존재하면 스킵
