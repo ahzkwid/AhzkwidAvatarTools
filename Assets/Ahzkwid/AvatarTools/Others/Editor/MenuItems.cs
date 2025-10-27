@@ -80,7 +80,13 @@ namespace Ahzkwid
         {
             IntervalTool.Init();
         }
-        
+
+        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/" + nameof(AssetsExportTool))]
+        public static void AssetsExportToolInit()
+        {
+            AssetsExportTool.Init();
+        }
+
 
 
 

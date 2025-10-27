@@ -368,7 +368,6 @@ public class AnimationCreator : MonoBehaviour
                         singleState = true;
                     }
                 }
-                singleState = false;
             }
 
             if (singleState) //항상 false로 봉인
