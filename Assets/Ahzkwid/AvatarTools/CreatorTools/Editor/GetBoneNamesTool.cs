@@ -6,6 +6,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Ahzkwid;
 
 
 [InitializeOnLoad]
@@ -43,12 +44,18 @@ class GetBoneNamesTool : EditorWindow
                 {
                     continue;
                 }
+
+
                 var humanBodyBoneToString = ToLowerFirst(humanBodyBone.ToString());
-                if (!string.IsNullOrWhiteSpace(boneTransformEnumNames))
                 {
-                    boneTransformEnumNames += ",";
+                    //변수명 등록
+
+                    if (!string.IsNullOrWhiteSpace(boneTransformEnumNames))
+                    {
+                        boneTransformEnumNames += ",";
+                    }
+                    boneTransformEnumNames += $"\"{humanBodyBoneToString}\": None";
                 }
-                boneTransformEnumNames += $"\"{humanBodyBoneToString}\": None";
                 //boneTransformEnumNames += $"\n";
 
                 if (animator == null)
@@ -66,6 +73,52 @@ class GetBoneNamesTool : EditorWindow
                 }
                 boneTransformNames += $"{humanBodyBoneToString}=\"{boneTransform.name}\"";
                 //boneTransformNames += $"\n";
+            }
+            {
+                //가슴추가
+                var ahzkwidHumanoid = new AhzkwidHumanoid(character);
+
+                var fields = typeof(AhzkwidHumanoid).GetFields();
+
+                var list = new List<Transform>() { ahzkwidHumanoid.rightBreast, ahzkwidHumanoid.leftBreast };
+                foreach (var field in fields)
+                {
+
+                    var boneTransformToString = ToLowerFirst(field.Name);
+                    if (boneTransformToString.ToLower().Contains("breast") == false)
+                    {
+                        continue;
+                    }
+
+                    {
+                        //변수명 등록
+
+                        if (!string.IsNullOrWhiteSpace(boneTransformEnumNames))
+                        {
+                            boneTransformEnumNames += ",";
+                        }
+                        boneTransformEnumNames += $"\"{boneTransformToString}\": None";
+                    }
+
+
+
+
+                    var boneTransform = field.GetValue(ahzkwidHumanoid) as Transform;
+
+                    if (boneTransform == null)
+                    {
+                        Debug.Log($"{boneTransformToString} is null");
+                        continue;
+                    }
+
+
+                    if (!string.IsNullOrWhiteSpace(boneTransformNames))
+                    {
+                        boneTransformNames += ",";
+                    }
+                    boneTransformNames += $"{boneTransformToString}=\"{boneTransform.name}\"";
+                }
+
             }
             if (character==null)
             {

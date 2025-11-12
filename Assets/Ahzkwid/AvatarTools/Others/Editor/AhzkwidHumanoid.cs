@@ -1,4 +1,5 @@
 #define USE_FINGER
+#define USE_BREAST
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -36,37 +37,41 @@ namespace Ahzkwid
         public Transform rightLowerArm;
         public Transform rightHand;
 #if USE_FINGER
-        public Transform LeftThumbProximal;
-        public Transform LeftThumbIntermediate;
-        public Transform LeftThumbDistal;
-        public Transform LeftIndexProximal;
-        public Transform LeftIndexIntermediate;
-        public Transform LeftIndexDistal;
-        public Transform LeftMiddleProximal;
-        public Transform LeftMiddleIntermediate;
-        public Transform LeftMiddleDistal;
-        public Transform LeftRingProximal;
-        public Transform LeftRingIntermediate;
-        public Transform LeftRingDistal;
-        public Transform LeftLittleProximal;
-        public Transform LeftLittleIntermediate;
-        public Transform LeftLittleDistal;
+        public Transform leftThumbProximal;
+        public Transform leftThumbIntermediate;
+        public Transform leftThumbDistal;
+        public Transform leftIndexProximal;
+        public Transform leftIndexIntermediate;
+        public Transform leftIndexDistal;
+        public Transform leftMiddleProximal;
+        public Transform leftMiddleIntermediate;
+        public Transform leftMiddleDistal;
+        public Transform leftRingProximal;
+        public Transform leftRingIntermediate;
+        public Transform leftRingDistal;
+        public Transform leftLittleProximal;
+        public Transform leftLittleIntermediate;
+        public Transform leftLittleDistal;
 
-        public Transform RightThumbProximal;
-        public Transform RightThumbIntermediate;
-        public Transform RightThumbDistal;
-        public Transform RightIndexProximal;
-        public Transform RightIndexIntermediate;
-        public Transform RightIndexDistal;
-        public Transform RightMiddleProximal;
-        public Transform RightMiddleIntermediate;
-        public Transform RightMiddleDistal;
-        public Transform RightRingProximal;
-        public Transform RightRingIntermediate;
-        public Transform RightRingDistal;
-        public Transform RightLittleProximal;
-        public Transform RightLittleIntermediate;
-        public Transform RightLittleDistal;
+        public Transform rightThumbProximal;
+        public Transform rightThumbIntermediate;
+        public Transform rightThumbDistal;
+        public Transform rightIndexProximal;
+        public Transform rightIndexIntermediate;
+        public Transform rightIndexDistal;
+        public Transform rightMiddleProximal;
+        public Transform rightMiddleIntermediate;
+        public Transform rightMiddleDistal;
+        public Transform rightRingProximal;
+        public Transform rightRingIntermediate;
+        public Transform rightRingDistal;
+        public Transform rightLittleProximal;
+        public Transform rightLittleIntermediate;
+        public Transform rightLittleDistal;
+#endif
+#if USE_BREAST
+        public Transform leftBreast;
+        public Transform rightBreast;
 #endif
 
         public Transform GetSymmetricalTransform(Transform input)
@@ -401,7 +406,8 @@ namespace Ahzkwid
 
         static readonly string[] spineKeywords = new [] { "spine", "ribs" };
         static readonly string[] hipsKeywords = new [] { "hips", "pelvis", "hip" };
-        static readonly string[] shoulderKeywords = new [] { "shoulder", "clavicle" };
+        static readonly string[] shoulderKeywords = new[] { "shoulder", "clavicle" };
+        static readonly string[] breastKeywords = new[] { "breast" };
         static readonly string[] handKeywords = new [] { "hand", "wrist" };
         static readonly string[] footKeywords = new [] { "foot", "ankle" };
 
@@ -620,24 +626,27 @@ namespace Ahzkwid
             {
                 var fingerTransforms = leftHand.GetComponentsInChildren<Transform>(true);
 
-                SetFingers(fingerTransforms, ref LeftThumbProximal, ref LeftThumbIntermediate, ref LeftThumbDistal, "thumb");
-                SetFingers(fingerTransforms, ref LeftIndexProximal, ref LeftIndexIntermediate, ref LeftIndexDistal, "index");
-                SetFingers(fingerTransforms, ref LeftMiddleProximal, ref LeftMiddleIntermediate, ref LeftMiddleDistal, "middle");
-                SetFingers(fingerTransforms, ref LeftRingProximal, ref LeftRingIntermediate, ref LeftRingDistal, "ring");
-                SetFingers(fingerTransforms, ref LeftLittleProximal, ref LeftLittleIntermediate, ref LeftLittleDistal, "little");
+                SetFingers(fingerTransforms, ref leftThumbProximal, ref leftThumbIntermediate, ref leftThumbDistal, "thumb");
+                SetFingers(fingerTransforms, ref leftIndexProximal, ref leftIndexIntermediate, ref leftIndexDistal, "index");
+                SetFingers(fingerTransforms, ref leftMiddleProximal, ref leftMiddleIntermediate, ref leftMiddleDistal, "middle");
+                SetFingers(fingerTransforms, ref leftRingProximal, ref leftRingIntermediate, ref leftRingDistal, "ring");
+                SetFingers(fingerTransforms, ref leftLittleProximal, ref leftLittleIntermediate, ref leftLittleDistal, "little");
             }
 
             if (rightHand != null)
             {
                 var fingerTransforms = rightHand.GetComponentsInChildren<Transform>(true);
 
-                SetFingers(fingerTransforms, ref RightThumbProximal, ref RightThumbIntermediate, ref RightThumbDistal, "thumb");
-                SetFingers(fingerTransforms, ref RightIndexProximal, ref RightIndexIntermediate, ref RightIndexDistal, "index");
-                SetFingers(fingerTransforms, ref RightMiddleProximal, ref RightMiddleIntermediate, ref RightMiddleDistal, "middle");
-                SetFingers(fingerTransforms, ref RightRingProximal, ref RightRingIntermediate, ref RightRingDistal, "ring");
-                SetFingers(fingerTransforms, ref RightLittleProximal, ref RightLittleIntermediate, ref RightLittleDistal, "little");
+                SetFingers(fingerTransforms, ref rightThumbProximal, ref rightThumbIntermediate, ref rightThumbDistal, "thumb");
+                SetFingers(fingerTransforms, ref rightIndexProximal, ref rightIndexIntermediate, ref rightIndexDistal, "index");
+                SetFingers(fingerTransforms, ref rightMiddleProximal, ref rightMiddleIntermediate, ref rightMiddleDistal, "middle");
+                SetFingers(fingerTransforms, ref rightRingProximal, ref rightRingIntermediate, ref rightRingDistal, "ring");
+                SetFingers(fingerTransforms, ref rightLittleProximal, ref rightLittleIntermediate, ref rightLittleDistal, "little");
             }
 #endif
+
+
+
 
 
             //家芭过
@@ -983,46 +992,15 @@ namespace Ahzkwid
             static Transform[] GetIntermediates(Transform[] transforms)
             {
                 var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("intermediate"));
+                if (matchingTransforms.Length==0)
+                {
+                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("intemediate"));
+                }
                 return matchingTransforms;
             }
             static Transform[] GetDistals(Transform[] transforms)
             {
                 var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("distal"));
-                return matchingTransforms;
-            }
-            Transform[] GetLefts(Transform[] transforms)
-            {
-                var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("left"));
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(" L "));
-                    //Debug.Log($"matchingTransforms.Length:{matchingTransforms[0].Length}");
-                }
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(".L"));
-                }
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_L"));
-                }
-                return matchingTransforms;
-            }
-            Transform[] GetRights(Transform[] transforms)
-            {
-                var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("right"));
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(" R "));
-                }
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(".R"));
-                }
-                if (matchingTransforms.Length == 0)
-                {
-                    matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_R"));
-                }
                 return matchingTransforms;
             }
 
@@ -1078,6 +1056,41 @@ namespace Ahzkwid
             }
         }
 
+        Transform[] GetLefts(Transform[] transforms)
+        {
+            var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("left"));
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(" L "));
+                //Debug.Log($"matchingTransforms.Length:{matchingTransforms[0].Length}");
+            }
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(".L"));
+            }
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_L"));
+            }
+            return matchingTransforms;
+        }
+        Transform[] GetRights(Transform[] transforms)
+        {
+            var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("right"));
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(" R "));
+            }
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains(".R"));
+            }
+            if (matchingTransforms.Length == 0)
+            {
+                matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_R"));
+            }
+            return matchingTransforms;
+        }
         public void DrawGizmo(bool ignoreHierarchy)
         {
 #if UNITY_EDITOR
@@ -1283,12 +1296,20 @@ namespace Ahzkwid
         }
         public void Update(GameObject root)
         {
+            if (root == null)
+            {
+                return;
+            }
+            Update(root.transform);
+        }
+        public void Update(Transform root)
+        {
             Clear();
             if (root == null)
             {
                 return;
             }
-            this.root = root.transform;
+            this.root = root;
 
 
             var animator = root.GetComponent<Animator>();
@@ -1300,6 +1321,19 @@ namespace Ahzkwid
             {
                 NameSearch(root.GetComponentsInChildren<Transform>(true));
             }
+
+#if USE_BREAST
+            if (chest != null)
+            {
+                var chestChilds = chest.GetComponentsInChildren<Transform>(true);
+                var breasts = FindBones(chestChilds, breastKeywords);
+                breasts = System.Array.FindAll(breasts, x => x.name.ToLower().Contains("root") == false);//风飘绰 傈何 力芭
+                leftBreast = GetLefts(breasts).FirstOrDefault();
+                rightBreast = GetRights(breasts).FirstOrDefault();
+            }
+
+
+#endif
 
             /*
             var transforms = root.GetComponentsInChildren<Transform>();
@@ -1344,6 +1378,11 @@ namespace Ahzkwid
         }
 
         public AhzkwidHumanoid(GameObject root)
+        {
+            Update(root);
+        }
+
+        public AhzkwidHumanoid(Transform root)
         {
             Update(root);
         }
