@@ -45,10 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   category: 0
+  mergeType: 0
+  forceMergeType: 0
   mergeTrigger: 1
   targetMeshs: []
   clothRoots:
   - option: 0
     parentIndex: 1
     gameObject: {fileID: 0}
-  parentIndex: 1

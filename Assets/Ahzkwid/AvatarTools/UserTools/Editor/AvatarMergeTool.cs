@@ -20,6 +20,7 @@ namespace Ahzkwid
     using System.Linq;
     using System.Collections;
     using static Ahzkwid.AvatarMergeTool;
+    using static AnimationRepairTool;
 
     [InitializeOnLoad]
     public class AvatarMergeTool : EditorWindow
@@ -1115,59 +1116,52 @@ namespace Ahzkwid
                     break;
                 case ForceMergeType.Path:
 
+                        var clothArmature = ObjectPath.GetArmature(cloth);
+
+                        var characterArmature = ObjectPath.GetArmature(character);
+
+                        if (clothArmature == null)
                         {
-                            var armature = ObjectPath.GetArmature(cloth);
-                            if (armature != null)
-                            {
-                                armature.gameObject.SetActive(false);
-                            }
+                            Debug.LogError("clothArmature == null");
+                        }
+                        if (characterArmature == null)
+                        {
+                            Debug.LogError("characterArmature == null");
                         }
 
+                        var characterBones = new Dictionary<string,Transform>();
                         {
-                            var parents = cloth.transform.GetComponentsInParent<Transform>();
-                            if (System.Array.FindIndex(parents, x => x == character.transform) < 0)
+                            var transforms = characterArmature.GetComponentsInChildren<Transform>(true);
+                            foreach (var transform in transforms)
                             {
-                                cloth.transform.parent = character.transform;
-                            }
-                        }
-
-                        var characterRenderer = character.GetComponentInChildren<SkinnedMeshRenderer>(true);
-                        var clothRenderers = cloth.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-
-
-                        var characterRendererBones = (Transform[])characterRenderer.bones.Clone();
-                        Debug.Log($"characterRenderer.bones.Length: {characterRenderer.bones.Length}");
-
-                        foreach (var characterBone in characterRendererBones)
-                        {
-                            var characterArmature = ObjectPath.GetArmature(character);
-                            var clothArmature = ObjectPath.GetArmature(cloth);
-
-                            if (characterArmature == null)
-                            {
-                                Debug.LogError("characterArmature == null");
-                            }
-                            if (characterArmature == null)
-                            {
-                                Debug.LogError("characterArmature == null");
-                            }
-                            var relativePathCharacter = ObjectPath.GetPath(characterBone, characterArmature);
-
-
-
-                            foreach (var clothRenderer in clothRenderers)
-                            {
-                                var clothRenderersBones = (Transform[])clothRenderer.bones.Clone();
-
-                                foreach (var clothBone in clothRenderersBones)
+                                var key = ObjectPath.GetPath(transform, characterArmature);
+                                if (key==null)
                                 {
-                                    var relativePathCloth = ObjectPath.GetPath(clothBone, clothArmature);
-                                    if (relativePathCharacter != relativePathCloth)
-                                    {
-                                        continue;
-                                    }
-                                    clothBone.parent = characterBone;
+                                    Debug.LogError($"key == null\n{transform.name}");
+                            }
+                                characterBones.Add(key, transform);
+                            }
+                        }
+
+
+                        var clothBones = new Dictionary<string,Transform>();
+                        {
+                            var transforms= clothArmature.GetComponentsInChildren<Transform>(true);
+                            foreach (var transform in transforms)
+                            {
+                                var key = ObjectPath.GetPath(transform, clothArmature);
+                                if (key == null)
+                                {
+                                    Debug.LogError($"key == null\n{transform.name}");
                                 }
+                                clothBones.Add(key, transform);
+                            }
+                        }
+                        foreach (var clothBone in clothBones)
+                        {
+                            if (characterBones.TryGetValue(clothBone.Key, out var value))
+                            {
+                                clothBone.Value.parent = value;
                             }
                         }
                         break;

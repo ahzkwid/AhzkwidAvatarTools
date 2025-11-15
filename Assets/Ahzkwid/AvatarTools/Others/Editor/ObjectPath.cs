@@ -39,7 +39,10 @@ namespace Ahzkwid
             var rootPath = "";
             var hierarchyPath = "";
 
-
+            if (target== root)
+            {
+                return "";
+            }
             if (root != null)
             {
                 rootPath = SearchUtils.GetHierarchyPath(root.gameObject, false).Replace("\\", "/");

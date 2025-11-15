@@ -41,10 +41,24 @@ namespace Ahzkwid
                             break;
                     }
                 }
+                
+                {
+                    var mergeType = (AvatarMergeTool.MergeType)serializedObject.FindProperty(nameof(AutoMerge.mergeType)).enumValueIndex;
+                    switch (mergeType)
+                    {
+                        case AvatarMergeTool.MergeType.Default:
+                            break;
+                        case AvatarMergeTool.MergeType.ForceMerge:
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(AutoMerge.forceMergeType)));
+                            break;
+                        default:
+                            break;
+                    }
+                }
 
 
 
-                DrawPropertiesExcluding(serializedObject, "m_Script", nameof(AutoMerge.mergeTrigger));
+                DrawPropertiesExcluding(serializedObject, "m_Script", nameof(AutoMerge.mergeTrigger), nameof(AutoMerge.forceMergeType));
             }
             serializedObject.ApplyModifiedProperties();
 
@@ -293,7 +307,7 @@ namespace Ahzkwid
 
 
         public AvatarMergeTool.MergeType mergeType = AvatarMergeTool.MergeType.Default;
-        [HideInInspector]
+        //[HideInInspector]
         public AvatarMergeTool.ForceMergeType forceMergeType = AvatarMergeTool.ForceMergeType.HumanBodyBones;
         
 
