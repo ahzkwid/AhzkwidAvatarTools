@@ -23,6 +23,7 @@ class AvatarPoseCopyTool : EditorWindow
     public float animationTime = 0;
     public bool poseBackup = false;
     public bool poseOnly = true;
+    public bool xMirror = false;
 
 
     //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarPoseCopyTool))]
@@ -133,6 +134,7 @@ class AvatarPoseCopyTool : EditorWindow
                 if (allReady)
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseBackup)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
                 }
             }
         }
@@ -170,7 +172,15 @@ class AvatarPoseCopyTool : EditorWindow
                         }
                         ApplyAnimationClipsMuscle(character, animation);
                     }
+
+                    if (xMirror)
+                    {
+                        var humanoid = new AhzkwidHumanoid(character);
+                        humanoid.MirrorX();
+                    }
                 }
+
+
             }
             GUI.enabled = true;
         }

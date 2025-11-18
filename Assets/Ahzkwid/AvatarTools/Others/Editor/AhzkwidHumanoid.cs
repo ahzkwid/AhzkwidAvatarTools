@@ -1091,16 +1091,85 @@ namespace Ahzkwid
             }
             return matchingTransforms;
         }
+        public void MirrorX()
+        {
+            int CountAllChildren(Transform t)
+            {
+                int count = 0;
+                foreach (Transform c in t)
+                {
+                    count++;
+                    count += CountAllChildren(c);
+                }
+                return count;
+            }
+            var fields = GetType().GetFields();
+
+            var dictionary = new Dictionary<Transform, Quaternion>();
+            foreach (var field in fields)
+            {
+                if (field.FieldType != typeof(Transform))
+                {
+                    continue;
+                }
+                var transform = (Transform)field.GetValue(this);
+                if (transform == null)
+                {
+                    continue;
+                }
+                if (field.Name == "root")
+                {
+                    continue;
+                }
+                dictionary.Add(transform, transform.rotation);
+            }
+            {
+                //부모우선 정렬
+                dictionary = dictionary
+    .OrderByDescending(t => CountAllChildren(t.Key))
+    .ToDictionary(x => x.Key, x => x.Value);
+            }
+            foreach (var item in dictionary)
+            {
+                var transform = item.Key;
+                var symmetricalTransform = GetSymmetricalTransform(transform);
+
+                var rotation = item.Value;
+
+                if (symmetricalTransform == null)
+                {
+                    symmetricalTransform=transform;
+                }
+                var localRotation = Quaternion.Inverse(root.rotation) * rotation;
+
+                localRotation = new Quaternion(
+                    // 대칭 회전 처리 (AI)
+                    -localRotation.x,
+                     localRotation.y,
+                     localRotation.z,
+                    -localRotation.w
+                );
+                var newRotation= root.rotation * localRotation;
+                Debug.Log($"{symmetricalTransform.name}.rotation:{symmetricalTransform.rotation.eulerAngles}->{newRotation.eulerAngles}");
+
+
+#if UNITY_EDITOR
+                UnityEditor.Undo.RecordObject(symmetricalTransform, "X Mirror");
+#endif
+                symmetricalTransform.rotation = newRotation;
+
+
+            }
+        }
         public void DrawGizmo(bool ignoreHierarchy)
         {
 #if UNITY_EDITOR
-
             List<Transform> GetChilds(params Transform[] transforms)
             {
                 var childs = new List<Transform>();
                 foreach (var transform in transforms)
                 {
-                    if (transform==null)
+                    if (transform == null)
                     {
                         continue;
                     }
@@ -1111,6 +1180,7 @@ namespace Ahzkwid
                 }
                 return childs;
             }
+
             List<Transform> childs = null;
             List<Vector3> childPositions = null;
             List<Quaternion> childRotations = null;
