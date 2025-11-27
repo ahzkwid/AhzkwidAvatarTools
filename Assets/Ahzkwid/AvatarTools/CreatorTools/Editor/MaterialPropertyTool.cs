@@ -54,6 +54,10 @@ class MaterialPropertyTool : EditorWindow
     public Material from;
     public Object[] to= new Object[1];
 
+    public Object parentsFolder;
+    public Object[] targets;
+
+
     public string[] properties;
     public static readonly string[] propertyNamesOutline = new string[]
     {
@@ -192,7 +196,7 @@ class MaterialPropertyTool : EditorWindow
     }
     public enum Mode
     {
-        CopyPaste, TriggerAction
+        CopyPaste, TriggerAction, RepairParent
     }
     //public Object textureFolder;
     //public bool createBackup = true;
@@ -565,6 +569,33 @@ class MaterialPropertyTool : EditorWindow
                 {
                     ReplacePropertyValue(folder, trigger, action);
                 }
+                break;
+            case Mode.RepairParent:
+                EditorGUILayout.Space();
+                serializedObject.Update();
+                {
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(parentsFolder)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(targets)));
+                    EditorGUILayout.Space();
+                }
+                serializedObject.ApplyModifiedProperties();
+
+                if (from == null)
+                {
+                    allReady = false;
+                }
+                if ((to != null) && (System.Array.FindAll(to, x => x != null).Length == 0))
+                {
+                    allReady = false;
+                }
+
+                GUI.enabled = allReady;
+                if (GUILayout.Button("Repair"))
+                {
+                }
+
+
+
                 break;
             default:
                 break;

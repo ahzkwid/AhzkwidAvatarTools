@@ -8,6 +8,7 @@ using UnityEditor.Search;
 using UnityEditor;
 using System.Linq;
 using Ahzkwid;
+using System.Collections.Generic;
 
 [InitializeOnLoad]
 class AvatarPoseCopyTool : EditorWindow
@@ -20,6 +21,7 @@ class AvatarPoseCopyTool : EditorWindow
 
     public GameObject[] characters;
     public Object pose;
+    public AvatarMask avatarMask;
     public float animationTime = 0;
     public bool poseBackup = false;
     public bool poseOnly = true;
@@ -45,6 +47,7 @@ class AvatarPoseCopyTool : EditorWindow
 
 
         var allReady = true;
+        var isHumanoid = true;
 
 
 
@@ -57,6 +60,32 @@ class AvatarPoseCopyTool : EditorWindow
             EditorGUILayout.Space();
             if (mode==Mode.ApplyPose)
             {
+                /*
+                if (characters == null || characters.Length == 0)
+                {
+                    allReady = false;
+                }
+                else
+                {
+                    foreach (var character in characters)
+                    {
+                        if (character != null)
+                        {
+                            var animator = character.GetComponent<Animator>();
+                            if (animator == null)
+                            {
+                                EditorGUILayout.HelpBox($"This character({character.name}) does not include an animator", MessageType.Info);
+                                //isHumanoid = false;
+                            }
+                            else if (animator.isHuman == false)
+                            {
+                                EditorGUILayout.HelpBox($"This character({character.name}) is not a humanoid", MessageType.Info);
+                                //isHumanoid = false;
+                            }
+                        }
+                    }
+                }
+                */
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(pose)));
                 if (pose == null)
                 {
@@ -88,27 +117,7 @@ class AvatarPoseCopyTool : EditorWindow
                     }
                 }
                 EditorGUILayout.Space();
-                if (characters == null || characters.Length == 0)
-                {
-                    allReady = false;
-                }
-                else
-                {
-                    if (characters[0] != null)
-                    {
-                        var animator = characters[0].GetComponent<Animator>();
-                        if (animator == null)
-                        {
-                            EditorGUILayout.HelpBox("This character does not include an animator", MessageType.Info);
-                            allReady = false;
-                        }
-                        else if (animator.isHuman == false)
-                        {
-                            EditorGUILayout.HelpBox("This character is not a humanoid", MessageType.Info);
-                            allReady = false;
-                        }
-                    }
-                }
+
                 if (pose == null)
                 {
                     allReady = false;
@@ -122,17 +131,25 @@ class AvatarPoseCopyTool : EditorWindow
                         if (animator == null)
                         {
                             EditorGUILayout.HelpBox("This pose character does not include an animator", MessageType.Info);
-                            allReady = false;
+                            //allReady = false;
                         }
                         else if (animator.isHuman == false)
                         {
                             EditorGUILayout.HelpBox("This pose character is not a humanoid", MessageType.Info);
-                            allReady = false;
+                            //allReady = false;
                         }
                     }
                 }
+
+
+
+
                 if (allReady)
                 {
+
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(avatarMask)));
+
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseBackup)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
                 }
@@ -142,7 +159,7 @@ class AvatarPoseCopyTool : EditorWindow
 
         if (mode == Mode.ApplyPose)
         {
-            //GUI.enabled = allReady;
+            GUI.enabled = allReady;
             if (GUILayout.Button("Apply Pose"))
             {
                 foreach (var character in characters)
@@ -155,22 +172,19 @@ class AvatarPoseCopyTool : EditorWindow
                     }
                     if (pose is GameObject gameObject)
                     {
-                        if (allReady)
+                        //if (isHumanoid)
                         {
-                            PoseCopy(character, gameObject);
+                            PoseCopy(character, gameObject,avatarMask);
                         }
-                        else
-                        {
-                            PoseCopyPath(character, gameObject);
-                        }
+                        PoseCopyPath(character, gameObject, avatarMask);
                     }
                     if (pose is AnimationClip animation)
                     {
                         if (poseOnly==false)
                         {
-                            ApplyAnimationClips(character, animation);
+                            ApplyAnimationClips(character, avatarMask, animation);
                         }
-                        ApplyAnimationClipsMuscle(character, animation);
+                        ApplyAnimationClipsMuscle(character, avatarMask, animation);
                     }
 
                     if (xMirror)
@@ -370,7 +384,7 @@ class AvatarPoseCopyTool : EditorWindow
         AssetDatabase.Refresh();
 
     }
-    public void ApplyAnimationClips(GameObject root, params AnimationClip[] clips)
+    public void ApplyAnimationClips(GameObject root, AvatarMask avatarMask, params AnimationClip[] clips)
     {
         if (root == null)
         {
@@ -387,9 +401,35 @@ class AvatarPoseCopyTool : EditorWindow
             animator.avatar = null;
             animator.runtimeAnimatorController = null;
         }
+        var transforms = root.GetComponentsInChildren<Transform>(true);
+        var preTRSs = new Dictionary<Transform, (Vector3 pos, Quaternion rot, Vector3 scale)>();
+
+        foreach (var transform in transforms)
+        {
+            preTRSs.Add(transform, (transform.localPosition, transform.localRotation, transform.localScale));
+        }
         foreach (var clip in clips)
         {
             clip.SampleAnimation(root.gameObject, clip.length);
+        }
+        if (avatarMask!=null)
+        {
+            var humanoid = new AhzkwidHumanoid(root);
+            var childs = humanoid.GetBoneTransformChilds(avatarMask);
+            foreach (var preTRS in preTRSs)
+            {
+                if (childs.Contains(preTRS.Key))
+                {
+                    continue;
+                }
+
+                var transform = preTRS.Key;
+                var trs = preTRS.Value;
+                transform.localPosition = trs.pos;
+                transform.localRotation = trs.rot;
+                transform.localScale = trs.scale;
+                //롤백
+            }
         }
         //EditorUtility.SetDirty(root.gameObject);
 
@@ -401,7 +441,7 @@ class AvatarPoseCopyTool : EditorWindow
         }
         EditorUtility.SetDirty(root.gameObject);
     }
-    public void ApplyAnimationClipsMuscle(GameObject root, params AnimationClip[] clips)
+    public void ApplyAnimationClipsMuscle(GameObject root, AvatarMask avatarMask, params AnimationClip[] clips)
     {
         if (root==null)
         {
@@ -416,6 +456,13 @@ class AvatarPoseCopyTool : EditorWindow
 
         Undo.RegisterCompleteObjectUndo(root.gameObject, "Apply ObjectSetting");
 
+        var transforms = root.GetComponentsInChildren<Transform>(true);
+        var preTRSs = new Dictionary<Transform, (Vector3 pos, Quaternion rot, Vector3 scale)>();
+
+        foreach (var transform in transforms)
+        {
+            preTRSs.Add(transform, (transform.localPosition, transform.localRotation, transform.localScale));
+        }
 
         foreach (var clip in clips)
         {
@@ -470,6 +517,23 @@ class AvatarPoseCopyTool : EditorWindow
             for (int i = 0; i < pose.muscles.Length; i++)
             {
                 var muscleName = HumanTrait.MuscleName[i];
+
+
+
+
+
+
+
+                //Undo.RegisterCompleteObjectUndo(AhzkwidHumanoid.MuscleToBoneTransform(muscleName), "Apply ObjectSetting");
+
+
+
+
+
+
+
+
+
                 //var humanoidName = AhzkwidHumanoid.HumanoidToMuscle(b.propertyName);
 
                 //Debug.Log($"{muscleName} -> {humanoidName}");
@@ -625,6 +689,27 @@ class AvatarPoseCopyTool : EditorWindow
             poseHandler.SetHumanPose(ref pose);
         }
 
+
+        if (avatarMask != null)
+        {
+            var humanoid = new AhzkwidHumanoid(root);
+            var childs = humanoid.GetBoneTransformChilds(avatarMask);
+            foreach (var preTRS in preTRSs)
+            {
+                if (childs.Contains(preTRS.Key))
+                {
+                    continue;
+                }
+
+                var transform = preTRS.Key;
+                var trs = preTRS.Value;
+                transform.localPosition = trs.pos;
+                transform.localRotation = trs.rot;
+                transform.localScale = trs.scale;
+                //롤백
+            }
+        }
+
         EditorUtility.SetDirty(root.gameObject);
     }
 
@@ -664,14 +749,39 @@ class AvatarPoseCopyTool : EditorWindow
         EditorUtility.SetDirty(animator.gameObject);
     }
 
-    public void PoseCopyPath(GameObject character, GameObject pose)
+    public void PoseCopyPath(GameObject character, GameObject pose, AvatarMask avatarMask)
     {
+
 
         var pathCharacter = SearchUtils.GetHierarchyPath(character.gameObject, false);
         var pathPose = SearchUtils.GetHierarchyPath(pose.gameObject, false);
 
+
+
+
         var characterChilds = character.GetComponentsInChildren<Transform>(true);
         var poseChilds = pose.GetComponentsInChildren<Transform>(true);
+
+
+        if (avatarMask == null)
+        {
+            characterChilds = character.GetComponentsInChildren<Transform>(true);
+            poseChilds = pose.GetComponentsInChildren<Transform>(true);
+        }
+        else 
+        { 
+            {
+                var humanoid = new AhzkwidHumanoid(character);
+                characterChilds = humanoid.GetBoneTransformChilds(avatarMask);
+            }
+            {
+                var humanoid = new AhzkwidHumanoid(character);
+                poseChilds = humanoid.GetBoneTransformChilds(avatarMask);
+            }
+        }
+
+
+
 
         var pathPoseChilds = System.Array.ConvertAll(poseChilds, x => SearchUtils.GetHierarchyPath(x.gameObject, false));
         var relativePathPose = System.Array.ConvertAll(pathPoseChilds, x => Path.GetRelativePath(pathPose, x));
@@ -694,12 +804,36 @@ class AvatarPoseCopyTool : EditorWindow
             UnityEditor.EditorUtility.SetDirty(characterChild);
         }
     }
-    public void PoseCopy(GameObject character, GameObject pose)
+    public void PoseCopy(GameObject character, GameObject pose,AvatarMask avatarMask)
     {
         var characterAnimator = character.GetComponent<Animator>();
+        if (characterAnimator==null)
+        {
+            return;
+        }
+        if (characterAnimator.isHuman == false)
+        {
+            return;
+        }
+
         characterAnimator.runtimeAnimatorController = null;
         var poseAnimator = pose.GetComponent<Animator>();
-        foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+        if (poseAnimator == null)
+        {
+            return;
+        }
+        if (poseAnimator.isHuman == false)
+        {
+            return;
+        }
+
+        var humanBodyBones = (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones));
+        if (avatarMask!=null)
+        {
+            humanBodyBones=AhzkwidHumanoid.AvatarMaskToHumanBodyBones(avatarMask);
+        }
+
+        foreach (var humanBodyBone in humanBodyBones)
         {
 
             if (humanBodyBone < 0)

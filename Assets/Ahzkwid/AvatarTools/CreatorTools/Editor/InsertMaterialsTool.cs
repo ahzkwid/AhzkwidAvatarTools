@@ -302,10 +302,16 @@ class InsertMaterialsTool : EditorWindow
                 case MaterialSelectMode.MaterialFolder:
                 case MaterialSelectMode.CreateMaterialsVariant:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(materialFolders)));
+                    if (GUILayout.Button("ResetMaterials"))
+                    {
+                        materialFolders = null;
+                        materials = null;
+                    }
                     if ((materialFolders == null) || (System.Array.FindAll(materialFolders, x => x != null).Length == 0))
                     {
                         allReady = false;
                     }
+
                     break;
                 default:
                     break;
@@ -319,9 +325,17 @@ class InsertMaterialsTool : EditorWindow
                     break;
                 case MaterialSelectMode.MaterialFolder:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(roots)));
+                    if (GUILayout.Button("Reset Roots"))
+                    {
+                        roots = null;
+                    }
                     break;
                 case MaterialSelectMode.CreateMaterialsVariant:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(toFolders)));
+                    if (GUILayout.Button("Reset ToFolders"))
+                    {
+                        toFolders = null;
+                    }
                     break;
                 default:
                     break;

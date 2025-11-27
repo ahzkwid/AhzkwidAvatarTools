@@ -293,18 +293,48 @@ namespace Ahzkwid
 
 
 
-
-        public Transform GetBoneTransform(HumanBodyBones humanBodyBone)
+        public System.Reflection.FieldInfo[] GetBonesField()
         {
+            var bones = new List<System.Reflection.FieldInfo>();
             var fields = GetType().GetFields();
-            var boneName = humanBodyBone.ToString();
-
             foreach (var field in fields)
             {
                 if (field.FieldType != typeof(Transform))
                 {
                     continue;
                 }
+                bones.Add(field);
+            }
+            return bones.ToArray();
+        }
+        public Transform[] GetBoneTransforms()
+        {
+            var bones = new List<Transform>();
+            var fields = GetBonesField();
+            foreach (var field in fields)
+            {
+                var transform = (Transform)field.GetValue(this);
+                if (transform == null)
+                {
+                    continue;
+                }
+                bones.Add(transform);
+            }
+            return bones.ToArray();
+        }
+        public Transform[] GetBoneTransforms(HumanBodyBones[] humanBodyBone)
+        {
+            var bones = System.Array.ConvertAll(humanBodyBone, x => GetBoneTransform(x));
+            bones=System.Array.FindAll(bones, x => x != null);
+            return bones;
+        }
+        public Transform GetBoneTransform(HumanBodyBones humanBodyBone)
+        {
+            var fields = GetBonesField();
+            var boneName = humanBodyBone.ToString();
+
+            foreach (var field in fields)
+            {
                 if (field.Name.ToLower() != boneName.ToLower())
                 {
                     continue;
@@ -312,6 +342,46 @@ namespace Ahzkwid
                 return (Transform)field.GetValue(this);
             }
             return null;
+        }
+
+        public Transform[] GetBoneTransformChilds(AvatarMask avatarMask)
+        {
+            var humanBodyBones = AvatarMaskToHumanBodyBones(avatarMask);
+            var childs = GetBoneTransformChilds(humanBodyBones);
+            return childs.ToArray();
+        }
+        public Transform[] GetBoneTransformChilds(params HumanBodyBones[] humanBodyBone)
+        {
+            var bones = GetBoneTransforms(humanBodyBone);
+            var childs = GetBoneTransformChilds(bones);
+            return childs.ToArray();
+        }
+        public Transform[] GetBoneTransformChilds(params Transform[] bones)
+        {
+            Transform[] GetChilds(Transform bone, Transform[] ignored)
+            {
+                var list = new List<Transform>();
+                for (int i = 0; i < bone.childCount; i++)
+                {
+                    var child = bone.GetChild(i);
+                    if (ignored.Contains(child))
+                    {
+                        continue;
+                    }
+                    list.Add(child);
+
+                    var childs = GetChilds(child, ignored);
+                    list.AddRange(childs);
+                }
+                return list.ToArray();
+            }
+            var childs = new List<Transform>();
+            var ignored = bones;
+            foreach (var bone in bones)
+            {
+                childs.AddRange(GetChilds(bone, ignored));
+            }
+            return childs.ToArray();
         }
         public void HumanoidSearch(Animator animator)
         {
@@ -404,10 +474,14 @@ namespace Ahzkwid
             return false;
         }
 
-        static readonly string[] spineKeywords = new [] { "spine", "ribs" };
+        static readonly string[] headKeywords = new[] { "head" };
+        static readonly string[] neckKeywords = new[] { "neck" };
+        static readonly string[] chestKeywords = new[] { "chest" };
+
+        static readonly string[] spineKeywords = new[] { "spine", "ribs" };
         static readonly string[] hipsKeywords = new [] { "hips", "pelvis", "hip" };
         static readonly string[] shoulderKeywords = new[] { "shoulder", "clavicle" };
-        static readonly string[] breastKeywords = new[] { "breast" };
+        static readonly string[] breastKeywords = new[] { "breast", "oppai" };
         static readonly string[] handKeywords = new [] { "hand", "wrist" };
         static readonly string[] footKeywords = new [] { "foot", "ankle" };
 
@@ -415,6 +489,9 @@ namespace Ahzkwid
         static readonly string[] lowerLegKeywords = new [] { "knee", "calf" };
         static readonly string[] upperArmKeywords = new string[] { };
         static readonly string[] lowerArmKeywords = new [] { "elbow", "forearm" };
+
+
+        static readonly string[] fingerKeywords = new[] { "thumb", "index", "middle" , "ring", "little" };
 
 
         public static readonly string[] fingerMuscleKeywords = new [] { "Stretched", "Spread" };
@@ -465,14 +542,232 @@ namespace Ahzkwid
             }
             return name;
         }
+        /*
+        public Transform GetBoneTransform(string name)
+        {
+            var humanBodyBones = GetHumanBodyBones(muscleName);
+            var transforms = GetBoneTransforms();
+            head = FindBone(transforms, "head");
+        }
+        public HumanBodyBones GetHumanBodyBones(string name)
+        {
+            var lowerName= name.ToLower();
+            if (headKeywords.Any(x => lowerName.Contains(x)))
+            {
+                return HumanBodyBones.Head;
+            }
+            if (neckKeywords.Any(x => lowerName.Contains(x)))
+            {
+                return HumanBodyBones.Neck;
+            }
+            if (chestKeywords.Any(x => lowerName.Contains(x)))
+            {
+                return HumanBodyBones.Chest;
+            }
+            if (spineKeywords.Any(x => lowerName.Contains(x)))
+            {
+                return HumanBodyBones.Spine;
+            }
+            if (hipsKeywords.Any(x => lowerName.Contains(x)))
+            {
+                return HumanBodyBones.Hips;
+            }
+
+
+
+
+            var legTransforms = FindWithKeywords(transforms, (new string[] { "leg" }).Concat(upperLegKeywords).Concat(lowerLegKeywords).ToArray());
+            var armTransforms = FindWithKeywords(transforms, new string[] { "arm" }.Concat(lowerArmKeywords).ToArray(), new string[] { "armature" });
+
+            //Debug.Log(armTransforms.Length);
+
+            var leftLegTransforms = GetLefts(legTransforms);
+            leftUpperLeg = GetUppers(leftLegTransforms).FirstOrDefault();
+            leftLowerLeg = GetLowers(leftLegTransforms).FirstOrDefault();
+
+            var rightLegTransforms = GetRights(legTransforms);
+            rightUpperLeg = GetUppers(rightLegTransforms).FirstOrDefault();
+            rightLowerLeg = GetLowers(rightLegTransforms).FirstOrDefault();
+
+
+
+            var leftArmTransforms = GetLefts(armTransforms);
+            leftUpperArm = GetUppers(leftArmTransforms).FirstOrDefault();
+            leftLowerArm = GetLowers(leftArmTransforms).FirstOrDefault();
+
+            var rightArmTransforms = GetRights(armTransforms);
+            rightUpperArm = GetUppers(rightArmTransforms).FirstOrDefault();
+            rightLowerArm = GetLowers(rightArmTransforms).FirstOrDefault();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            return (HumanBodyBones)(-1);
+        }
+        */
+        public static HumanBodyBones[] GetFingers()
+        {
+            var list = new List<HumanBodyBones>();
+            foreach (var humanBodyBones in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+            {
+                var boneName = humanBodyBones.ToString().ToLower();
+                if (fingerKeywords.Any(x => boneName.Contains(x)))
+                {
+                    list.Add(humanBodyBones);
+                }
+            }
+            return list.ToArray();
+        }
+        public static AvatarMaskBodyPart HumanBodyBonesToAvatarMaskBodyPart(HumanBodyBones humanBodyBones)
+        {
+            foreach (var avatarMaskBodyPart in (AvatarMaskBodyPart[])System.Enum.GetValues(typeof(AvatarMaskBodyPart)))
+            {
+                var bones = AvatarMaskBodyPartToHumanBodyBones(avatarMaskBodyPart);
+                if (bones == null)
+                {
+                    continue;
+                }
+                if (bones.Contains(humanBodyBones)==false)
+                {
+                    continue;
+                }
+                return avatarMaskBodyPart;
+            }
+            return (AvatarMaskBodyPart)(-1);
+        }
+        public static HumanBodyBones[] AvatarMaskBodyPartToHumanBodyBones(AvatarMaskBodyPart avatarMaskBodyPart)
+        {
+            var name = avatarMaskBodyPart.ToString().ToLower();
+
+
+            switch (avatarMaskBodyPart)
+            {
+                case AvatarMaskBodyPart.Root:
+                    break;
+                case AvatarMaskBodyPart.Body:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.Hips,
+                    HumanBodyBones.Spine,
+                    HumanBodyBones.Chest,
+                    HumanBodyBones.UpperChest,
+                    };
+                case AvatarMaskBodyPart.Head:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.Neck,
+                    HumanBodyBones.Head,
+                    };
+                case AvatarMaskBodyPart.LeftLeg:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.LeftUpperLeg,
+                    HumanBodyBones.LeftLowerLeg,
+                    HumanBodyBones.LeftFoot,
+                    HumanBodyBones.LeftToes,
+                    };
+                case AvatarMaskBodyPart.RightLeg:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.RightUpperLeg,
+                    HumanBodyBones.RightLowerLeg,
+                    HumanBodyBones.RightFoot,
+                    HumanBodyBones.RightToes,
+                    };
+                case AvatarMaskBodyPart.LeftArm:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.LeftShoulder,
+                    HumanBodyBones.LeftUpperArm,
+                    HumanBodyBones.LeftLowerArm,
+                    };
+                case AvatarMaskBodyPart.RightArm:
+                    return new HumanBodyBones[]
+                    {
+                    HumanBodyBones.RightShoulder,
+                    HumanBodyBones.RightUpperArm,
+                    HumanBodyBones.RightLowerArm,
+                    };
+                case AvatarMaskBodyPart.LeftFingers:
+                    {
+                        var fingers = GetFingers();
+                        fingers = GetLefts(fingers);
+                        return fingers;
+                    }
+                case AvatarMaskBodyPart.RightFingers:
+                    {
+                        var fingers = GetFingers();
+                        fingers = GetRights(fingers);
+                        return fingers;
+                    }
+                case AvatarMaskBodyPart.LeftFootIK:
+                    break;
+                case AvatarMaskBodyPart.RightFootIK:
+                    break;
+                case AvatarMaskBodyPart.LeftHandIK:
+                    break;
+                case AvatarMaskBodyPart.RightHandIK:
+                    break;
+                case AvatarMaskBodyPart.LastBodyPart:
+                    break;
+                default:
+                    break;
+            }
+
+
+            return null;
+        }
+        public static AvatarMaskBodyPart[] AvatarMaskToAvatarMaskBodyParts(AvatarMask avatarMask)
+        {
+            var avatarMaskBodyParts = (AvatarMaskBodyPart[])System.Enum.GetValues(typeof(AvatarMaskBodyPart));
+            avatarMaskBodyParts=System.Array.FindAll(avatarMaskBodyParts, x =>
+            {
+                if (x==AvatarMaskBodyPart.LastBodyPart)
+                {
+                    return false;
+                }
+                return avatarMask.GetHumanoidBodyPartActive(x);
+            });
+            return avatarMaskBodyParts.ToArray();
+        }
+        public static HumanBodyBones[] AvatarMaskToHumanBodyBones(AvatarMask avatarMask)
+        {
+            var avatarMaskBodyParts = AvatarMaskToAvatarMaskBodyParts(avatarMask);
+            var humanBodyBones = new List<HumanBodyBones>();
+            foreach (var avatarMaskBodyPart in avatarMaskBodyParts)
+            {
+                var bones = AvatarMaskBodyPartToHumanBodyBones(avatarMaskBodyPart);
+                if (bones == null)
+                {
+                    continue;
+                }
+                humanBodyBones.AddRange(bones);
+            }
+            return humanBodyBones.ToArray();
+        }
         public void NameSearch(Transform[] transforms)
         {
 
 
 
-            head = FindBone(transforms, "head");
-            neck = FindBone(transforms, "neck");
-            chest = FindBone(transforms, "chest");
+            head = FindBone(transforms, headKeywords);
+            neck = FindBone(transforms, neckKeywords);
+            chest = FindBone(transforms, chestKeywords);
 
             /*
             spine = FindBone(transforms, "spine");
@@ -1056,8 +1351,60 @@ namespace Ahzkwid
             }
         }
 
+        static string[] GetLefts(string[] names)
+        {
+
+            var matchingNames = System.Array.FindAll(names, name => name.ToLower().Contains("left"));
+
+            var upperKeywords = new string[] { " L ", ".L", "_L" };
+            foreach (var keyword in upperKeywords)
+            {
+                if (matchingNames.Length != 0)
+                {
+                    break;
+                }
+                matchingNames = System.Array.FindAll(names, name => name.ToUpper().Contains(keyword));
+            }
+            return matchingNames;
+        }
+        static string[] GetRights(string[] names)
+        {
+
+            var matchingNames = System.Array.FindAll(names, name => name.ToLower().Contains("right"));
+
+            var upperKeywords = new string[] { " R ", ".R", "_R" };
+            foreach (var keyword in upperKeywords)
+            {
+                if (matchingNames.Length != 0)
+                {
+                    break;
+                }
+                matchingNames = System.Array.FindAll(names, name => name.ToUpper().Contains(keyword));
+            }
+            return matchingNames;
+        }
+        static HumanBodyBones[] GetLefts(HumanBodyBones[] humanBodyBones)
+        {
+
+            var names = System.Array.ConvertAll(humanBodyBones, t => t.ToString());
+            var matchingNames = GetLefts(names);
+            var matchingBones = System.Array.FindAll(humanBodyBones, x => names.Contains(x.ToString()));
+            return matchingBones;
+        }
+        static HumanBodyBones[] GetRights(HumanBodyBones[] humanBodyBones)
+        {
+
+            var names = System.Array.ConvertAll(humanBodyBones, t => t.ToString());
+            var matchingNames = GetRights(names);
+            var matchingBones = System.Array.FindAll(humanBodyBones, x => names.Contains(x.ToString()));
+            return matchingBones;
+        }
         Transform[] GetLefts(Transform[] transforms)
         {
+            var names= System.Array.ConvertAll(transforms, t => t.name);
+            var matchingNames = GetLefts(names);
+            var matchingTransforms = System.Array.FindAll(transforms,x=> names.Contains(x.name));
+            /*
             var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("left"));
             if (matchingTransforms.Length == 0)
             {
@@ -1072,10 +1419,15 @@ namespace Ahzkwid
             {
                 matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_L"));
             }
+            */
             return matchingTransforms;
         }
         Transform[] GetRights(Transform[] transforms)
         {
+            var names = System.Array.ConvertAll(transforms, t => t.name);
+            var matchingNames = GetRights(names);
+            var matchingTransforms = System.Array.FindAll(transforms, x => names.Contains(x.name));
+            /*
             var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("right"));
             if (matchingTransforms.Length == 0)
             {
@@ -1089,7 +1441,12 @@ namespace Ahzkwid
             {
                 matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToUpper().Contains("_R"));
             }
+            */
             return matchingTransforms;
+        }
+        Transform[] GetBones()
+        {
+            return GetBoneTransforms();
         }
         public void MirrorX()
         {
@@ -1103,15 +1460,11 @@ namespace Ahzkwid
                 }
                 return count;
             }
-            var fields = GetType().GetFields();
+            var fields = GetBonesField();
 
             var dictionary = new Dictionary<Transform, Quaternion>();
             foreach (var field in fields)
             {
-                if (field.FieldType != typeof(Transform))
-                {
-                    continue;
-                }
                 var transform = (Transform)field.GetValue(this);
                 if (transform == null)
                 {
