@@ -21,6 +21,7 @@ namespace Ahzkwid
     using System.Collections;
     using static Ahzkwid.AvatarMergeTool;
     using static AnimationRepairTool;
+    using UnityEngine.TextCore.Text;
 
     [InitializeOnLoad]
     public class AvatarMergeTool : EditorWindow
@@ -713,6 +714,13 @@ namespace Ahzkwid
             ////Debug.Log(cloth.transform.GetShortHierarchyPath());
             //Debug.Log(ArmaturePath(cloth.transform, cloth.transform));
         }
+
+
+        /// <summary>
+        /// 리스트에 ChildBone을 재귀적으로 추가합니다.
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="rootBone"></param>
         static void AddChildBones(ref List<Transform> list, Transform rootBone)
         {
             list.Add(rootBone);
@@ -786,6 +794,8 @@ namespace Ahzkwid
                     //gameObject = InstantiatePrefab(childCloth.gameObject, rootBoneCharacter);
                     gameObject = InstantiatePrefabTemporary(childCloth.gameObject, rootBoneCharacter);
 
+
+
                     //gameObject = Instantiate(childCloth.gameObject, rootBoneCharacter);
                     //var gameObject=Instantiate(childCloth, rootBoneCharacter);
                     //gameObject.transform.parent = rootBoneCharacter;
@@ -794,6 +804,9 @@ namespace Ahzkwid
                     gameObject.transform.localRotation = childCloth.transform.localRotation;
                     gameObject.transform.localScale = childCloth.transform.localScale;
 
+
+
+                    RepairPhysBones(gameObject.transform);
                     /*
                     gameObject = childCloth.gameObject;
 
@@ -1111,7 +1124,10 @@ namespace Ahzkwid
                             continue;
                         }
                         //characterTransform.localRotation = clothTransform.localRotation;
+
                         clothTransform.parent = characterTransform;
+
+                        RepairPhysBones(clothTransform);
                     }
                     break;
                 case ForceMergeType.Path:
@@ -1138,7 +1154,7 @@ namespace Ahzkwid
                                 if (key==null)
                                 {
                                     Debug.LogError($"key == null\n{transform.name}");
-                            }
+                                }
                                 characterBones.Add(key, transform);
                             }
                         }
@@ -1162,17 +1178,100 @@ namespace Ahzkwid
                             if (characterBones.TryGetValue(clothBone.Key, out var value))
                             {
                                 clothBone.Value.parent = value;
+                                RepairPhysBones(clothBone.Value);
                             }
                         }
-                        break;
+
+
+
+
+
+                    break;
                 default:
                     break;
             }
 
 
             cloth.transform.parent = character.transform;
-        }
 
+
+            RepairPhysBones(character.transform);
+
+
+
+
+        }
+        public static void RepairPhysBones(Transform transform)
+        {
+            var physBones = transform.GetComponentsInParent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+            var parents = transform.GetComponentsInParent<Transform>(true);
+            foreach (var physBone in physBones)
+            {
+                var physBoneTarget = physBone.rootTransform;
+                if (physBoneTarget == null)
+                {
+                    physBoneTarget = physBone.transform;
+                }
+
+
+                var contains = false;
+                foreach (var parent in parents)
+                {
+                    if (physBone.ignoreTransforms.Contains(parent))
+                    {
+                        contains = true;
+                        break;
+                    }
+                }
+                if (contains)
+                {
+                    continue;
+                }
+                physBone.ignoreTransforms.Add(transform);
+            }
+        }
+        public static void RepairPhysBones(Transform from,Transform to)
+        {
+            //Repair PhysBone
+            var physBones = from.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+            foreach (var physBone in physBones)
+            {
+                var physBoneTarget = physBone.rootTransform;
+                if (physBoneTarget == null)
+                {
+                    if (from==to)
+                    {
+                        physBoneTarget = physBone.transform;
+                    }
+                    else
+                    {
+                        physBoneTarget = ObjectPath.EqualTransform(from.transform, to.transform, physBone.transform);
+                    }
+                }
+                if (physBoneTarget == null)
+                {
+                    continue;
+                }
+
+                var parents = physBoneTarget.GetComponentsInParent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+                foreach (var parent in parents)
+                {
+                    if (physBoneTarget == parent.transform)
+                    {
+                        continue;
+                    }
+                    if (physBone.transform == parent.transform)
+                    {
+                        continue;
+                    }
+                    if (parent.ignoreTransforms.Contains(physBoneTarget))
+                    {
+                        continue;
+                    }
+                    parent.ignoreTransforms.Add(physBoneTarget);
+                }
+            }
+        }
         public static void MergeDefault(GameObject character, GameObject cloth)
         {
             /*
@@ -1530,6 +1629,44 @@ namespace Ahzkwid
 
 
                 ObjectPath.RepathComponents(cloth.transform, character.transform);
+
+
+                //RepairPhysBones(cloth.transform, character.transform);
+                /*
+                {
+                    //Repair PhysBone
+                    var physBones = cloth.GetComponentsInChildren<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+                    foreach (var physBone in physBones)
+                    {
+                        var physBoneTarget = physBone.rootTransform;
+                        if (physBoneTarget == null)
+                        {
+                            physBoneTarget = ObjectPath.EqualTransform(cloth.transform, character.transform, physBone.transform);
+                        }
+                        if (physBoneTarget == null)
+                        {
+                            continue;
+                        }
+
+                        var parents= physBoneTarget.GetComponentsInParent<VRC.SDK3.Dynamics.PhysBone.Components.VRCPhysBone>(true);
+                        foreach (var parent in parents)
+                        {
+                            if (physBoneTarget == parent.transform)
+                            {
+                                continue;
+                            }
+                            if (parent.ignoreTransforms.Contains(physBoneTarget))
+                            {
+                                continue;
+                            }
+                            parent.ignoreTransforms.Add(physBoneTarget);
+                        }
+                    }
+                }
+                */
+
+
+
 
 
 

@@ -58,101 +58,109 @@ class AvatarPoseCopyTool : EditorWindow
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
             EditorGUILayout.Space();
-            if (mode==Mode.ApplyPose)
+            switch (mode)
             {
-                /*
-                if (characters == null || characters.Length == 0)
-                {
-                    allReady = false;
-                }
-                else
-                {
-                    foreach (var character in characters)
+                case Mode.ApplyPose:
+                    /*
+                    if (characters == null || characters.Length == 0)
                     {
-                        if (character != null)
-                        {
-                            var animator = character.GetComponent<Animator>();
-                            if (animator == null)
-                            {
-                                EditorGUILayout.HelpBox($"This character({character.name}) does not include an animator", MessageType.Info);
-                                //isHumanoid = false;
-                            }
-                            else if (animator.isHuman == false)
-                            {
-                                EditorGUILayout.HelpBox($"This character({character.name}) is not a humanoid", MessageType.Info);
-                                //isHumanoid = false;
-                            }
-                        }
-                    }
-                }
-                */
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(pose)));
-                if (pose == null)
-                {
-                    var text = "Please insert a GameObject or AnimationClip.";
-                    switch (Application.systemLanguage)
-                    {
-                        case SystemLanguage.Japanese:
-                            text = "GameObjectやAnimationClipを入れてください。";
-                            break;
-                        case SystemLanguage.Korean:
-                            text = "GameObject혹은 AnimationClip을 넣으십시오";
-                            break;
-                    }
-                    EditorGUILayout.HelpBox(text, MessageType.Info);
-                }
-                else
-                {
-                    if (pose is GameObject)
-                    {
-                    }
-                    else if (pose is AnimationClip)
-                    {
-                        animationTime = EditorGUILayout.Slider(nameof(animationTime), animationTime, 0, 1);
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseOnly)));
+                        allReady = false;
                     }
                     else
                     {
-                        pose = null;
+                        foreach (var character in characters)
+                        {
+                            if (character != null)
+                            {
+                                var animator = character.GetComponent<Animator>();
+                                if (animator == null)
+                                {
+                                    EditorGUILayout.HelpBox($"This character({character.name}) does not include an animator", MessageType.Info);
+                                    //isHumanoid = false;
+                                }
+                                else if (animator.isHuman == false)
+                                {
+                                    EditorGUILayout.HelpBox($"This character({character.name}) is not a humanoid", MessageType.Info);
+                                    //isHumanoid = false;
+                                }
+                            }
+                        }
                     }
-                }
-                EditorGUILayout.Space();
-
-                if (pose == null)
-                {
-                    allReady = false;
-                }
-                else
-                {
-                    if (pose is GameObject gameObject)
+                    */
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(pose)));
+                    if (pose == null)
                     {
-                        //Animator animator = null;
-                        var animator = gameObject.GetComponent<Animator>();
-                        if (animator == null)
+                        var text = "Please insert a GameObject or AnimationClip.";
+                        switch (Application.systemLanguage)
                         {
-                            EditorGUILayout.HelpBox("This pose character does not include an animator", MessageType.Info);
-                            //allReady = false;
+                            case SystemLanguage.Japanese:
+                                text = "GameObjectやAnimationClipを入れてください。";
+                                break;
+                            case SystemLanguage.Korean:
+                                text = "GameObject혹은 AnimationClip을 넣으십시오";
+                                break;
                         }
-                        else if (animator.isHuman == false)
+                        EditorGUILayout.HelpBox(text, MessageType.Info);
+                    }
+                    else
+                    {
+                        if (pose is GameObject)
                         {
-                            EditorGUILayout.HelpBox("This pose character is not a humanoid", MessageType.Info);
-                            //allReady = false;
+                        }
+                        else if (pose is AnimationClip)
+                        {
+                            animationTime = EditorGUILayout.Slider(nameof(animationTime), animationTime, 0, 1);
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseOnly)));
+                        }
+                        else
+                        {
+                            pose = null;
                         }
                     }
-                }
+                    EditorGUILayout.Space();
+
+                    if (pose == null)
+                    {
+                        allReady = false;
+                    }
+                    else
+                    {
+                        if (pose is GameObject gameObject)
+                        {
+                            //Animator animator = null;
+                            var animator = gameObject.GetComponent<Animator>();
+                            if (animator == null)
+                            {
+                                EditorGUILayout.HelpBox("This pose character does not include an animator", MessageType.Info);
+                                //allReady = false;
+                            }
+                            else if (animator.isHuman == false)
+                            {
+                                EditorGUILayout.HelpBox("This pose character is not a humanoid", MessageType.Info);
+                                //allReady = false;
+                            }
+                        }
+                    }
 
 
 
 
-                if (allReady)
-                {
+                    if (allReady)
+                    {
 
 
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(avatarMask)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(avatarMask)));
 
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseBackup)));
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
-                }
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(poseBackup)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
+                    }
+                    break;
+                case Mode.Export:
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(animationType)));
+                    EditorGUILayout.Space();
+                    break;
+                default:
+                    break;
             }
         }
         serializedObject.ApplyModifiedProperties();
@@ -204,13 +212,142 @@ class AvatarPoseCopyTool : EditorWindow
             {
                 foreach (var character in characters)
                 {
-                    CreateHumanoidAnimation(character);
+                    CreateAnimation(character, animationType);
                 }
             }
         }
 
 
     }
+
+
+
+
+
+    public enum AnimationType
+    {
+        Generic, Human
+    }
+    public AnimationType animationType = AnimationType.Human;
+
+    public static void CreateAnimation(GameObject root, AnimationType animationType)
+    {
+        switch (animationType)
+        {
+            case AnimationType.Generic:
+                CreateGenericAnimation(root);
+                break;
+            case AnimationType.Human:
+                CreateHumanoidAnimation(root);
+                break;
+            default:
+                break;
+        }
+    }
+    public static void CreateGenericAnimation(GameObject root)
+    {
+        if (root == null || root == false)
+        {
+            Debug.LogError("Root object is null.");
+            return;
+        }
+
+        var humanoid = new AhzkwidHumanoid(root);
+        var bones = humanoid.GetBoneTransforms();
+
+        var path = EditorUtility.SaveFilePanelInProject("Save Animation", "Pose", "anim", "Select save location.");
+        if (string.IsNullOrEmpty(path)) return;
+
+        var clip = new AnimationClip();
+
+        void WritePos(Transform transform, string curvePath)
+        {
+            var pos = transform.localPosition;
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalPosition.x", new AnimationCurve(new Keyframe(0, pos.x)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalPosition.y", new AnimationCurve(new Keyframe(0, pos.y)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalPosition.z", new AnimationCurve(new Keyframe(0, pos.z)));
+        }
+
+        void WriteRot(Transform transform, string curvePath)
+        {
+            var rot = transform.localRotation;
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalRotation.x", new AnimationCurve(new Keyframe(0, rot.x)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalRotation.y", new AnimationCurve(new Keyframe(0, rot.y)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalRotation.z", new AnimationCurve(new Keyframe(0, rot.z)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalRotation.w", new AnimationCurve(new Keyframe(0, rot.w)));
+        }
+
+        void WriteScale(Transform transform, string curvePath)
+        {
+            var scale = transform.localScale;
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalScale.x", new AnimationCurve(new Keyframe(0, scale.x)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalScale.y", new AnimationCurve(new Keyframe(0, scale.y)));
+            clip.SetCurve(curvePath, typeof(Transform), "m_LocalScale.z", new AnimationCurve(new Keyframe(0, scale.z)));
+        }
+
+        void AddIfChanged(Transform transform, Transform prefabTransform, string curvePath)
+        {
+            bool posChanged = false, rotChanged = false, scaleChanged = false;
+            bool forceRot = bones.Contains(transform);
+
+            if (prefabTransform == null)
+            {
+                posChanged = rotChanged = scaleChanged = true;
+            }
+            else
+            {
+                if (transform.localPosition != prefabTransform.localPosition) posChanged = true;
+                if (transform.localRotation != prefabTransform.localRotation) rotChanged = true;
+                if (transform.localScale != prefabTransform.localScale) scaleChanged = true;
+            }
+
+            if (posChanged) WritePos(transform, curvePath);
+            if (forceRot || rotChanged)
+            {
+                WriteRot(transform, curvePath);
+            }
+            if (scaleChanged) WriteScale(transform, curvePath);
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                var childTransform = transform.GetChild(i);
+                Transform prefabChild = null;
+                if (prefabTransform != null) prefabChild = prefabTransform.Find(childTransform.name);
+                var childPath = curvePath == "" ? childTransform.name : curvePath + "/" + childTransform.name;
+                AddIfChanged(childTransform, prefabChild, childPath);
+            }
+        }
+
+        var prefab = PrefabUtility.GetCorrespondingObjectFromSource(root);
+        var prefabRoot = prefab != null ? (prefab).transform : null;
+
+        AddIfChanged(root.transform, prefabRoot, "");
+
+        var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+        if (existing == null || existing == false)
+        {
+            AssetDatabase.CreateAsset(clip, path);
+        }
+        else
+        {
+            clip.name = existing.name;
+            EditorUtility.CopySerialized(clip, existing); clip = existing;
+        }
+
+        var settings = AnimationUtility.GetAnimationClipSettings(clip);
+        settings.keepOriginalOrientation = true;
+        settings.keepOriginalPositionY = true;
+        settings.keepOriginalPositionXZ = true;
+        AnimationUtility.SetAnimationClipSettings(clip, settings);
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+    }
+
+
+
+
+
     public static void CreateHumanoidAnimation(GameObject root)
     {
         /*
