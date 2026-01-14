@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6870423781828389998}
   - component: {fileID: 8395779967899254028}
+  - component: {fileID: 374933563129691188}
   m_Layer: 0
   m_Name: AutoDescriptor
   m_TagString: EditorOnly
@@ -44,11 +45,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9636b454a1af39640900dd1d32879493, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  autoDestroy: 1
+  isAwake: 0
+  mergeTrigger: 1
   actionTriggers:
-  - triggersOperator: 0
-    triggers: []
+  - memo: 
     actions:
-    - target: 0
+    - target: 4
       option: 1
-      value: {fileID: 0}
+      value: {fileID: 374933563129691188}
+--- !u!114 &374933563129691188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276801323450232431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6a816d9c8ddfc645bf8f93e337e3685, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  all:
+    parameter: 
+    inverse: 0
+  animationRoot: {fileID: 0}
+  toggleDatas:
+  - parameters: []
+    targets: []
+    clip: {fileID: 0}
+    shirink:
+      clip: {fileID: 0}
+    floatParameter: 0
+    motionTime: 0
+    motionTimeParameter: 
+    inverse: 0
