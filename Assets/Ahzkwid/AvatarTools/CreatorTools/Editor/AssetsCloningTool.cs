@@ -193,15 +193,23 @@ class AssetsCloningTool : EditorWindow
             }
             else
             {
-                //if (IsEqualFile(filepathA, newFilePath)==false)
+                var importer = AssetImporter.GetAtPath(filepathA);
+                if (importer is ModelImporter)
                 {
-                    File.Copy(filepathA, newFilePath);
+                    AssetDatabase.CopyAsset(filepathA, newFilePath);
+                }
+                else
+                {
+                    //if (IsEqualFile(filepathA, newFilePath)==false)
+                    {
+                        File.Copy(filepathA, newFilePath);
+                    }
                 }
             }
 
             AssetDatabase.ImportAsset(newFilePath);
         }
-        //AssetDatabase.Refresh();
+        AssetDatabase.Refresh();
 
 
 
