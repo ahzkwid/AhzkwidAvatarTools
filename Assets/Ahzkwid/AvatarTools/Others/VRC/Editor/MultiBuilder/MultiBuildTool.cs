@@ -59,57 +59,57 @@ namespace Ahzkwid
         //public void BuildAll()
         public async System.Threading.Tasks.Task BuildAll()
         {
-            {
-                VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder builder = null;
-                {
-                    var fieldInfo = typeof(VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
-                    builder = (VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder)fieldInfo.GetValue(null);
-                }
-                if (builder != null)
-                {
-                    {
-                        var method = builder.GetType().GetMethod("OnBuildAndPublishAction", BindingFlags.Instance | BindingFlags.NonPublic);
-                        if (method != null) method.Invoke(builder, null);
+            //{
+            //    VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder builder = null;
+            //    {
+            //        var fieldInfo = typeof(VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic);
+            //        builder = (VRC.SDK3A.Editor.VRCSdkControlPanelAvatarBuilder)fieldInfo.GetValue(null);
+            //    }
+            //    if (builder != null)
+            //    {
+            //        {
+            //            var method = builder.GetType().GetMethod("OnBuildAndPublishAction", BindingFlags.Instance | BindingFlags.NonPublic);
+            //            if (method != null) method.Invoke(builder, null);
 
-                    }
-                    //builder.OnSdkUploadFinish += UploadFinish;
-                    //builder.OnSdkBuildError += UploadError;
-                    //{
-                    //    var m = builder.GetType().GetMethod("RunBuildAndPublish", BindingFlags.Instance | BindingFlags.NonPublic);
-                    //    var task = (System.Threading.Tasks.Task)m.Invoke(builder, new object[] { null, null });
-                    //    await task;
+            //        }
+            //        //builder.OnSdkUploadFinish += UploadFinish;
+            //        //builder.OnSdkBuildError += UploadError;
+            //        //{
+            //        //    var m = builder.GetType().GetMethod("RunBuildAndPublish", BindingFlags.Instance | BindingFlags.NonPublic);
+            //        //    var task = (System.Threading.Tasks.Task)m.Invoke(builder, new object[] { null, null });
+            //        //    await task;
 
-                    //}
-                }
-                /*
-                var windows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-                foreach (var window in windows)
-                {
-                    if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
-                    {
-                        var method = window.GetType().GetMethod("OnBuildAndPublishAction", BindingFlags.Instance | BindingFlags.NonPublic);
-                        Debug.Log("BuildAll");
-                        if (method != null) method.Invoke(window, null);
-                        break;
-                    }
-                }
-                */
+            //        //}
+            //    }
+            //    /*
+            //    var windows = Resources.FindObjectsOfTypeAll<EditorWindow>();
+            //    foreach (var window in windows)
+            //    {
+            //        if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
+            //        {
+            //            var method = window.GetType().GetMethod("OnBuildAndPublishAction", BindingFlags.Instance | BindingFlags.NonPublic);
+            //            Debug.Log("BuildAll");
+            //            if (method != null) method.Invoke(window, null);
+            //            break;
+            //        }
+            //    }
+            //    */
 
-                //var editorWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-                //foreach (var window in editorWindows)
-                //{
-                //    if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
-                //    {
-                //        var fieldInfo = window.GetType().GetField("_selectedAvatar", BindingFlags.Instance | BindingFlags.NonPublic);
-                //        if (fieldInfo != null)
-                //        {
-                //            //selectedAvatar = (VRC_AvatarDescriptor)fieldInfo.GetValue(window);
-                //            break;
-                //        }
-                //    }
-                //}
+            //    //var editorWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
+            //    //foreach (var window in editorWindows)
+            //    //{
+            //    //    if (window.GetType().Name == "VRCSdkControlPanelAvatarBuilder")
+            //    //    {
+            //    //        var fieldInfo = window.GetType().GetField("_selectedAvatar", BindingFlags.Instance | BindingFlags.NonPublic);
+            //    //        if (fieldInfo != null)
+            //    //        {
+            //    //            //selectedAvatar = (VRC_AvatarDescriptor)fieldInfo.GetValue(window);
+            //    //            break;
+            //    //        }
+            //    //    }
+            //    //}
 
-            }
+            //}
         }
         public GameObject[] characters = null;
         void OnGUI()
