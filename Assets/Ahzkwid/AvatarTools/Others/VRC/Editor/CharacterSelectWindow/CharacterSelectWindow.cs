@@ -1,6 +1,7 @@
 
 namespace Ahzkwid
 {
+    using System;
     using System.IO;
 #if UNITY_EDITOR
 
@@ -62,7 +63,7 @@ namespace Ahzkwid
             "Assets/Amatousagi/Plum/Plum.prefab",
             "Assets/Amatousagi/Chocolat/Chocolat.prefab",
             "Assets/Amatousagi/Chiffon/Chiffon.prefab",
-            "",
+            "Assets/onair/Alue/Prefab/Alue.prefab",
             "",
             "",
             "",
@@ -78,6 +79,8 @@ namespace Ahzkwid
                 return go ;
             });
             characters = System.Array.FindAll(characters, x => x != null);
+            System.Array.Sort(characters, (a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+
         }
         public GameObject[] characters = null;
         void OnGUI()
@@ -106,9 +109,14 @@ namespace Ahzkwid
                         if (GUILayout.Button("Spawn"))
                         {
                             var poxX = 0f;
-                            foreach (var go0 in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                            var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+                            foreach (var root in roots)
                             {
-                                poxX = Mathf.Min(poxX, go0.transform.position.x);
+                                if (root.activeInHierarchy == false)
+                                {
+                                    continue;
+                                }
+                                poxX = Mathf.Min(poxX, root.transform.position.x);
                             }
                             var go = (GameObject)PrefabUtility.InstantiatePrefab(item);
                             go.transform.position = new Vector3(poxX - 0.75f, 0f, 0f);
@@ -120,6 +128,10 @@ namespace Ahzkwid
                 //EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
 
 
+                if (GUILayout.Button("Refresh"))
+                {
+                    UpdateCharacters();
+                }
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("GUID Viewer");
                 //EditorGUILayout.BeginHorizontal();
@@ -130,10 +142,6 @@ namespace Ahzkwid
                         var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(guidTarget));
                         EditorGUILayout.TextField(guid);
                     }
-                }
-                if (GUILayout.Button("Refresh"))
-                {
-                    UpdateCharacters();
                 }
                 //EditorGUILayout.EndHorizontal();
             }

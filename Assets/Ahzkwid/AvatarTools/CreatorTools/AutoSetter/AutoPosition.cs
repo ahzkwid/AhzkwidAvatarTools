@@ -44,7 +44,7 @@ namespace Ahzkwid
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
 
-            float propertyCount = 12f;
+            float propertyCount = 13f;
             {
                 var tracking = (AutoPosition.Tracking)property.FindPropertyRelative(nameof(AutoPosition.PositionData.tracking)).intValue;
                 switch (tracking)
@@ -345,7 +345,7 @@ namespace Ahzkwid
                 {
                     if (GUI.Button(fieldRect, "Set Current Transform"))
                     {
-                        var target = property.serializedObject.targetObject ;
+                        var target = property.serializedObject.targetObject;
                         var autoPosition = target as AutoPosition;
                         var index = GetIndexFromPropertyPath(property.propertyPath);
                         Debug.Log($"index: {index}");
@@ -353,6 +353,19 @@ namespace Ahzkwid
 
 
                         positionData.SetCurrentTransform(autoPosition);
+                        EditorUtility.SetDirty(autoPosition);
+                    }
+                    fieldRect.y += EditorGUIUtility.singleLineHeight;
+
+                    if (GUI.Button(fieldRect, "Apply"))
+                    {
+                        var target = property.serializedObject.targetObject;
+                        var autoPosition = target as AutoPosition;
+                        var index = GetIndexFromPropertyPath(property.propertyPath);
+                        Debug.Log($"index: {index}");
+                        var positionData = autoPosition.PositionDatas[index];
+
+                        positionData.Apply(autoPosition);
                         EditorUtility.SetDirty(autoPosition);
                     }
                     fieldRect.y += EditorGUIUtility.singleLineHeight;
@@ -473,6 +486,194 @@ namespace Ahzkwid
             }
 
 
+            public void Apply(AutoPosition autoPosition)
+            {
+                var root = autoPosition.GetRoot();
+                if (root == null)
+                {
+                    return;
+                }
+
+                //ComponentsMove(root);
+                ApplyPosition(autoPosition,root);
+            }
+            public void ApplyPosition(AutoPosition autoPosition,Transform root)
+            {
+                var positionData = this;
+
+                //게임오브젝트
+                Transform target = null;
+
+                target = positionData.GetTarget(autoPosition);
+                /*
+                switch (positionData.target)
+                {
+                    case Target.Object:
+                        if (positionData.targetObject == null)
+                        {
+                            target = autoPosition.transform;
+                        }
+                        else
+                        {
+                            if (positionData.targetObject is Component)
+                            {
+                                continue;
+                            }
+                            var gameObject = positionData.targetObject as GameObject;
+                            target = gameObject.transform;
+                        }
+                        break;
+                    case Target.Parent:
+                        target = autoPosition.GetParent(positionData.parentIndex);
+                        break;
+                    default:
+                        break;
+                }
+                */
+                if (target == null)
+                {
+                    return;
+                }
+
+                var parent = positionData.GetParentTarget(root);
+                if (parent != null)
+                {
+                    target.parent = parent;
+                }
+
+
+                /*
+                switch (positionData.tracking)
+                {
+                    case Tracking.Path:
+                        {
+                            var parent = ObjectPath.Find(positionData.path, root.transform);
+                            if (parent != null)
+                            {
+                                target.parent = parent;
+                            }
+                        }
+                        break;
+                    case Tracking.Humanoid:
+                        {
+                            var parent = AhzkwidHumanoid.GetBoneTransform(root.gameObject, positionData.bone);
+                            if (parent != null)
+                            {
+                                target.parent = parent;
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                */
+                if ((positionData.tracking == Tracking.Humanoid) && (parent == null))
+                {
+                    //skip
+                }
+                else
+                {
+                    if (positionData.updatePosition)
+                    {
+                        target.localPosition = positionData.position;
+                    }
+
+                    if (positionData.updateRotation)
+                    {
+                        target.localRotation = Quaternion.Euler(positionData.rotation);
+                    }
+
+                    if (positionData.updateScale)
+                    {
+                        target.localScale = positionData.scale;
+                    }
+                }
+
+            }
+            public void ComponentsMove(Transform root)
+            {
+                var positionData = this;
+                //컴포넌트
+                Component component = null;
+                switch (positionData.target)
+                {
+                    case Target.Object:
+                        component = positionData.targetObject as Component;
+                        break;
+                    case Target.Parent:
+                        break;
+                    default:
+                        break;
+                }
+                if (component == null)
+                {
+                    return;
+                }
+
+                var parent = positionData.GetParentTarget(root);
+                if (parent != null)
+                {
+
+                    ObjectPath.ComponentMove(component, parent.gameObject);
+
+                    //var newComponent = parent.gameObject.AddComponent(component.GetType());
+
+
+                    //ObjectPath.ComponentMove(component,newComponent);
+
+                    //DestroyImmediate(component);
+
+                    //CopyClass(component,ref newComponent);
+                    //var json = JsonUtility.ToJson(component);
+                    //JsonUtility.FromJsonOverwrite(json, newComponent);
+
+                    /*
+                    foreach (var field in component.GetType().GetFields())
+                    {
+                        var value = field.GetValue(component);
+                        field.SetValue(newComponent, value);
+                    }
+                    var properties = component.GetType().GetProperties();
+                    foreach (var property in properties)
+                    {
+                        if (!property.CanWrite || !property.CanRead)
+                        {
+                            continue;
+                        }
+                        property.SetValue(newComponent, property.GetValue(component));
+                    }
+                    */
+                    //var rc = newComponent as RotationConstraint;
+                    //rc.GetSources
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            }
             public void SetCurrentTransform(AutoPosition autoPosition)
             {
                 var target = GetTarget(autoPosition);
@@ -616,154 +817,11 @@ namespace Ahzkwid
 
                 foreach (var positionData in autoPosition.PositionDatas)
                 {
-                    //컴포넌트
-                    Component component = null;
-                    switch (positionData.target)
-                    {
-                        case Target.Object:
-                            component = positionData.targetObject as Component;
-                            break;
-                        case Target.Parent:
-                            break;
-                        default:
-                            break;
-                    }
-                    if (component == null)
-                    {
-                        continue;
-                    }
-
-                    var parent = positionData.GetParentTarget(root);
-                    if (parent != null)
-                    {
-
-                        ObjectPath.ComponentMove(component, parent.gameObject);
-
-                        //var newComponent = parent.gameObject.AddComponent(component.GetType());
-
-
-                        //ObjectPath.ComponentMove(component,newComponent);
-
-                        //DestroyImmediate(component);
-
-                        //CopyClass(component,ref newComponent);
-                        //var json = JsonUtility.ToJson(component);
-                        //JsonUtility.FromJsonOverwrite(json, newComponent);
-
-                        /*
-                        foreach (var field in component.GetType().GetFields())
-                        {
-                            var value = field.GetValue(component);
-                            field.SetValue(newComponent, value);
-                        }
-                        var properties = component.GetType().GetProperties();
-                        foreach (var property in properties)
-                        {
-                            if (!property.CanWrite || !property.CanRead)
-                            {
-                                continue;
-                            }
-                            property.SetValue(newComponent, property.GetValue(component));
-                        }
-                        */
-                        //var rc = newComponent as RotationConstraint;
-                        //rc.GetSources
-                    }
-
+                    positionData.ComponentsMove(root);
                 }
                 foreach (var positionData in autoPosition.PositionDatas)
                 {
-                    //게임오브젝트
-                    Transform target = null;
-
-                    target = positionData.GetTarget(this);
-                    /*
-                    switch (positionData.target)
-                    {
-                        case Target.Object:
-                            if (positionData.targetObject == null)
-                            {
-                                target = autoPosition.transform;
-                            }
-                            else
-                            {
-                                if (positionData.targetObject is Component)
-                                {
-                                    continue;
-                                }
-                                var gameObject = positionData.targetObject as GameObject;
-                                target = gameObject.transform;
-                            }
-                            break;
-                        case Target.Parent:
-                            target = autoPosition.GetParent(positionData.parentIndex);
-                            break;
-                        default:
-                            break;
-                    }
-                    */
-                    if (target == null)
-                    {
-                        continue;
-                    }
-
-                    var parent = positionData.GetParentTarget(root);
-                    if (parent != null)
-                    {
-                        target.parent = parent;
-                    }
-
-
-                    /*
-                    switch (positionData.tracking)
-                    {
-                        case Tracking.Path:
-                            {
-                                var parent = ObjectPath.Find(positionData.path, root.transform);
-                                if (parent != null)
-                                {
-                                    target.parent = parent;
-                                }
-                            }
-                            break;
-                        case Tracking.Humanoid:
-                            {
-                                var parent = AhzkwidHumanoid.GetBoneTransform(root.gameObject, positionData.bone);
-                                if (parent != null)
-                                {
-                                    target.parent = parent;
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    */
-                    if ((positionData.tracking==Tracking.Humanoid)&& (parent == null))
-                    {
-                        //skip
-                    }
-                    else
-                    {
-                        if (positionData.updatePosition)
-                        {
-                            target.localPosition = positionData.position;
-                        }
-
-                        if (positionData.updateRotation)
-                        {
-                            target.localRotation = Quaternion.Euler(positionData.rotation);
-                        }
-
-                        if (positionData.updateScale)
-                        {
-                            target.localScale = positionData.scale;
-                        }
-                    }
-
-
-
-
+                    positionData.ApplyPosition(this,root);
                 }
 
                 autoPosition.success = true;

@@ -41,7 +41,7 @@ namespace Ahzkwid
                             break;
                     }
                 }
-                
+
                 {
                     var mergeType = (AvatarMergeTool.MergeType)serializedObject.FindProperty(nameof(AutoMerge.mergeType)).enumValueIndex;
                     switch (mergeType)
@@ -66,7 +66,7 @@ namespace Ahzkwid
                 var autoMerge = target as AutoMerge;
                 var targetMeshs = autoMerge.targetMeshs;
                 var valueChanged = false;
-                if (targetMeshs!=null)
+                if (targetMeshs != null)
                 {
                     targetMeshs = System.Array.ConvertAll(targetMeshs, value =>
                     {
@@ -309,7 +309,7 @@ namespace Ahzkwid
         public AvatarMergeTool.MergeType mergeType = AvatarMergeTool.MergeType.Default;
         //[HideInInspector]
         public AvatarMergeTool.ForceMergeType forceMergeType = AvatarMergeTool.ForceMergeType.HumanBodyBones;
-        
+
 
 
         public enum MergeTrigger
@@ -372,7 +372,7 @@ namespace Ahzkwid
         public Transform GetClothRootTransform(ClothRoot clothRoot)
         {
 
-            if (clothRoot==null)
+            if (clothRoot == null)
             {
                 return null;
             }
@@ -428,7 +428,7 @@ namespace Ahzkwid
                 }
 
                 */
-                targetTransforms= ObjectPath.GetRoots(ObjectPath.VRCRootSearchOption.VRCRootOnly);
+                targetTransforms = ObjectPath.GetRoots(ObjectPath.VRCRootSearchOption.VRCRootOnly);
 
 
 
@@ -464,7 +464,7 @@ namespace Ahzkwid
                     {
                         continue;
                     }
-                    targetTransforms.AddRange(targets.ConvertAll(x=>x.transform));
+                    targetTransforms.AddRange(targets.ConvertAll(x => x.transform));
 
                     /*
                     var targetTransform = targets.First().transform;
@@ -505,7 +505,7 @@ namespace Ahzkwid
 
             return null;
         }
-
+        Transform lastTarget = null;
 
         public void DrawSnap()
         {
@@ -517,6 +517,7 @@ namespace Ahzkwid
             }
 
             var targetTransform = GetTargetTransform();
+            lastTarget = targetTransform;
             if (targetTransform == null)
             {
                 return;
@@ -588,7 +589,17 @@ namespace Ahzkwid
         }
         public void SetParent()
         {
-            var targetTransform = GetTargetTransform();
+            //var targetTransform = GetTargetTransform();
+
+            var targetTransform = lastTarget;
+            if (targetTransform == null)
+            {
+                targetTransform = GetTargetTransform();
+            }
+            if (targetTransform == null)
+            {
+                return;
+            }
 
 
             transform.root.parent = targetTransform;
@@ -628,7 +639,7 @@ namespace Ahzkwid
             autoMerge.HandleDragAndDropEvents();
             HandleDragAndDropEvents();
         }
-        static List<AutoMerge> autoMerges=new List<AutoMerge>();
+        static List<AutoMerge> autoMerges = new List<AutoMerge>();
         static void OnHierarchyGUI(int instanceID, Rect selectionRect)
         {
             //var autoMerges = FastFind.FindAutoMergeFast();
@@ -680,14 +691,14 @@ namespace Ahzkwid
         bool SnapCheck()
         {
 
-            if (PrefabStageUtility.GetCurrentPrefabStage()!=null) //프리팹 수정모드라면 중단
+            if (PrefabStageUtility.GetCurrentPrefabStage() != null) //프리팹 수정모드라면 중단
             {
                 return false;
             }
 
 
-            var root = ObjectPath.GetVRCRoot(transform,ObjectPath.VRCRootSearchOption.VRCRootOnly);
-            if (root==null)
+            var root = ObjectPath.GetVRCRoot(transform, ObjectPath.VRCRootSearchOption.VRCRootOnly);
+            if (root == null)
             {
                 return true;
             }
@@ -749,15 +760,15 @@ namespace Ahzkwid
                 var targetTransform = ObjectPath.GetVRCRoot(clothRoot, ObjectPath.VRCRootSearchOption.IncludeVRCRoot);
                 if (targetTransform != clothRoot)
                 {
-                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject,mergeType, forceMergeType);
+                    AvatarMergeTool.Merge(targetTransform.gameObject, clothRoot.gameObject, mergeType, forceMergeType);
                     DestroyImmediate(this);
                 }
             }
         }
-        public void FollowBones(Transform from,Transform to)
+        public void FollowBones(Transform from, Transform to)
         {
 
-            var transforms=from.GetComponentsInChildren<Transform>(true);
+            var transforms = from.GetComponentsInChildren<Transform>(true);
 
             //from.localScale = Vector3.one;
             foreach (var transform in transforms)
