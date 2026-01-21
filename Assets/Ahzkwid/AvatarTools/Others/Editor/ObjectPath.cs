@@ -2,6 +2,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -230,19 +231,8 @@ namespace Ahzkwid
 
         public static Transform GetVRCRoot(Transform transform, VRCRootSearchOption vrcRootSearchOption = VRCRootSearchOption.IncludeVRCRoot)
         {
-            if (transform == null)
+            Component GetAvatarDescriptor(Component[] components)
             {
-                return null;
-            }
-            var root = transform.root;
-            if (root == null)
-            {
-                return null;
-            }
-            {
-                //var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
-                var components = root.GetComponentsInChildren<Component>(true);
-                //var components = transform.GetComponentsInParent<Component>(true);
                 var avatarDescriptor = System.Array.Find(components, x =>
                 {
                     if (x == null)
@@ -257,19 +247,52 @@ namespace Ahzkwid
                     var name = type.Name;
                     return name.Contains("AvatarDescriptor");
                 });
-                if (avatarDescriptor == null)
+                return null;
+            }
+
+            if (transform == null)
+            {
+                return null;
+            }
+
+
+            Transform root = null;
+            {
+                var components= transform.GetComponentsInParent<Component>(true);
+                var avatarDescriptor = GetAvatarDescriptor(components);
+                if (avatarDescriptor != null)
                 {
-                    switch (vrcRootSearchOption)
-                    {
-                        case VRCRootSearchOption.IncludeVRCRoot:
-                            return root;
-                        case VRCRootSearchOption.VRCRootOnly:
-                            return null;
-                        default:
-                            break;
-                    }
+                    return avatarDescriptor.transform;
                 }
-                root = avatarDescriptor.transform;
+            }
+
+
+            {
+                root = transform.root;
+                if (root == null)
+                {
+                    return null;
+                }
+                {
+                    //var avatarDescriptor = root.GetComponentInChildren<VRCAvatarDescriptor>(true);
+                    var components = root.GetComponentsInChildren<Component>(true);
+                    //var components = transform.GetComponentsInParent<Component>(true);
+
+                    var avatarDescriptor = GetAvatarDescriptor(components);
+                    if (avatarDescriptor == null)
+                    {
+                        switch (vrcRootSearchOption)
+                        {
+                            case VRCRootSearchOption.IncludeVRCRoot:
+                                return root;
+                            case VRCRootSearchOption.VRCRootOnly:
+                                return null;
+                            default:
+                                break;
+                        }
+                    }
+                    root = avatarDescriptor.transform;
+                }
             }
             return root;
         }

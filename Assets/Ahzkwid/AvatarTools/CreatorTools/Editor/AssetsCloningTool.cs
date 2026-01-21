@@ -302,18 +302,8 @@ class AssetsCloningTool : EditorWindow
         }
 
 
-        var importPaths = new List<string>();
-        foreach (var guid in assetGUIDs)
+        bool ReplaceGUID(string path)
         {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                continue;
-            }
-            if (System.IO.File.Exists(path) == false)
-            {
-                continue;
-            }
             var text = System.IO.File.ReadAllText(path);
             var replaceCount = 0;
             foreach (var key in relativeGUIDs.Keys)
@@ -326,12 +316,51 @@ class AssetsCloningTool : EditorWindow
                 Debug.Log($"{path}.{key} -> {relativeGUIDs[key]}");
                 replaceCount++;
             }
-            if (replaceCount==0)
+            if (replaceCount == 0)
+            {
+                return false;
+            }
+            System.IO.File.WriteAllText(path, text);
+            return true;
+        }
+
+        var importPaths = new List<string>();
+        foreach (var guid in assetGUIDs)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrWhiteSpace(path))
             {
                 continue;
             }
-            importPaths.Add(path);
-            System.IO.File.WriteAllText(path, text);
+            if (System.IO.File.Exists(path) == false)
+            {
+                continue;
+            }
+            var metaPath = path + ".meta";
+            if (ReplaceGUID(path)|| ReplaceGUID(metaPath))
+            {
+                importPaths.Add(path);
+            }
+            {
+                //var text = System.IO.File.ReadAllText(path);
+                //var replaceCount = 0;
+                //foreach (var key in relativeGUIDs.Keys)
+                //{
+                //    if (text.Contains(key) == false)
+                //    {
+                //        continue;
+                //    }
+                //    text = text.Replace(key, relativeGUIDs[key]);
+                //    Debug.Log($"{path}.{key} -> {relativeGUIDs[key]}");
+                //    replaceCount++;
+                //}
+                //if (replaceCount == 0)
+                //{
+                //    continue;
+                //}
+                //importPaths.Add(path);
+                //System.IO.File.WriteAllText(path, text);
+            }
         }
         //var assetPaths = assetGUIDs.ConvertAll(guid => AssetDatabase.GUIDToAssetPath(guid));
         foreach (var path in importPaths)

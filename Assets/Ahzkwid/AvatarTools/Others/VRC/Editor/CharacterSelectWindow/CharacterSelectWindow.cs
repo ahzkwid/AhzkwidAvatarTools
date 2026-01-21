@@ -30,7 +30,7 @@ namespace Ahzkwid
             window.Show();
         }
         SerializedObject serializedObject;
-        string[] characterPaths = new string[]
+        readonly string[] characterPaths = new string[]
         {
             "Assets/Amatousagi/Plum/Plum.prefab",
             "Assets/sep-neko-ya/Eku/Prefab/Eku.prefab",
@@ -64,6 +64,10 @@ namespace Ahzkwid
             "Assets/Amatousagi/Chocolat/Chocolat.prefab",
             "Assets/Amatousagi/Chiffon/Chiffon.prefab",
             "Assets/onair/Alue/Prefab/Alue.prefab",
+            "Assets/Komano/Prefab/Komano.prefab",
+            "f226432ec87c1a44898f5da338c31789", //akyoHumanoid
+            "Assets/MUMUS_Avatar/MUMUS_all.prefab",
+            "",
             "",
             "",
             "",
