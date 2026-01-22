@@ -2,7 +2,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -247,7 +246,7 @@ namespace Ahzkwid
                     var name = type.Name;
                     return name.Contains("AvatarDescriptor");
                 });
-                return null;
+                return avatarDescriptor;
             }
 
             if (transform == null)
