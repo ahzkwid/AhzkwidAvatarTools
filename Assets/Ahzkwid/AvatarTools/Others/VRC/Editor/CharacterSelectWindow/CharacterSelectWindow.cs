@@ -1,14 +1,12 @@
 
 namespace Ahzkwid
 {
-    using System;
-    using System.IO;
 #if UNITY_EDITOR
 
     using UnityEditor;
     using UnityEngine;
-    using static MaterialPropertyTool;
-    using UnityEngine.UI;
+    using System;
+    using System.IO;
 
     //class CharacterRefreshHook : AssetPostprocessor
     //{
@@ -110,7 +108,14 @@ namespace Ahzkwid
             "",
         };
         public bool kisekae = false;
+
         public void UpdateCharacters()
+        {
+            UpdateCharactersV2();
+
+        }
+
+        public void UpdateCharactersV1()
         {
 
             var paths = characterPaths;
@@ -122,15 +127,39 @@ namespace Ahzkwid
                 var go = AssetDatabase.LoadAssetAtPath<GameObject>(x);
                 if (go == null)
                 {
-                    go= AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x));
+                    go = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x));
                 }
-                return go ;
+                return go;
             });
             characters = System.Array.FindAll(characters, x => x != null);
             System.Array.Sort(characters, (a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
 
         }
+
+        public void UpdateCharactersV2()
+        {
+
+            var paths = characterPaths;
+            if (kisekae)
+            {
+                paths = characterKisekaePaths;
+            }
+            existCharacters = System.Array.ConvertAll(paths, x => {
+                var guid = AssetDatabase.AssetPathToGUID(x);
+                if (string.IsNullOrWhiteSpace(guid))
+                {
+                    guid = x;
+                }
+
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                return path;
+            });
+            existCharacters = System.Array.FindAll(existCharacters, x => !string.IsNullOrWhiteSpace(x));
+            System.Array.Sort(existCharacters, (a, b) => string.Compare(Path.GetFileNameWithoutExtension(a), Path.GetFileNameWithoutExtension(b), StringComparison.Ordinal));
+
+        }
         public GameObject[] characters = null;
+        public string[] existCharacters = null;
         void OnGUI()
         {
             if (serializedObject == null)
@@ -138,22 +167,29 @@ namespace Ahzkwid
                 serializedObject = new SerializedObject(this);
             }
 
-            if (characters==null)
+            //if (characters == null)
+            if (existCharacters == null)
             {
                 UpdateCharacters();
             }
             serializedObject.Update();
             {
                 EditorGUILayout.Space();
-                foreach (var item in characters)
+                foreach (var item in existCharacters)
                 {
                     EditorGUILayout.BeginHorizontal();
                     {
                         GUI.enabled = false;
                         {
-                            EditorGUILayout.ObjectField(item, typeof(UnityEngine.GameObject), false);
+                            EditorGUILayout.TextField(Path.GetFileNameWithoutExtension(item));
+                            //EditorGUILayout.ObjectField(item, typeof(UnityEngine.GameObject), false);
                         }
                         GUI.enabled = true;
+                        if (GUILayout.Button("Select"))
+                        {
+                            var target= AssetDatabase.LoadAssetAtPath<GameObject>(item);
+                            Selection.activeObject = target;
+                        }
                         if (GUILayout.Button("Spawn"))
                         {
                             var poxX = 0f;
@@ -166,7 +202,8 @@ namespace Ahzkwid
                                 }
                                 poxX = Mathf.Min(poxX, root.transform.position.x);
                             }
-                            var go = (GameObject)PrefabUtility.InstantiatePrefab(item);
+                            var target = AssetDatabase.LoadAssetAtPath<GameObject>(item);
+                            var go = (GameObject)PrefabUtility.InstantiatePrefab(target);
                             go.transform.position = new Vector3(poxX - 0.75f, 0f, 0f);
 
                         }
