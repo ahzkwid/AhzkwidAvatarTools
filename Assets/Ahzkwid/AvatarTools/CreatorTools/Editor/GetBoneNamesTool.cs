@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 using Ahzkwid;
+using System.Linq;
 
 
 [InitializeOnLoad]
@@ -33,63 +34,68 @@ class GetBoneNamesTool : EditorWindow
             {
                 animator=character.GetComponentInChildren<Animator>(true);
             }
-            foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
-            {
+            //foreach (var humanBodyBone in (HumanBodyBones[])System.Enum.GetValues(typeof(HumanBodyBones)))
+            //{
 
-                if (humanBodyBone < 0)
-                {
-                    continue;
-                }
-                if (humanBodyBone >= HumanBodyBones.LastBone)
-                {
-                    continue;
-                }
+            //    if (humanBodyBone < 0)
+            //    {
+            //        continue;
+            //    }
+            //    if (humanBodyBone >= HumanBodyBones.LastBone)
+            //    {
+            //        continue;
+            //    }
 
 
-                var humanBodyBoneToString = ToLowerFirst(humanBodyBone.ToString());
-                {
-                    //변수명 등록
+            //    var humanBodyBoneToString = ToLowerFirst(humanBodyBone.ToString());
+            //    {
+            //        //변수명 등록
 
-                    if (!string.IsNullOrWhiteSpace(boneTransformEnumNames))
-                    {
-                        boneTransformEnumNames += ",";
-                    }
-                    boneTransformEnumNames += $"\"{humanBodyBoneToString}\": None";
-                }
-                //boneTransformEnumNames += $"\n";
+            //        if (!string.IsNullOrWhiteSpace(boneTransformEnumNames))
+            //        {
+            //            boneTransformEnumNames += ",";
+            //        }
+            //        boneTransformEnumNames += $"\"{humanBodyBoneToString}\": None";
+            //    }
+            //    //boneTransformEnumNames += $"\n";
 
-                if (animator == null)
-                {
-                    continue;
-                }
-                var boneTransform = animator.GetBoneTransform(humanBodyBone);
-                if (boneTransform == null)
-                {
-                    continue;
-                }
-                if (!string.IsNullOrWhiteSpace(boneTransformNames))
-                {
-                    boneTransformNames += ",";
-                }
-                boneTransformNames += $"{humanBodyBoneToString}=\"{boneTransform.name}\"";
-                //boneTransformNames += $"\n";
-            }
+            //    if (animator == null)
+            //    {
+            //        continue;
+            //    }
+            //    var boneTransform = animator.GetBoneTransform(humanBodyBone);
+            //    if (boneTransform == null)
+            //    {
+            //        continue;
+            //    }
+            //    if (!string.IsNullOrWhiteSpace(boneTransformNames))
+            //    {
+            //        boneTransformNames += ",";
+            //    }
+            //    boneTransformNames += $"{humanBodyBoneToString}=\"{boneTransform.name}\"";
+            //    //boneTransformNames += $"\n";
+            //}
             {
                 //가슴추가
                 var ahzkwidHumanoid = new AhzkwidHumanoid(character);
 
                 var fields = typeof(AhzkwidHumanoid).GetFields();
 
-                var list = new List<Transform>() { ahzkwidHumanoid.rightBreast, ahzkwidHumanoid.leftBreast };
+                //var list = new List<Transform>() { ahzkwidHumanoid.rightBreast, ahzkwidHumanoid.leftBreast };
+
+                var list = ahzkwidHumanoid.GetBoneTransforms().ToList();
                 foreach (var field in fields)
                 {
 
                     var boneTransformToString = ToLowerFirst(field.Name);
-                    if (boneTransformToString.ToLower().Contains("breast") == false)
+                    //if (boneTransformToString.ToLower().Contains("breast") == false)
+                    //{
+                    //    continue;
+                    //}
+                    if (boneTransformToString.ToLower().Contains("root"))
                     {
                         continue;
                     }
-
                     {
                         //변수명 등록
 

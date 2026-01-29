@@ -66,6 +66,12 @@ namespace Ahzkwid
             "Assets/Komano/Prefab/Komano.prefab",
             "f226432ec87c1a44898f5da338c31789", //akyoHumanoid
             "Assets/MUMUS_Avatar/MUMUS_all.prefab",
+            "Assets/BLUE_STELLA/Kanata/Kanata_BLUESTELLA.prefab",
+            "Assets/KululuShippo/Hikarun3D/Hikarun.prefab",
+            "",
+            "",
+            "",
+            "",
             "",
             "",
             "",
@@ -102,6 +108,10 @@ namespace Ahzkwid
             "Assets/IKUSIA/ririka/Prefab/ririka kaihen.prefab",
             "Assets/IKUSIA/rurune/Prefab/rurune_kaihen.prefab",
             "Assets/ugarex/Humanoid Akyo/Prefab/v1_71Humanoid_Akyo_SingleBaseLayer.prefab",
+            "Assets/BLUE_STELLA/Kanata/Kanata_Kisekae.prefab",
+            "Assets/KululuShippo/Hikarun3D/Hikarun_Kisekae.prefab",
+            "",
+            "",
             "",
             "",
             "",
@@ -132,7 +142,7 @@ namespace Ahzkwid
                 return go;
             });
             characters = System.Array.FindAll(characters, x => x != null);
-            System.Array.Sort(characters, (a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+            System.Array.Sort(characters, (a, b) => string.Compare(a.name, b.name, StringComparison.OrdinalIgnoreCase));
 
         }
 
@@ -155,7 +165,7 @@ namespace Ahzkwid
                 return path;
             });
             existCharacters = System.Array.FindAll(existCharacters, x => !string.IsNullOrWhiteSpace(x));
-            System.Array.Sort(existCharacters, (a, b) => string.Compare(Path.GetFileNameWithoutExtension(a), Path.GetFileNameWithoutExtension(b), StringComparison.Ordinal));
+            System.Array.Sort(existCharacters, (a, b) => string.Compare(Path.GetFileNameWithoutExtension(a), Path.GetFileNameWithoutExtension(b), StringComparison.OrdinalIgnoreCase));
 
         }
         public GameObject[] characters = null;

@@ -1,5 +1,8 @@
 #define USE_FINGER
 #define USE_BREAST
+#define USE_TOE
+#define USE_EYE
+#define USE_UPPER_CHEST
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -72,6 +75,19 @@ namespace Ahzkwid
 #if USE_BREAST
         public Transform leftBreast;
         public Transform rightBreast;
+#endif
+
+#if USE_TOE
+        public Transform leftToes;
+        public Transform rightToes;
+#endif
+
+#if USE_EYE
+        public Transform leftEye;
+        public Transform rightEye;
+#endif
+#if USE_UPPER_CHEST
+        public Transform upperChest;
 #endif
 
         public Transform GetSymmetricalTransform(Transform input)
@@ -313,6 +329,10 @@ namespace Ahzkwid
             var fields = GetBonesField();
             foreach (var field in fields)
             {
+                if (field.IsStatic)
+                {
+                    continue;
+                }
                 var transform = (Transform)field.GetValue(this);
                 if (transform == null)
                 {
@@ -400,7 +420,12 @@ namespace Ahzkwid
                 {
                     continue;
                 }
-                field.SetValue(this, animator.GetBoneTransform(humanBodyBone));
+                var boneTransform = animator.GetBoneTransform(humanBodyBone);
+                if (boneTransform==null)
+                {
+                    continue;
+                }
+                field.SetValue(this, boneTransform);
                 /*
                 if (Enum.TryParse(field.Name, out HumanBodyBones humanBodyBone))
                 {
@@ -491,7 +516,10 @@ namespace Ahzkwid
         static readonly string[] lowerArmKeywords = new [] { "elbow", "forearm" };
 
 
-        static readonly string[] fingerKeywords = new[] { "thumb", "index", "middle" , "ring", "little" };
+        static readonly string[] fingerKeywords = new[] { "thumb", "index", "middle", "ring", "little" };
+        static readonly string[] toeKeywords = new[] { "toe" };
+        static readonly string[] eyeKeywords = new[] { "eye" };
+        static readonly string[] upperChestKeywords = new[] { "upper" };
 
 
         public static readonly string[] fingerMuscleKeywords = new [] { "Stretched", "Spread" };
@@ -941,7 +969,43 @@ namespace Ahzkwid
 #endif
 
 
+#if USE_TOE
+            if (leftFoot != null)
+            {
+                var toeTransforms = leftFoot.GetComponentsInChildren<Transform>(true);
+                leftToes = FindBone(toeTransforms, toeKeywords);
+            }
 
+            if (rightFoot != null)
+            {
+                var toeTransforms = rightFoot.GetComponentsInChildren<Transform>(true);
+                rightFoot = FindBone(toeTransforms, toeKeywords);
+            }
+#endif
+
+
+#if USE_EYE
+            if (head != null)
+            {
+                var eyeTransforms = head.GetComponentsInChildren<Transform>(true);
+                eyeTransforms = FindBones(eyeTransforms, eyeKeywords);
+
+                leftEye = GetLefts(eyeTransforms).FirstOrDefault();
+                rightEye = GetRights(eyeTransforms).FirstOrDefault();
+            }
+#endif
+#if USE_UPPER_CHEST
+            if (chest != null)
+            {
+                var childs=new Transform[chest.childCount];
+                for (int i = 0; i < chest.childCount; i++)
+                {
+                    childs[i]= chest.GetChild(i);
+                }
+                upperChest = FindBone(childs, upperChestKeywords);
+
+            }
+#endif
 
 
             //¼Ò°Å¹ý
@@ -1734,15 +1798,14 @@ namespace Ahzkwid
             }
             this.root = root;
 
+            NameSearch(root.GetComponentsInChildren<Transform>(true));
+
+
 
             var animator = root.GetComponent<Animator>();
             if ((animator != null) && (animator.isHuman))
             {
                 HumanoidSearch(animator);
-            }
-            else
-            {
-                NameSearch(root.GetComponentsInChildren<Transform>(true));
             }
 
 #if USE_BREAST

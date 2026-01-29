@@ -224,10 +224,11 @@ namespace Ahzkwid
                 var action = (AutoObjectSetting.ObjectSettingDatas.Action)property.FindPropertyRelative(nameof(AutoObjectSetting.ObjectSettingDatas.action)).intValue;
                 switch (action)
                 {
-                    case AutoObjectSetting.ObjectSettingDatas.Action.SetTag:
+                    case AutoObjectSetting.ObjectSettingDatas.Action.Tag:
                         propertyCount += 1;
                         break;
                     case AutoObjectSetting.ObjectSettingDatas.Action.MaterialsCopy:
+                    case AutoObjectSetting.ObjectSettingDatas.Action.AnchoOverride:
                         break;
                     default:
                         break;
@@ -245,9 +246,10 @@ namespace Ahzkwid
                 }
                 switch (action)
                 {
-                    case AutoObjectSetting.ObjectSettingDatas.Action.SetTag:
+                    case AutoObjectSetting.ObjectSettingDatas.Action.Tag:
                         break;
                     case AutoObjectSetting.ObjectSettingDatas.Action.MaterialsCopy:
+                    case AutoObjectSetting.ObjectSettingDatas.Action.AnchoOverride:
                         {
                             var path = nameof(AutoObjectSetting.ObjectSettingDatas.fromObject);
                             var pathProperty = property.FindPropertyRelative(path);
@@ -324,7 +326,7 @@ namespace Ahzkwid
                     var action = (AutoObjectSetting.ObjectSettingDatas.Action)property.FindPropertyRelative(nameof(AutoObjectSetting.ObjectSettingDatas.action)).intValue;
                     switch (action)
                     {
-                        case AutoObjectSetting.ObjectSettingDatas.Action.SetTag:
+                        case AutoObjectSetting.ObjectSettingDatas.Action.Tag:
 
                             {
                                 var path = nameof(AutoObjectSetting.ObjectSettingDatas.targetObject);
@@ -380,6 +382,16 @@ namespace Ahzkwid
                             {
                                 var path = nameof(AutoObjectSetting.ObjectSettingDatas.targetObject);
                                 DrawTarget(path, "To");
+                            }
+                            break;
+                        case AutoObjectSetting.ObjectSettingDatas.Action.AnchoOverride:
+                            {
+                                var path = nameof(AutoObjectSetting.ObjectSettingDatas.fromObject);
+                                DrawTarget(path, "Anchor");
+                            }
+                            {
+                                var path = nameof(AutoObjectSetting.ObjectSettingDatas.targetObject);
+                                DrawTarget(path, "RootTarget");
                             }
                             break;
                         default:
@@ -439,8 +451,9 @@ namespace Ahzkwid
 
             public enum Action
             {
-                SetTag,
+                Tag,
                 MaterialsCopy,
+                AnchoOverride,
             }
             public Action action;
             [AutoObjectSettingTargetAttribute]
@@ -473,7 +486,7 @@ namespace Ahzkwid
                 }
                 switch (action)
                 {
-                    case Action.SetTag:
+                    case Action.Tag:
                         switch (tag)
                         {
                             case Tag.None:
@@ -488,23 +501,44 @@ namespace Ahzkwid
                         }
                         break;
                     case Action.MaterialsCopy:
-                        var from = fromObject.GetGameObject(root, rootChildrens);
-                        if (from == null)
                         {
-                            return;
+                            var from = fromObject.GetGameObject(root, rootChildrens);
+                            if (from == null)
+                            {
+                                return;
+                            }
+                            var fromRenderer = from.GetComponent<Renderer>();
+                            if (fromRenderer == null)
+                            {
+                                return;
+                            }
+                            var toRenderer = target.GetComponent<Renderer>();
+                            if (toRenderer == null)
+                            {
+                                return;
+                            }
+                            toRenderer.sharedMaterials = fromRenderer.sharedMaterials;
+                            EditorUtility.SetDirty(toRenderer);
                         }
-                        var fromRenderer = from.GetComponent<Renderer>();
-                        if (fromRenderer == null)
+                        break;
+                    case Action.AnchoOverride:
                         {
-                            return;
+                            var from = fromObject.GetGameObject(root, rootChildrens);
+                            if (from == null)
+                            {
+                                return;
+                            }
+                            var toRenderers = target.GetComponentsInChildren<Renderer>(true);
+                            foreach (var toRenderer in toRenderers)
+                            {
+                                if (toRenderer == null)
+                                {
+                                    return;
+                                }
+                                toRenderer.probeAnchor = from.transform;
+                                EditorUtility.SetDirty(toRenderer);
+                            }
                         }
-                        var toRenderer = target.GetComponent<Renderer>();
-                        if (toRenderer == null)
-                        {
-                            return;
-                        }
-                        toRenderer.sharedMaterials = fromRenderer.sharedMaterials;
-                        EditorUtility.SetDirty(toRenderer);
                         break;
                     default:
                         break;

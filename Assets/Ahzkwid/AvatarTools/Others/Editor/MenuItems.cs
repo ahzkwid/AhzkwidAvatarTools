@@ -50,12 +50,6 @@ namespace Ahzkwid
             AssetsCloningTool.Init();
         }
 
-        [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/AssetsTool/" + nameof(AssetsExportTool))]
-        public static void AssetsExportToolInit()
-        {
-            AssetsExportTool.Init();
-        }
-
 
         [UnityEditor.MenuItem("Ahzkwid/AvatarTools/CreatorTools/MaterialTool/" + nameof(InsertMaterialsTool))]
         public static void InsertMaterialsToolInit()

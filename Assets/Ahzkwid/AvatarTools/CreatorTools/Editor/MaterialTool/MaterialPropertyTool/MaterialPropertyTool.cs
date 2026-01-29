@@ -160,6 +160,7 @@ class MaterialPropertyTool : EditorWindow
         "_MatCapBlendMode",
         "_MatCapApply Transparency",
         "_MatCapCustomNormal",
+
         "_UseMatCap2nd",
         "_MatCap2ndTex",
         "_MatCap2ndColor",
@@ -176,7 +177,46 @@ class MaterialPropertyTool : EditorWindow
         "_MatCap2ndApply Transparency",
         "_MatCap2ndCustomNormal"
     };
+    public static readonly string[] emissionProperties =
+    {
+        "_UseEmission",
+        "_EmissionMap","_EmissionColor",
+        "_EmissionMainStrength",
+        "_EmissionBlendMask","_EmissionBlend",
+        "_EmissionBlendMode",
+        "_EmissionBlink",
+        "_EmissionUseGrad",
+        "_EmissionParallaxDepth",
+        "_EmissionFluorescence",
 
+        "_UseEmission2nd",
+        "_Emission2ndMap","_Emission2ndColor",
+        "_Emission2ndMainStrength",
+        "_Emission2ndBlendMask","_Emission2ndBlend",
+        "_Emission2ndBlendMode",
+        "_Emission2ndBlink",
+        "_Emission2ndUseGrad",
+        "_Emission2ndParallaxDepth",
+        "_Emission2ndFluorescence"
+    };
+
+    public static readonly string[] audioLinkProperties =
+    {
+        "_UseAudioLink",
+        "_AudioLinkUVMode",
+        "_AudioLinkMask",
+        "_AudioLinkMask_ScrollRotate",
+        "_AudioLinkMask_UVMode",
+        "_AudioLinkDefaultValue",
+        "_AudioLink2Main2nd",
+        "_AudioLink2Main3rd",
+        "_AudioLink2Emission",
+        "_AudioLink2EmissionGrad",
+        "_AudioLink2Emission2nd",
+        "_AudioLink2Emission2ndGrad",
+        "_AudioLink2Vertex",
+        "_AudioLinkAsLocal"
+    };
 
 
 
@@ -192,7 +232,7 @@ class MaterialPropertyTool : EditorWindow
     }
     public enum TargetCopyPaste
     {
-        Light, Shadow, RimLight, RimShade, BackLight, Reflection, Matcap,Outline
+        Light, Shadow, RimLight, RimShade, BackLight, Reflection, Matcap, Outline, Emission, AudioLink
     }
     public enum Mode
     {
@@ -282,7 +322,7 @@ class MaterialPropertyTool : EditorWindow
             }
         }
     }
-    public static void CopyPasteProperties(Material from, Object[] to, string[] properties)
+    public static void CopyPasteProperties(Material from, Object[] to, string[] properties,bool includeTextures)
     {
 
         var propertiesFrom = MaterialEditor.GetMaterialProperties(new Material[] { from });
@@ -299,7 +339,7 @@ class MaterialPropertyTool : EditorWindow
                     //Debug.Log($"materials.Length:{materials.Length}");
 
 
-                    CopyPasteProperties(from, materials, properties);
+                    CopyPasteProperties(from, materials, properties, includeTextures);
                 }
                 continue;
             }
@@ -310,12 +350,12 @@ class MaterialPropertyTool : EditorWindow
                 //Debug.Log($"materials.Length:{materials.Length}");
 
 
-                CopyPasteProperties(from, materials, properties);
+                CopyPasteProperties(from, materials, properties, includeTextures);
             }
         }
 
     }
-    public static void CopyPasteProperties(Material from, Material[] toMaterials, string[] properties)
+    public static void CopyPasteProperties(Material from, Material[] toMaterials, string[] properties, bool includeTextures)
     {
 
         var propertiesFrom = MaterialEditor.GetMaterialProperties(new Material[] { from });
@@ -346,7 +386,10 @@ class MaterialPropertyTool : EditorWindow
                         break;
                     case MaterialProperty.PropType.Texture:
                         {
-
+                            if (includeTextures==false)
+                            {
+                                break;
+                            }
                             var value = from.GetTexture(property.name);
                             Debug.Log($"{material.name}.{property.name}:{property.textureValue}->{value}");
                             property.textureValue = value;
@@ -401,6 +444,10 @@ class MaterialPropertyTool : EditorWindow
             }
         }
     }
+
+    public bool includeTextures = false;
+
+
     SerializedObject serializedObject;
     void OnGUI()
     {
@@ -436,6 +483,10 @@ class MaterialPropertyTool : EditorWindow
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(from)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(to)));
+                    if (GUILayout.Button("ResetMaterials"))
+                    {
+                        to = null;
+                    }
                     EditorGUILayout.Space();
 
                     EditorGUILayout.Space();
@@ -475,6 +526,12 @@ class MaterialPropertyTool : EditorWindow
                             case TargetCopyPaste.Matcap:
                                 properties = matCapProperties.ToArray();
                                 break;
+                            case TargetCopyPaste.Emission:
+                                properties = emissionProperties.ToArray();
+                                break;
+                            case TargetCopyPaste.AudioLink:
+                                properties = audioLinkProperties.ToArray();
+                                break;
                             default:
                                 break;
                         }
@@ -488,6 +545,9 @@ class MaterialPropertyTool : EditorWindow
                     {
                         allReady = false;
                     }
+
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(includeTextures)));
                 }
                 serializedObject.ApplyModifiedProperties();
 
@@ -495,7 +555,7 @@ class MaterialPropertyTool : EditorWindow
                 GUI.enabled = allReady;
                 if (GUILayout.Button("Paste"))
                 {
-                    CopyPasteProperties(from, to, properties);
+                    CopyPasteProperties(from, to, properties, includeTextures);
                 }
 
 
