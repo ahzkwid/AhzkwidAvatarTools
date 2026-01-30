@@ -86,6 +86,14 @@ class GetBoneNamesTool : EditorWindow
                 var list = ahzkwidHumanoid.GetBoneTransforms().ToList();
                 foreach (var field in fields)
                 {
+                    if (field.FieldType!=typeof(Transform))
+                    {
+                        continue;
+                    }
+                    if (field.IsStatic)
+                    {
+                        continue;
+                    }
 
                     var boneTransformToString = ToLowerFirst(field.Name);
                     //if (boneTransformToString.ToLower().Contains("breast") == false)

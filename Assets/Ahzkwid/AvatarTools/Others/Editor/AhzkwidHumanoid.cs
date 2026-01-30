@@ -979,7 +979,7 @@ namespace Ahzkwid
             if (rightFoot != null)
             {
                 var toeTransforms = rightFoot.GetComponentsInChildren<Transform>(true);
-                rightFoot = FindBone(toeTransforms, toeKeywords);
+                rightToes = FindBone(toeTransforms, toeKeywords);
             }
 #endif
 
@@ -1467,7 +1467,7 @@ namespace Ahzkwid
         {
             var names= System.Array.ConvertAll(transforms, t => t.name);
             var matchingNames = GetLefts(names);
-            var matchingTransforms = System.Array.FindAll(transforms,x=> names.Contains(x.name));
+            var matchingTransforms = System.Array.FindAll(transforms,x=> matchingNames.Contains(x.name));
             /*
             var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("left"));
             if (matchingTransforms.Length == 0)
@@ -1490,7 +1490,7 @@ namespace Ahzkwid
         {
             var names = System.Array.ConvertAll(transforms, t => t.name);
             var matchingNames = GetRights(names);
-            var matchingTransforms = System.Array.FindAll(transforms, x => names.Contains(x.name));
+            var matchingTransforms = System.Array.FindAll(transforms, x => matchingNames.Contains(x.name));
             /*
             var matchingTransforms = System.Array.FindAll(transforms, transform => transform.name.ToLower().Contains("right"));
             if (matchingTransforms.Length == 0)
@@ -1813,9 +1813,18 @@ namespace Ahzkwid
             {
                 var chestChilds = chest.GetComponentsInChildren<Transform>(true);
                 var breasts = FindBones(chestChilds, breastKeywords);
+                Debug.Log($"{string.Join(",", System.Array.ConvertAll(breasts, x => x.name))}");
                 breasts = System.Array.FindAll(breasts, x => x.name.ToLower().Contains("root") == false);//루트는 전부 제거
-                leftBreast = GetLefts(breasts).FirstOrDefault();
-                rightBreast = GetRights(breasts).FirstOrDefault();
+                {
+                    var bones = GetLefts(breasts);
+                    Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
+                    leftBreast = bones.FirstOrDefault();
+                }
+                {
+                    var bones = GetRights(breasts);
+                    Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
+                    rightBreast = bones.FirstOrDefault();
+                }
             }
 
 
