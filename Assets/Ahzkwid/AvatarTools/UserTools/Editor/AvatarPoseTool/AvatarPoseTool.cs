@@ -2,20 +2,21 @@
 
 
 #if UNITY_EDITOR
-using UnityEngine;
-using System.IO;
-using UnityEditor.Search;
-using UnityEditor;
-using System.Linq;
 using Ahzkwid;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Search;
+using UnityEditorInternal;
+using UnityEngine;
 
 [InitializeOnLoad]
-class AvatarPoseCopyTool : EditorWindow
+class AvatarPoseTool : EditorWindow
 {
     public enum Mode
     {
-        ApplyPose, Export
+        ApplyPose, Edit,Export
     }
     public Mode mode;
 
@@ -28,17 +29,64 @@ class AvatarPoseCopyTool : EditorWindow
     public bool xMirror = false;
 
 
-    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarPoseCopyTool))]
+    //[UnityEditor.MenuItem("Ahzkwid/AvatarTools/" + nameof(AvatarPoseTool))]
     public static void Init()
     {
-        var window = GetWindow<AvatarPoseCopyTool>(utility: false, title: nameof(AvatarPoseCopyTool));
+        var window = GetWindow<AvatarPoseTool>(utility: false, title: nameof(AvatarPoseTool));
         window.minSize = new Vector2(300, 150);
         //window.maxSize = window.minSize;
         window.Show();
     }
+
+    public bool ignoreHierarchy = false;
+    private void OnEnable()
+    {
+        SceneView.duringSceneGui += OnSceneGUI;
+    }
+
+    private void OnDisable()
+    {
+        SceneView.duringSceneGui -= OnSceneGUI;
+    }
+
+
+    public bool showFingers= false;
+    private void OnSceneGUI(SceneView sceneView)
+    {
+        if ((characters == null) || (characters.Length == 0))
+        {
+            humanoid = null;
+            return;
+        }
+        if (humanoid != null)
+        {
+            humanoid.DrawGizmo(xMirror, ignoreHierarchy, showFingers);
+        }
+        sceneView.Repaint();
+    }
+
+
+    public AhzkwidHumanoid humanoid = null;
     SerializedObject serializedObject;
     void OnGUI()
     {
+        void UpdateHumanoid(GameObject cloth)
+        {
+            characters = new GameObject[] { cloth };
+
+            if (humanoid == null)
+            {
+                humanoid = new AhzkwidHumanoid();
+            }
+            if ((characters != null) && (characters.Length > 0))
+            {
+                humanoid.Update(characters.First());
+            }
+            else
+            {
+                humanoid.Clear();
+            }
+        }
         if (serializedObject == null)
         {
             serializedObject = new SerializedObject(this);
@@ -54,9 +102,22 @@ class AvatarPoseCopyTool : EditorWindow
         serializedObject.Update();
         {
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mode)));
 
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
+
+            serializedObject.Update();
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(mode)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(characters)));
+            }
+            serializedObject.ApplyModifiedProperties();
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (characters == null || characters.Length == 0)
+                {
+                    characters = new GameObject[0];
+                }
+                UpdateHumanoid(characters.FirstOrDefault());
+            }
             EditorGUILayout.Space();
             switch (mode)
             {
@@ -155,6 +216,15 @@ class AvatarPoseCopyTool : EditorWindow
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
                     }
                     break;
+                case Mode.Edit:
+                    //EditorGUI.indentLevel++;
+                    {
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(xMirror)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(ignoreHierarchy)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(showFingers)));
+                    }
+                    //EditorGUI.indentLevel--;
+                    break;
                 case Mode.Export:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(animationType)));
                     EditorGUILayout.Space();
@@ -165,56 +235,61 @@ class AvatarPoseCopyTool : EditorWindow
         }
         serializedObject.ApplyModifiedProperties();
 
-        if (mode == Mode.ApplyPose)
+        switch (mode)
         {
-            GUI.enabled = allReady;
-            if (GUILayout.Button("Apply Pose"))
-            {
-                foreach (var character in characters)
+            case Mode.ApplyPose:
+                GUI.enabled = allReady;
+                if (GUILayout.Button("Apply Pose"))
                 {
-                    if (poseBackup)
+                    foreach (var character in characters)
                     {
-                        var characterCopy = Instantiate(character);
-                        characterCopy.name = character.name + " (BackupPose)";
-                        characterCopy.SetActive(false);
-                    }
-                    if (pose is GameObject gameObject)
-                    {
-                        //if (isHumanoid)
+                        if (poseBackup)
                         {
-                            PoseCopy(character, gameObject,avatarMask);
+                            var characterCopy = Instantiate(character);
+                            characterCopy.name = character.name + " (BackupPose)";
+                            characterCopy.SetActive(false);
                         }
-                        PoseCopyPath(character, gameObject, avatarMask);
-                    }
-                    if (pose is AnimationClip animation)
-                    {
-                        if (poseOnly==false)
+                        if (pose is GameObject gameObject)
                         {
-                            ApplyAnimationClips(character, avatarMask, animation);
+                            //if (isHumanoid)
+                            {
+                                PoseCopy(character, gameObject, avatarMask);
+                            }
+                            PoseCopyPath(character, gameObject, avatarMask);
                         }
-                        ApplyAnimationClipsMuscle(character, avatarMask, animation);
+                        if (pose is AnimationClip animation)
+                        {
+                            if (poseOnly == false)
+                            {
+                                ApplyAnimationClips(character, avatarMask, animation);
+                            }
+                            ApplyAnimationClipsMuscle(character, avatarMask, animation);
+                        }
+
+                        if (xMirror)
+                        {
+                            var humanoid = new AhzkwidHumanoid(character);
+                            humanoid.MirrorX();
+                        }
                     }
 
-                    if (xMirror)
+
+                }
+                GUI.enabled = true;
+                break;
+            case Mode.Edit:
+                break;
+            case Mode.Export:
+                if (GUILayout.Button("Export"))
+                {
+                    foreach (var character in characters)
                     {
-                        var humanoid = new AhzkwidHumanoid(character);
-                        humanoid.MirrorX();
+                        CreateAnimation(character, animationType);
                     }
                 }
-
-
-            }
-            GUI.enabled = true;
-        }
-        else
-        {
-            if (GUILayout.Button("Export"))
-            {
-                foreach (var character in characters)
-                {
-                    CreateAnimation(character, animationType);
-                }
-            }
+                break;
+            default:
+                break;
         }
 
 

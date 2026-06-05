@@ -1578,7 +1578,7 @@ namespace Ahzkwid
 
             }
         }
-        public void DrawGizmo(bool ignoreHierarchy)
+        public void DrawGizmo(bool xMirror, bool ignoreHierarchy,bool showFingers)
         {
 #if UNITY_EDITOR
             List<Transform> GetChilds(params Transform[] transforms)
@@ -1596,6 +1596,12 @@ namespace Ahzkwid
                     }
                 }
                 return childs;
+            }
+
+            bool IsFinger(Transform transform)
+            {
+                var name = transform.name.ToLower();
+                return name.Contains("thumb") || name.Contains("index") || name.Contains("middle") || name.Contains("ring") || name.Contains("little");
             }
 
             List<Transform> childs = null;
@@ -1620,9 +1626,21 @@ namespace Ahzkwid
                 {
                     continue;
                 }
+                if (showFingers == false)
+                {
+                    if (IsFinger(transform))
+                    {
+                        continue;
+                    }
+                }
+
                 UnityEditor.Handles.Label(transform.position, transform.name);
 
-                var symmetricalTransform = GetSymmetricalTransform(transform);
+                Transform symmetricalTransform = null;
+                if (xMirror)
+                {
+                    symmetricalTransform = GetSymmetricalTransform(transform);
+                }
                 switch (UnityEditor.Tools.current)
                 {
                     case Tool.View:
