@@ -78,7 +78,13 @@ class MaterialPropertyTool : EditorWindow
         "_ShadowBorder", "_Shadow2ndBorder", "_Shadow3rdBorder",
         "_ShadowBlur", "_Shadow2ndBlur", "_Shadow3rdBlur",
         "_ShadowNormalStrength", "_Shadow2ndNormalStrength", "_Shadow3rdNormalStrength",
-        "_ShadowReceive", "_Shadow2ndReceive", "_Shadow3rdReceive"
+        "_ShadowReceive", "_Shadow2ndReceive", "_Shadow3rdReceive",
+
+        "_ShadowBorderColor",
+        "_ShadowBorderRange",
+        "_ShadowMainStrength",
+        "_ShadowEnvStrength",
+        "_lilShadowCasterBias"
     };
     public static readonly string[] rimlightProperties = 
     {
