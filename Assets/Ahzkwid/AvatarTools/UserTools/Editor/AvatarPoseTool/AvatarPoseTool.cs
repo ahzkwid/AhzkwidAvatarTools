@@ -60,7 +60,10 @@ class AvatarPoseTool : EditorWindow
         }
         if (humanoid != null)
         {
-            humanoid.DrawGizmo(xMirror, ignoreHierarchy, showFingers);
+            if(mode==Mode.Edit)
+            {
+                humanoid.DrawGizmo(xMirror, ignoreHierarchy, showFingers);
+            }
         }
         sceneView.Repaint();
     }

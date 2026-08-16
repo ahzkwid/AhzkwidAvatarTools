@@ -1831,16 +1831,16 @@ namespace Ahzkwid
             {
                 var chestChilds = chest.GetComponentsInChildren<Transform>(true);
                 var breasts = FindBones(chestChilds, breastKeywords);
-                Debug.Log($"{string.Join(",", System.Array.ConvertAll(breasts, x => x.name))}");
+                //Debug.Log($"{string.Join(",", System.Array.ConvertAll(breasts, x => x.name))}");
                 breasts = System.Array.FindAll(breasts, x => x.name.ToLower().Contains("root") == false);//루트는 전부 제거
                 {
                     var bones = GetLefts(breasts);
-                    Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
+                    //Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
                     leftBreast = bones.FirstOrDefault();
                 }
                 {
                     var bones = GetRights(breasts);
-                    Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
+                    //Debug.Log($"{string.Join(",", System.Array.ConvertAll(bones, x => x.name))}");
                     rightBreast = bones.FirstOrDefault();
                 }
             }
